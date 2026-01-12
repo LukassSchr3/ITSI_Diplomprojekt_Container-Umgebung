@@ -1,0 +1,32 @@
+<div class="image-container">
+  <div class="image-header">
+    <div class="header-info">
+      <a routerLink="/" class="back-button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" [attr.stroke-width]="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Zurück
+      </a>
+      @if (image()) {
+        <h2>{{ image()!.Name }}</h2>
+      }
+    </div>
+
+    <div class="status-indicator" [class.connected]="!isConnecting()" [class.connecting]="isConnecting()">
+      <span class="status-dot"></span>
+      <span class="status-text">{{ connectionStatus() }}</span>
+    </div>
+  </div>
+
+  <div class="vnc-wrapper">
+    @if (isConnecting()) {
+      <div class="loading-overlay">
+        <div class="spinner"></div>
+        <p>{{ connectionStatus() }}</p>
+      </div>
+    }
+
+    <div #vncScreen class="vnc-screen"></div>
+  </div>
+</div>
+
