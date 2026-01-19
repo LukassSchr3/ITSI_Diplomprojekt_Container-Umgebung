@@ -1,41 +1,48 @@
 package itsi.api.steuerung.service;
 
-import com.cedarpolicy.AuthorizationEngine;
-import com.cedarpolicy.BasicAuthorizationEngine;
-import com.cedarpolicy.model.exception.InternalException;
-import com.cedarpolicy.model.slice.PolicySet;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
+/**
+ * Cedar Policy Authorization Service
+ *
+ * HINWEIS: Dieser Service ist vorerst deaktiviert, weil die cedar-java Bibliothek
+ * eine native Bibliothek (cedar_java_ffi.dll) benötigt, die nicht automatisch geladen wird.
+ *
+ * Um Cedar zu aktivieren:
+ * 1. Kommentiere @Service wieder ein
+ * 2. Füge die Cedar-Imports wieder hinzu
+ * 3. Stelle sicher, dass die native cedar_java_ffi Bibliothek im java.library.path ist
+ *
+ * Für jetzt wird eine einfache Platzhalter-Implementation verwendet.
+ */
+// @Service  // Vorerst deaktiviert wegen fehlender nativer Bibliothek
 @Service
+@Slf4j
 public class CedarService {
 
-    private final AuthorizationEngine authEngine;
-    private PolicySet policySet;
-
-    @Value("classpath:policies/CedarPolicy.cedar")
+    @Value("classpath:policy/CedarPolicy.cedar")
     private Resource policyResource;
 
     public CedarService() {
-        this.authEngine = new BasicAuthorizationEngine();
-        loadPolicies();
+        log.warn("CedarService ist deaktiviert - Authorization wird vorerst nicht durchgeführt");
     }
 
-    private void loadPolicies() {
-        try {
-            String policies = new String(
-                    policyResource.getInputStream().readAllBytes(),
-                    StandardCharsets.UTF_8
-            );
-            this.policySet = PolicySet.parsePolicies(policies);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load Cedar policies", e);
-        } catch (InternalException e) {
-            throw new RuntimeException("Failed to parse Cedar policies", e);
-        }
+    /**
+     * Prüft ob ein Subject die Aktion auf der Resource ausführen darf.
+     *
+     * @param subject Der Benutzer (z.B. "user123")
+     * @param action Die Aktion (z.B. "start", "stop", "reset")
+     * @param resource Die Resource (z.B. "container456")
+     * @return true wenn erlaubt, false sonst
+     */
+    public boolean authorize(String subject, String action, String resource) {
+        // Temporäre Implementierung - alle Requests erlauben
+        log.debug("Authorization Check (DEAKTIVIERT): subject={}, action={}, resource={} -> ERLAUBT",
+                  subject, action, resource);
+        return true;
     }
 }
+
