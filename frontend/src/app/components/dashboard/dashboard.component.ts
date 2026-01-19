@@ -17,6 +17,8 @@ export class DashboardComponent {
   private router = inject(Router);
 
   protected exercises = this.exerciseService.getExercises();
+  protected role = this.authService.getRole();
+  protected isTeacher = this.authService.isTeacher();
 
   protected stats = computed(() => {
     const all = this.exercises();
@@ -33,9 +35,18 @@ export class DashboardComponent {
   }
 
   onExerciseClick(exercise: Exercise) {
-    console.log('Exercise clicked:', exercise.id);
-    // Navigiere zum Image-Component mit der Exercise-ID
-    this.router.navigate(['/image', exercise.id]);
+    console.log('Exercise clicked:', exercise.id, 'imageId:', exercise.imageId);
+    // Navigiere zum Image-Component mit der Image-ID
+    if (exercise.imageId) {
+      this.router.navigate(['/image', exercise.imageId]);
+    } else {
+      console.warn('No imageId defined for exercise:', exercise.id);
+    }
+  }
+
+  onBewerten(id: string) {
+    // Nur der Lehrer sieht den Button im Template, hier wird nur gesetzt
+    this.exerciseService.markBewertet(id);
   }
 
   logout() {

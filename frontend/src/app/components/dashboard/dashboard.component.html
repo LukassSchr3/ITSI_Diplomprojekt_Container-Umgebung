@@ -6,7 +6,16 @@
           <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
         </svg>
       </div>
-      <h1>ITSI Labor Dashboard</h1>
+      <div>
+        <h1>ITSI Labor Dashboard</h1>
+        <p class="role-hint">
+          @if (role() === 'teacher') {
+            <span>Angemeldet als: Lehrer</span>
+          } @else if (role() === 'student') {
+            <span>Angemeldet als: Schüler</span>
+          }
+        </p>
+      </div>
     </div>
     <button class="logout-button" (click)="logout()">
       Abmelden
@@ -117,6 +126,34 @@
                 Abgeschlossen
               </button>
             </div>
+          </div>
+
+          <div class="bewertungs-row"
+               tabindex="-1"
+               (click)="$event.stopPropagation()"
+               (keydown)="$event.stopPropagation()">
+            <div
+              class="bewertungs-status-badge"
+              [class.bewertet]="exercise.bewertet"
+              [class.nicht-bewertet]="!exercise.bewertet"
+            >
+              @if (exercise.bewertet) {
+                <span>Bewertet</span>
+              } @else {
+                <span>Nicht bewertet</span>
+              }
+            </div>
+
+            @if (isTeacher()) {
+              <button
+                type="button"
+                class="bewerten-button"
+                [disabled]="exercise.bewertet"
+                (click)="onBewerten(exercise.id)"
+              >
+                Als bewertet markieren
+              </button>
+            }
           </div>
         </div>
       }

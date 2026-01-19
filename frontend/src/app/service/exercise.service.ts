@@ -7,12 +7,14 @@ import { Exercise } from '../models/exercise.model';
 export class ExerciseService {
   private exercises = signal<Exercise[]>([
     {
-      id: '1',
+      id: '9.1',
       title: 'ITSI 9.1 Netzwerkforensik',
       description: 'Network forensics and traffic analysis',
       progress: 0,
       status: 'not-started',
-      category: 'Forensik'
+      category: 'Forensik',
+      bewertet: false,
+      imageId: '1'  // Ubuntu 22.04
     },
     {
       id: '9.2',
@@ -20,7 +22,9 @@ export class ExerciseService {
       description: 'Memory dump analysis and investigation',
       progress: 0,
       status: 'not-started',
-      category: 'Forensik'
+      category: 'Forensik',
+      bewertet: false,
+      imageId: '2'  // Nginx Latest
     },
     {
       id: '9.3',
@@ -28,7 +32,9 @@ export class ExerciseService {
       description: 'Android malware analysis and reverse engineering',
       progress: 0,
       status: 'not-started',
-      category: 'Malware'
+      category: 'Malware',
+      bewertet: false,
+      imageId: '3'  // Node.js 20
     }
   ]);
 
@@ -46,6 +52,7 @@ export class ExerciseService {
           } else if (progress === 100) {
             status = 'completed';
           }
+          // "bewertet" bleibt unverändert und wird nicht automatisch gesetzt
           return { ...ex, progress, status };
         }
         return ex;
@@ -63,10 +70,20 @@ export class ExerciseService {
           } else if (status === 'completed') {
             progress = 100;
           }
+          // "bewertet" bleibt unverändert
           return { ...ex, status, progress };
         }
         return ex;
       })
+    );
+  }
+
+  // Vom Lehrer gesetzter Bewertungsstatus
+  markBewertet(id: string) {
+    this.exercises.update(exercises =>
+      exercises.map(ex =>
+        ex.id === id ? { ...ex, bewertet: true } : ex
+      )
     );
   }
 }
