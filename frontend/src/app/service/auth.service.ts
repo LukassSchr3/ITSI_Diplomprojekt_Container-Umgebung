@@ -1,4 +1,5 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, signal, inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 type UserRole = 'teacher' | 'student';
 
@@ -6,6 +7,7 @@ type UserRole = 'teacher' | 'student';
   providedIn: 'root'
 })
 export class AuthService {
+  private router = inject(Router);
   private isAuthenticated = signal<boolean>(false);
   private role = signal<UserRole | null>(null);
 
@@ -49,5 +51,6 @@ export class AuthService {
   logout() {
     this.isAuthenticated.set(false);
     this.role.set(null);
+    this.router.navigate(['/login']);
   }
 }
