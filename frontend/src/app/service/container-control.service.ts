@@ -12,7 +12,7 @@ export interface ContainerControlState {
   providedIn: 'root'
 })
 export class ContainerControlService {
-  baseURL: string = 'http://localhost:9090/api/container';
+  baseURL = 'http://localhost:9090/api/container';
 
   private stateSubject = new BehaviorSubject<ContainerControlState>({
     selectedImage: null,
