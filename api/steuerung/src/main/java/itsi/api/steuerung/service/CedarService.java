@@ -1,48 +1,63 @@
 package itsi.api.steuerung.service;
 
-import lombok.extern.slf4j.Slf4j;
+import com.cedarpolicy.AuthorizationEngine;
+import com.cedarpolicy.BasicAuthorizationEngine;
+import com.cedarpolicy.model.exception.InternalException;
+import com.cedarpolicy.model.slice.PolicySet;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
-/**
- * Cedar Policy Authorization Service
- *
- * HINWEIS: Dieser Service ist vorerst deaktiviert, weil die cedar-java Bibliothek
- * eine native Bibliothek (cedar_java_ffi.dll) benötigt, die nicht automatisch geladen wird.
- *
- * Um Cedar zu aktivieren:
- * 1. Kommentiere @Service wieder ein
- * 2. Füge die Cedar-Imports wieder hinzu
- * 3. Stelle sicher, dass die native cedar_java_ffi Bibliothek im java.library.path ist
- *
- * Für jetzt wird eine einfache Platzhalter-Implementation verwendet.
- */
-// @Service  // Vorerst deaktiviert wegen fehlender nativer Bibliothek
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 @Service
-@Slf4j
+@ConditionalOnProperty(name = "cedar.enabled", havingValue = "true", matchIfMissing = false)
 public class CedarService {
+
+    private static final Logger logger = LoggerFactory.getLogger(CedarService.class);
+
+    private AuthorizationEngine authEngine;
+    private PolicySet policySet;
 
     @Value("classpath:policy/CedarPolicy.cedar")
     private Resource policyResource;
 
     public CedarService() {
-        log.warn("CedarService ist deaktiviert - Authorization wird vorerst nicht durchgeführt");
+        // Konstruktor bleibt leer - Initialisierung erfolgt in @PostConstruct
     }
 
-    /**
-     * Prüft ob ein Subject die Aktion auf der Resource ausführen darf.
-     *
-     * @param subject Der Benutzer (z.B. "user123")
-     * @param action Die Aktion (z.B. "start", "stop", "reset")
-     * @param resource Die Resource (z.B. "container456")
-     * @return true wenn erlaubt, false sonst
-     */
-    public boolean authorize(String subject, String action, String resource) {
-        // Temporäre Implementierung - alle Requests erlauben
-        log.debug("Authorization Check (DEAKTIVIERT): subject={}, action={}, resource={} -> ERLAUBT",
-                  subject, action, resource);
-        return true;
+    @PostConstruct
+    private void initialize() {
+        try {
+            logger.info("Initializing Cedar authorization engine...");
+            this.authEngine = new BasicAuthorizationEngine();
+            loadPolicies();
+            logger.info("Cedar authorization engine initialized successfully");
+        } catch (UnsatisfiedLinkError e) {
+            logger.error("Failed to load Cedar native library. Make sure the cedar_java_ffi library is in your java.library.path", e);
+            throw new RuntimeException("Cedar native library not found", e);
+        }
+    }
+
+    private void loadPolicies() {
+        try {
+            String policies = new String(
+                    policyResource.getInputStream().readAllBytes(),
+                    StandardCharsets.UTF_8
+            );
+            this.policySet = PolicySet.parsePolicies(policies);
+            logger.info("Cedar policies loaded successfully");
+        } catch (IOException e) {
+            logger.error("Failed to load Cedar policies from classpath", e);
+            throw new RuntimeException("Failed to load Cedar policies", e);
+        } catch (InternalException e) {
+            logger.error("Failed to parse Cedar policies", e);
+            throw new RuntimeException("Failed to parse Cedar policies", e);
+        }
     }
 }
-

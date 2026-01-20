@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import itsi.api.steuerung.dto.UserDTO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,9 @@ public class JwtService {
 
     @Value("${jwt.expiration}")
     private Long expiration;
+
+    @Autowired(required = false)
+    private CedarService cedarService;
 
     public String generateToken(UserDTO user) {
         Map<String, Object> claims = new HashMap<>();
@@ -53,7 +57,14 @@ public class JwtService {
 
     public boolean isTokenValid(String token) {
         try {
-            extractClaims(token);
+            Claims claims = extractClaims(token);
+
+            // Wenn Cedar aktiviert ist, zusätzlich Cedar-basierte Autorisierungsprüfung
+            if (cedarService != null) {
+                return cedarService.isUserAuthorized(claims);
+            }
+
+            // Ansonsten nur JWT-Signatur und Ablaufdatum prüfen
             return true;
         } catch (Exception e) {
             return false;
