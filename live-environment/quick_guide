@@ -1,0 +1,18 @@
+make build           # Build image
+make run             # Run container
+make stop            # Stop container
+make start           # Start container
+make shell           # Open shell
+make remove          # Remove container
+make clean           # Remove container + current version
+make clean-all       # Remove container + all versions
+make rebuild         # Clean + build
+make test            # Build + run
+make logs            # Show logs
+make prune           # Remove dangling images
+make ps              # List containers
+make images          # List images
+make versions        # List versions
+
+# With custom version
+make build VERSION=1.1
