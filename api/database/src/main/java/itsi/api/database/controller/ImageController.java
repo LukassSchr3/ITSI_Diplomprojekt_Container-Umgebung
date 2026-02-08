@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/images")
@@ -51,9 +52,26 @@ public class ImageController {
 
     @PostMapping
     @Operation(summary = "Neues Image erstellen")
-    public ResponseEntity<Image> createImage(@RequestBody Image image) {
-        Image savedImage = imageService.save(image);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedImage);
+    public ResponseEntity<?> createImage(@RequestBody Image image) {
+        try {
+            // Check if image with same name already exists
+            if (imageService.findByName(image.getName()).isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("error", "Image with name '" + image.getName() + "' already exists"));
+            }
+            
+            // Check if image with same imageRef already exists
+            if (imageService.findByImageRef(image.getImageRef()).isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("error", "Image with imageRef '" + image.getImageRef() + "' already exists"));
+            }
+            
+            Image savedImage = imageService.save(image);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedImage);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Failed to create image: " + e.getMessage()));
+        }
     }
 
     @PutMapping("/{id}")

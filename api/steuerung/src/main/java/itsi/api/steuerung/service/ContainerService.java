@@ -50,25 +50,18 @@ public class ContainerService {
                 );
             }
 
-            // Send start request to backend with FULL instance data from database
+            // Send start request to backend - NUR {name: containerName, reference: imageRef}
             Map<String, Object> backendRequest = new HashMap<>();
-            backendRequest.put("containerId", instance.getContainerId());
             backendRequest.put("name", instance.getName());
-            backendRequest.put("userId", instance.getUserId());
-            backendRequest.put("imageId", instance.getImageId());
-
-            // Add image information if available
-            if (instance.getImage() != null) {
-                backendRequest.put("imageRef", instance.getImage().getImageRef());
-                backendRequest.put("imageName", instance.getImage().getName());
+            
+            if (instance.getImage() != null && instance.getImage().getImageRef() != null) {
+                backendRequest.put("reference", instance.getImage().getImageRef());
+            } else {
+                log.error("Instance has no image reference!");
+                return new ContainerOperationResponse(false, "Instance missing image reference", null, null, null);
             }
 
-            // Add user information if available
-            if (instance.getUser() != null) {
-                backendRequest.put("userName", instance.getUser().getName());
-            }
-
-            log.info("Sending full instance data to backend: {}", backendRequest);
+            log.info("Sending to Backend /instances/start: {}", backendRequest);
 
             Map<String, Object> backendResponse = backendWebClient.post()
                     .uri("/instances/start")
@@ -77,6 +70,8 @@ public class ContainerService {
                     .bodyToMono(Map.class)
                     .timeout(Duration.ofSeconds(60))
                     .block();
+                    
+            log.info("Backend response: {}", backendResponse);
 
             // Update instance status in database
             instance.setStatus("running");
@@ -122,9 +117,18 @@ public class ContainerService {
             InstanceDTO instance = instances[0];
             log.info("Stopping instance: {} (id: {})", instance.getName(), instance.getId());
 
-            // Send stop request to backend controller (only containerId)
+            // Send stop request to backend - NUR {name: containerName, reference: imageRef}
             Map<String, Object> backendRequest = new HashMap<>();
-            backendRequest.put("containerId", instance.getContainerId());
+            backendRequest.put("name", instance.getName());
+            
+            if (instance.getImage() != null && instance.getImage().getImageRef() != null) {
+                backendRequest.put("reference", instance.getImage().getImageRef());
+            } else {
+                log.warn("Instance has no image reference for stop - sending anyway");
+                backendRequest.put("reference", "");
+            }
+            
+            log.info("Sending to Backend /instances/stop: {}", backendRequest);
 
             Map<String, Object> backendResponse = backendWebClient.post()
                     .uri("/instances/stop")
@@ -133,6 +137,8 @@ public class ContainerService {
                     .bodyToMono(Map.class)
                     .timeout(Duration.ofSeconds(60))
                     .block();
+                    
+            log.info("Backend response: {}", backendResponse);
 
             // Update instance status in database
             instance.setStatus("stopped");
@@ -178,9 +184,18 @@ public class ContainerService {
             InstanceDTO instance = instances[0];
             log.info("Resetting instance: {} (id: {})", instance.getName(), instance.getId());
 
-            // Send reset request to backend controller (only containerId)
+            // Send reset request to backend - NUR {name: containerName, reference: imageRef}
             Map<String, Object> backendRequest = new HashMap<>();
-            backendRequest.put("containerId", instance.getContainerId());
+            backendRequest.put("name", instance.getName());
+            
+            if (instance.getImage() != null && instance.getImage().getImageRef() != null) {
+                backendRequest.put("reference", instance.getImage().getImageRef());
+            } else {
+                log.error("Instance has no image reference for reset!");
+                return new ContainerOperationResponse(false, "Instance missing image reference", null, null, null);
+            }
+            
+            log.info("Sending to Backend /instances/reset: {}", backendRequest);
 
             Map<String, Object> backendResponse = backendWebClient.post()
                     .uri("/instances/reset")
@@ -189,6 +204,8 @@ public class ContainerService {
                     .bodyToMono(Map.class)
                     .timeout(Duration.ofSeconds(60))
                     .block();
+                    
+            log.info("Backend response: {}", backendResponse);
 
             // Update instance status in database
             instance.setStatus("running");
@@ -265,12 +282,18 @@ public class ContainerService {
             }
             instance.setName(imageName + "_" + userName);
 
-            // Call backend to create/start the container
+            // Call backend to create/start the container - NUR {name: containerName, reference: imageRef}
             Map<String, Object> backendRequest = new HashMap<>();
-            backendRequest.put("containerId", instance.getContainerId());
-            backendRequest.put("imageRef", instance.getImage() != null ? instance.getImage().getImageRef() : null);
             backendRequest.put("name", instance.getName());
-            backendRequest.put("userId", userId);
+            
+            if (instance.getImage() != null && instance.getImage().getImageRef() != null) {
+                backendRequest.put("reference", instance.getImage().getImageRef());
+            } else {
+                log.error("Cannot create container without image reference");
+                return null;
+            }
+            
+            log.info("Sending to Backend /instances/start (create): {}", backendRequest);
 
             Map<String, Object> backendResponse = backendWebClient.post()
                     .uri("/instances/start")

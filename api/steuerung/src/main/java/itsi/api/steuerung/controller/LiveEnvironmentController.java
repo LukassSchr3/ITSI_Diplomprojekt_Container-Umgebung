@@ -64,13 +64,37 @@ public class LiveEnvironmentController {
                         .block();
             }
 
-            // Sende START an Backend
-            Map<String, Object> backendResponse = backendWebClient.post()
-                    .uri("/live/start")
-                    .bodyValue(liveEnv)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
+            // Sende START an Backend - NUR {name: userName}
+            try {
+                // Hole User aus DB
+                Map<String, Object> user = databaseWebClient.get()
+                        .uri("/api/users/" + userId)
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .block();
+                
+                if (user == null || user.get("name") == null) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
+                }
+                
+                Map<String, Object> backendRequest = new HashMap<>();
+                backendRequest.put("name", user.get("name").toString());
+                
+                log.info("Sending to Backend /live/start: {}", backendRequest);
+                
+                Map<String, Object> backendResponse = backendWebClient.post()
+                        .uri("/live/start")
+                        .bodyValue(backendRequest)
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .block();
+                        
+                log.info("Backend response: {}", backendResponse);
+            } catch (Exception backendError) {
+                log.error("Backend error in /live/start", backendError);
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                        .body(Map.of("error", "Backend: " + backendError.getMessage()));
+            }
 
             // Update Status in Datenbank
             liveEnv.put("status", "running");
@@ -109,13 +133,37 @@ public class LiveEnvironmentController {
                 return ResponseEntity.badRequest().body("No live environment found for user " + userId);
             }
 
-            // Sende STOP an Backend
-            Map<String, Object> backendResponse = backendWebClient.post()
-                    .uri("/live/stop")
-                    .bodyValue(liveEnv)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
+            // Sende STOP an Backend - NUR {name: userName}
+            try {
+                // Hole User aus DB
+                Map<String, Object> user = databaseWebClient.get()
+                        .uri("/api/users/" + userId)
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .block();
+                
+                if (user == null || user.get("name") == null) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
+                }
+                
+                Map<String, Object> backendRequest = new HashMap<>();
+                backendRequest.put("name", user.get("name").toString());
+                
+                log.info("Sending to Backend /live/stop: {}", backendRequest);
+                
+                Map<String, Object> backendResponse = backendWebClient.post()
+                        .uri("/live/stop")
+                        .bodyValue(backendRequest)
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .block();
+                        
+                log.info("Backend response: {}", backendResponse);
+            } catch (Exception backendError) {
+                log.error("Backend error in /live/stop", backendError);
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                        .body(Map.of("error", "Backend: " + backendError.getMessage()));
+            }
 
             // Update Status in Datenbank
             liveEnv.put("status", "stopped");
@@ -151,13 +199,37 @@ public class LiveEnvironmentController {
                 return ResponseEntity.badRequest().body("No live environment found for user " + userId);
             }
 
-            // Sende RESET an Backend
-            Map<String, Object> backendResponse = backendWebClient.post()
-                    .uri("/live/reset")
-                    .bodyValue(liveEnv)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
+            // Sende RESET an Backend - NUR {name: userName}
+            try {
+                // Hole User aus DB
+                Map<String, Object> user = databaseWebClient.get()
+                        .uri("/api/users/" + userId)
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .block();
+                
+                if (user == null || user.get("name") == null) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
+                }
+                
+                Map<String, Object> backendRequest = new HashMap<>();
+                backendRequest.put("name", user.get("name").toString());
+                
+                log.info("Sending to Backend /live/reset: {}", backendRequest);
+                
+                Map<String, Object> backendResponse = backendWebClient.post()
+                        .uri("/live/reset")
+                        .bodyValue(backendRequest)
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .block();
+                        
+                log.info("Backend response: {}", backendResponse);
+            } catch (Exception backendError) {
+                log.error("Backend error in /live/reset", backendError);
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                        .body(Map.of("error", "Backend: " + backendError.getMessage()));
+            }
 
             // Update Status in Datenbank
             liveEnv.put("status", "running");
