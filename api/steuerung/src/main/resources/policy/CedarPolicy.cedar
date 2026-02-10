@@ -1,37 +1,39 @@
-// Lehrer dürfen alle Schüler ihrer Klasse sehen
+// Admin roles can perform any action on any resource
 permit(
-    principal is User,
-    action == Action::"viewStudent",
-    resource is Student
-) when {
-    principal.rolle == "LEHRER" &&
-    principal.klasse == resource.klasse
-};
-
-// Admin darf alles
-permit(
-    principal is User,
+    principal,
     action,
     resource
-) when {
+)
+when {
     principal.rolle == "ADMIN"
 };
 
-// Schüler dürfen nur ihre eigenen Daten sehen
+// Teachers can grade tasks
 permit(
-    principal is User,
-    action == Action::"viewStudent",
-    resource is Student
-) when {
-    principal.rolle == "SCHUELER" &&
-    principal.username == resource.username
+    principal,
+    action == Action::"grade",
+    resource
+)
+when {
+    principal.rolle == "LEHRER"
 };
 
-// Zugriff abgelaufen
+// Teachers and Students can read
+permit(
+    principal,
+    action == Action::"read",
+    resource
+)
+when {
+    principal.rolle == "LEHRER" || principal.rolle == "SCHUELER"
+};
+
+// Deny access if the user account is expired
 forbid(
-    principal is User,
+    principal,
     action,
     resource
-) when {
+)
+when {
     principal.ablaufJahr < context.currentYear
 };

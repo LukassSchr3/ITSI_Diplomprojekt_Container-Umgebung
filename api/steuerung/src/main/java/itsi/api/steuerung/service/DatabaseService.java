@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Mono;
 
@@ -70,6 +71,17 @@ public class DatabaseService {
                 .uri("/api/users/{id}", id)
                 .retrieve()
                 .bodyToMono(UserDTO.class)
+                .timeout(Duration.ofSeconds(30))
+                .block();
+    }
+
+    public UserDTO getUserByEmail(String email) {
+        log.debug("Fetching user with email: {}", email);
+        return databaseWebClient.get()
+                .uri("/api/users/email/{email}", email)
+                .retrieve()
+                .bodyToMono(UserDTO.class)
+                .onErrorResume(WebClientResponseException.NotFound.class, e -> Mono.empty())
                 .timeout(Duration.ofSeconds(30))
                 .block();
     }
