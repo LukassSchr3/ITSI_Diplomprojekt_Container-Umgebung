@@ -27,24 +27,24 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "User Login", description = "Authenticates a user by userId and returns a JWT token")
+    @Operation(summary = "User Login", description = "Authenticates a user by email and returns a JWT token")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
-        log.info("Login attempt for userId: {}", loginRequest.getUserId());
+        log.info("Login attempt for email: {}", loginRequest.getEmail());
 
         try {
             // Validate request
-            if (loginRequest.getUserId() == null) {
-                log.warn("Login failed: userId is null");
+            if (loginRequest.getEmail() == null) {
+                log.warn("Login failed: email is null");
                 return ResponseEntity.badRequest().body(
-                    new LoginResponse(false, "UserId is required", null, null)
+                    new LoginResponse(false, "Email is required", null, null)
                 );
             }
 
             // Fetch user from database
-            UserDTO user = databaseService.getUserById(loginRequest.getUserId());
+            UserDTO user = databaseService.getUserByEmail(loginRequest.getEmail());
 
             if (user == null) {
-                log.warn("Login failed: User not found with id: {}", loginRequest.getUserId());
+                log.warn("Login failed: User not found with email: {}", loginRequest.getEmail());
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     new LoginResponse(false, "User not found", null, null)
                 );
@@ -60,7 +60,7 @@ public class AuthController {
             );
 
         } catch (Exception e) {
-            log.error("Login error for userId: {}", loginRequest.getUserId(), e);
+            log.error("Login error for email: {}", loginRequest.getEmail(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 new LoginResponse(false, "An error occurred during login: " + e.getMessage(), null, null)
             );
