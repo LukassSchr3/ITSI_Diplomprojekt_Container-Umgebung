@@ -1,7 +1,9 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, inject, computed } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ContainerControlService, ContainerControlState } from './service/container-control.service';
+import { AuthService } from './service/auth.service';
+import { PermissionService } from './service/permission.service';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +20,14 @@ export class App implements OnInit {
   });
   isProcessing = signal(false);
 
-  constructor(private containerControlService: ContainerControlService) {}
+  private authService = inject(AuthService);
+  private permissions = inject(PermissionService);
+  private containerControlService = inject(ContainerControlService);
+
+  protected canManageSelectedContainer = computed(() => {
+    const userId = this.authService.getUserId()();
+    return this.permissions.canManageContainer(userId);
+  });
 
   ngOnInit(): void {
     this.containerControlService.state$.subscribe(state => {
@@ -33,11 +42,12 @@ export class App implements OnInit {
 
   async startContainer(): Promise<void> {
     const state = this.containerControlState();
-    if (!state.selectedImage || this.isProcessing()) return;
+    const userId = this.authService.getUserId()();
+    if (!state.selectedImage || this.isProcessing() || !this.canManageSelectedContainer() || !userId) return;
 
     this.isProcessing.set(true);
     try {
-      await this.containerControlService.startContainer(1, Number(state.selectedImage.ID));
+      await this.containerControlService.startContainer(Number(userId), Number(state.selectedImage.ID));
     } catch (error) {
       console.error('Fehler beim Starten:', error);
     } finally {
@@ -47,11 +57,12 @@ export class App implements OnInit {
 
   async stopContainer(): Promise<void> {
     const state = this.containerControlState();
-    if (!state.selectedImage || this.isProcessing()) return;
+    const userId = this.authService.getUserId()();
+    if (!state.selectedImage || this.isProcessing() || !this.canManageSelectedContainer() || !userId) return;
 
     this.isProcessing.set(true);
     try {
-      await this.containerControlService.stopContainer(1, Number(state.selectedImage.ID));
+      await this.containerControlService.stopContainer(Number(userId), Number(state.selectedImage.ID));
     } catch (error) {
       console.error('Fehler beim Stoppen:', error);
     } finally {
@@ -61,11 +72,12 @@ export class App implements OnInit {
 
   async restartContainer(): Promise<void> {
     const state = this.containerControlState();
-    if (!state.selectedImage || this.isProcessing()) return;
+    const userId = this.authService.getUserId()();
+    if (!state.selectedImage || this.isProcessing() || !this.canManageSelectedContainer() || !userId) return;
 
     this.isProcessing.set(true);
     try {
-      await this.containerControlService.restartContainer(1, Number(state.selectedImage.ID));
+      await this.containerControlService.restartContainer(Number(userId), Number(state.selectedImage.ID));
     } catch (error) {
       console.error('Fehler beim Neustarten:', error);
     } finally {

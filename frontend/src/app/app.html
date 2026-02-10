@@ -9,13 +9,13 @@
     </div>
 
     @if (containerControlState().isActive && containerControlState().selectedImage) {
-      <div class="container-controls">
+      <div class="container-controls" [class.disabled]="!canManageSelectedContainer()">
         <span class="container-name">{{ containerControlState().selectedImage!.Name }}</span>
         <div class="control-buttons">
           <button
             class="control-btn start-btn"
             (click)="startContainer()"
-            [disabled]="isProcessing()"
+            [disabled]="isProcessing() || !canManageSelectedContainer()"
             title="Container starten">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
@@ -25,7 +25,7 @@
           <button
             class="control-btn stop-btn"
             (click)="stopContainer()"
-            [disabled]="isProcessing()"
+            [disabled]="isProcessing() || !canManageSelectedContainer()"
             title="Container stoppen">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <rect x="6" y="6" width="12" height="12"/>
@@ -35,7 +35,7 @@
           <button
             class="control-btn restart-btn"
             (click)="restartContainer()"
-            [disabled]="isProcessing()"
+            [disabled]="isProcessing() || !canManageSelectedContainer()"
             title="Container neu starten">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M23 4v6h-6M1 20v-6h6"/>

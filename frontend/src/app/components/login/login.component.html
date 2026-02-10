@@ -43,8 +43,8 @@
         </div>
       }
 
-      <button type="submit" class="login-button">
-        Anmelden
+      <button type="submit" class="login-button" [disabled]="isSubmitting()">
+        @if (isSubmitting()) { Anmelden... } @else { Anmelden }
       </button>
     </form>
   </div>

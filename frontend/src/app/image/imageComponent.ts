@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, signal, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Image } from '../interfaces/Image';
@@ -26,11 +26,9 @@ export class ImageComponent implements OnInit, OnDestroy {
   isConnecting = signal(true);
   connectionStatus = signal('Verbindung wird hergestellt...');
 
-  constructor(
-    private route: ActivatedRoute,
-    private vncService: VncService,
-    private containerControlService: ContainerControlService
-  ) {}
+  private route = inject(ActivatedRoute);
+  private vncService = inject(VncService);
+  private containerControlService = inject(ContainerControlService);
 
   ngOnInit(): void {
     // Route-Parameter abonnieren
