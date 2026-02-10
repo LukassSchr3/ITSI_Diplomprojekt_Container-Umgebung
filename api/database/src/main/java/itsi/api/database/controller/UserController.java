@@ -48,6 +48,14 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 
+    @GetMapping("/email/{email}")
+    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
+        return userService.findByEmail(email)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+
     @PutMapping("/{id}")
     @Operation(summary = "Benutzer aktualisieren")
     public ResponseEntity<User> updateUser(@PathVariable Integer id, @RequestBody User user) {
