@@ -1,56 +1,115 @@
 import { Injectable, computed, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import axios from 'axios';
 
-type UserRole = 'teacher' | 'student';
+export type UserRole = 'SCHUELER' | 'LEHRER' | 'ADMIN';
+
+interface LoginResponse {
+  token: string;
+}
+
+interface JwtClaims {
+  sub?: string;
+  email?: string;
+  userId?: string | number;
+  roles?: UserRole[];
+  role?: UserRole;
+  rolle?: UserRole;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private router = inject(Router);
-  private isAuthenticated = signal<boolean>(false);
-  private role = signal<UserRole | null>(null);
+  private token = signal<string | null>(null);
+  private userId = signal<string | number | null>(null);
+  private roles = signal<UserRole[]>([]);
 
-  isLoggedIn() {
-    return this.isAuthenticated.asReadonly();
+  constructor() {
+    const stored = sessionStorage.getItem('auth_token');
+    if (stored) {
+      this.setToken(stored);
+    }
   }
 
-  getRole() {
-    return this.role.asReadonly();
+  isLoggedIn() {
+    return computed(() => !!this.token());
+  }
+
+  getToken() {
+    return this.token.asReadonly();
+  }
+
+  getUserId() {
+    return this.userId.asReadonly();
+  }
+
+  getRoles() {
+    return this.roles.asReadonly();
+  }
+
+  isAdmin() {
+    return computed(() => this.roles().includes('ADMIN'));
   }
 
   isTeacher() {
-    return computed(() => this.role() === 'teacher');
+    return computed(() => this.roles().includes('LEHRER'));
   }
 
   isStudent() {
-    return computed(() => this.role() === 'student');
+    return computed(() => this.roles().includes('SCHUELER'));
   }
 
-  login(email: string, password: string): boolean {
-    // simples Frontend-Login ohne Backend
-    if (password !== 'test') {
+  async login(email: string, password: string): Promise<boolean> {
+    try {
+      const response = await axios.post<LoginResponse>('http://localhost:9090/api/auth/login', {
+        email,
+        password
+      });
+
+      if (!response.data?.token) {
+        return false;
+      }
+
+      this.setToken(response.data.token);
+      console.log(this.getToken()());
+      console.log(this.getRoles()());
+      console.log(this.isAdmin()());
+      return true;
+    } catch {
       return false;
     }
-
-    if (email === 'lehrer@gmail.com') {
-      this.isAuthenticated.set(true);
-      this.role.set('teacher');
-      return true;
-    }
-
-    if (email === 'schüler@gmail.com') {
-      this.isAuthenticated.set(true);
-      this.role.set('student');
-      return true;
-    }
-
-    return false;
   }
 
   logout() {
-    this.isAuthenticated.set(false);
-    this.role.set(null);
+    this.token.set(null);
+    this.userId.set(null);
+    this.roles.set([]);
+    sessionStorage.removeItem('auth_token');
     this.router.navigate(['/login']);
+  }
+
+  private setToken(token: string) {
+    this.token.set(token);
+    sessionStorage.setItem('auth_token', token);
+
+    const claims = this.parseJwt(token);
+    const userId = claims?.userId ?? claims?.sub ?? claims?.email ?? null;
+    this.userId.set(userId);
+
+    const roles = claims?.roles ?? (claims?.role ? [claims.role] : claims?.rolle ? [claims.rolle] : []);
+    this.roles.set(roles);
+  }
+
+  private parseJwt(token: string): JwtClaims | null {
+    try {
+      const payload = token.split('.')[1];
+      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = normalized.padEnd(normalized.length + (4 - normalized.length % 4) % 4, '=');
+      return JSON.parse(atob(padded)) as JwtClaims;
+    } catch {
+      return null;
+    }
   }
 }

@@ -17,11 +17,17 @@ export class LoginComponent {
   protected email = signal<string>('');
   protected password = signal<string>('');
   protected errorMessage = signal<string>('');
+  protected isSubmitting = signal<boolean>(false);
 
-  onSubmit() {
-    const success = this.authService.login(this.email(), this.password());
+  async onSubmit() {
+    if (this.isSubmitting()) return;
+    this.errorMessage.set('');
+    this.isSubmitting.set(true);
+
+    const success = await this.authService.login(this.email(), this.password());
+    this.isSubmitting.set(false);
+
     if (success) {
-      // Login erfolgreich - zum Dashboard navigieren
       this.router.navigate(['/dashboard']);
     } else {
       this.errorMessage.set('Falsche E-Mail oder Passwort');
