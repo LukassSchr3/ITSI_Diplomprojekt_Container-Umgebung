@@ -257,14 +257,15 @@ public class LiveEnvironmentController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createLiveEnvironment(@RequestBody Map<String, Object> newEnv) {
-        // Hole den aktuellen max VNC-Port
-        Integer maxVncPort = databaseWebClient.get()
-                .uri("/api/live-environments/max-vnc-port")
-                .retrieve()
-                .bodyToMono(Integer.class)
-                .block();
-        int newVncPort = (maxVncPort != null ? maxVncPort : 5900) + 1;
-        newEnv.put("vncPort", newVncPort);
+        // VNC-Port basierend auf User-ID berechnen
+        if (newEnv.containsKey("userId")) {
+            Object userIdObj = newEnv.get("userId");
+            int userId = userIdObj instanceof Number ? ((Number) userIdObj).intValue() : Integer.parseInt(userIdObj.toString());
+            int newVncPort = 5900 + userId;
+            newEnv.put("vncPort", newVncPort);
+        } else {
+            return ResponseEntity.badRequest().body("userId muss angegeben werden!");
+        }
         newEnv.putIfAbsent("vncHost", "localhost");
         // Passwort MUSS gesetzt werden, sonst Fehler
         if (!newEnv.containsKey("vncPassword") || newEnv.get("vncPassword") == null || newEnv.get("vncPassword").toString().isEmpty()) {
