@@ -38,7 +38,7 @@ public class JwtService {
                 .subject(user.getName())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSigningKey())
+                .signWith(getSigningKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -57,16 +57,10 @@ public class JwtService {
 
     public boolean isTokenValid(String token) {
         try {
-            Claims claims = extractClaims(token);
-
-            // Wenn Cedar aktiviert ist, zusätzlich Cedar-basierte Autorisierungsprüfung
-            if (cedarService != null) {
-                return cedarService.isUserAuthorized(claims);
-            }
-
-            // Ansonsten nur JWT-Signatur und Ablaufdatum prüfen
+            extractClaims(token); // Wenn das hier scheitert, wissen wir warum
             return true;
         } catch (Exception e) {
+            System.out.println("JWT Validation Error: " + e.getMessage()); // LOG PRÜFEN!
             return false;
         }
     }

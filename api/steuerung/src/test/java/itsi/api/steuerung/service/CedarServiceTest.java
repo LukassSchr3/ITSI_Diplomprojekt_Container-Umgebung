@@ -99,6 +99,22 @@ class CedarServiceTest {
     }
 
     @Test
+    void testIsUserAuthorized_Student_ShouldBeAuthorized() {
+        if (!isCedarReady()) return;
+
+        boolean authorized = cedarService.isUserAuthorized(studentClaims);
+        assertTrue(authorized, "Student sollte autorisiert sein (read access)");
+    }
+
+    @Test
+    void testIsUserAuthorized_Lehrer_ShouldBeAuthorized() {
+        if (!isCedarReady()) return;
+
+        boolean authorized = cedarService.isUserAuthorized(lehrerClaims);
+        assertTrue(authorized, "Lehrer sollte autorisiert sein (read access)");
+    }
+
+    @Test
     void testIsUserAuthorized_ExpiredStudent_ShouldNotBeAuthorized() {
         if (!isCedarReady()) return;
 
