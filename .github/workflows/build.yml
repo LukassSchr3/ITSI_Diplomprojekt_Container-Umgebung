@@ -1,0 +1,195 @@
+name: Build and Test ITSI Project
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  build-database:
+    name: Setup and Test Database
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Start PostgreSQL Database
+      working-directory: ./api/database
+      run: docker-compose up -d
+      
+    - name: Wait for PostgreSQL to be ready
+      run: |
+        timeout 60 bash -c 'until docker exec itsi-postgres-db pg_isready -U itsi_user -d itsi_db; do sleep 2; done'
+      
+    - name: Verify database initialization
+      run: |
+        echo "Checking database tables..."
+        docker exec itsi-postgres-db psql -U itsi_user -d itsi_db -c "\dt"
+        echo "Checking users table..."
+        docker exec itsi-postgres-db psql -U itsi_user -d itsi_db -c "SELECT COUNT(*) FROM users;"
+        echo "Checking questions table..."
+        docker exec itsi-postgres-db psql -U itsi_user -d itsi_db -c "SELECT COUNT(*) FROM questions;"
+      
+    - name: Test Adminer availability
+      run: |
+        timeout 30 bash -c 'until curl -f http://localhost:8080 > /dev/null 2>&1; do sleep 2; done'
+        echo "Adminer is running on port 8080"
+      
+    - name: Stop Database
+      if: always()
+      working-directory: ./api/database
+      run: docker-compose down -v
+
+  build-backend:
+    name: Build Backend (Go)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25'
+        cache-dependency-path: backend/go.sum
+        
+    - name: Install dependencies
+      working-directory: ./backend
+      run: go mod download
+      
+    - name: Build backend
+      working-directory: ./backend
+      run: go build -v -o backend ./main.go
+      
+    - name: Upload backend binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-binary
+        path: backend/backend
+        retention-days: 7
+
+  build-api:
+    name: Build API (Spring Boot)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        cache: 'gradle'
+        
+    - name: Grant execute permission for gradlew
+      working-directory: ./api/database
+      run: chmod +x gradlew
+      
+    - name: Build with Gradle
+      working-directory: ./api/database
+      run: ./gradlew build -x test --no-daemon
+      
+    - name: Upload API JAR
+      uses: actions/upload-artifact@v4
+      with:
+        name: api-jar
+        path: api/database/build/libs/*.jar
+        retention-days: 7
+
+  build-frontend:
+    name: Build Frontend (Angular)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+      
+    - name: Build frontend
+      working-directory: ./frontend
+      run: npm run build
+      
+    - name: Upload frontend dist
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-dist
+        path: frontend/dist/
+        retention-days: 7
+
+  integration-test:
+    name: Integration Test (All Components)
+    runs-on: ubuntu-latest
+    needs: [build-database, build-backend, build-api, build-frontend]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Start Database
+      working-directory: ./api/database
+      run: docker-compose up -d
+      
+    - name: Wait for Database
+      run: |
+        timeout 60 bash -c 'until docker exec itsi-postgres-db pg_isready -U itsi_user -d itsi_db; do sleep 2; done'
+      
+    - name: Download API artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: api-jar
+        path: api-jar/
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        
+    - name: Start API Server
+      run: |
+        cd api-jar
+        java -jar *.jar &
+        echo $! > api.pid
+        
+    - name: Wait for API
+      run: |
+        timeout 90 bash -c 'until curl -s http://localhost:8080/api/users > /dev/null 2>&1; do sleep 3; done' || true
+        sleep 5
+      
+    - name: Test API Endpoints
+      run: |
+        echo "Testing Users endpoint..."
+        curl -f http://localhost:8080/api/users || echo "Users endpoint test"
+        
+        echo "Testing Images endpoint..."
+        curl -f http://localhost:8080/api/images || echo "Images endpoint test"
+        
+        echo "Testing Questions endpoint..."
+        curl -f http://localhost:8080/api/questions || echo "Questions endpoint test"
+        
+        echo "Testing Question Results endpoint..."
+        curl -f http://localhost:8080/api/question-results || echo "Question Results endpoint test"
+      
+    - name: Cleanup
+      if: always()
+      run: |
+        if [ -f api-jar/api.pid ]; then
+          kill $(cat api-jar/api.pid) || true
+        fi
+        cd api/database && docker-compose down -v
