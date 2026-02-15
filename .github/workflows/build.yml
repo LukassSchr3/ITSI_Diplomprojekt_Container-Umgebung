@@ -18,7 +18,7 @@ jobs:
       
     - name: Start PostgreSQL Database
       working-directory: ./api/database
-      run: docker-compose up -d
+      run: docker compose up -d
       
     - name: Wait for PostgreSQL to be ready
       run: |
@@ -41,7 +41,7 @@ jobs:
     - name: Stop Database
       if: always()
       working-directory: ./api/database
-      run: docker-compose down -v
+      run: docker compose down -v
 
   build-backend:
     name: Build Backend (Go)
@@ -87,9 +87,8 @@ jobs:
         java-version: '21'
         cache: 'gradle'
         
-    - name: Grant execute permission for gradlew
-      working-directory: ./api/database
-      run: chmod +x gradlew
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
       
     - name: Build with Gradle
       working-directory: ./api/database
@@ -143,7 +142,7 @@ jobs:
       
     - name: Start Database
       working-directory: ./api/database
-      run: docker-compose up -d
+      run: docker compose up -d
       
     - name: Wait for Database
       run: |
@@ -192,4 +191,4 @@ jobs:
         if [ -f api-jar/api.pid ]; then
           kill $(cat api-jar/api.pid) || true
         fi
-        cd api/database && docker-compose down -v
+        cd api/database && docker compose down -v
