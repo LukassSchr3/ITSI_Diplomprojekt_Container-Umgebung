@@ -27,16 +27,23 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "User Login", description = "Authenticates a user by email and returns a JWT token")
+    @Operation(summary = "User Login", description = "Authenticates a user by email and password, returns a JWT token")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
         log.info("Login attempt for email: {}", loginRequest.getEmail());
 
         try {
             // Validate request
-            if (loginRequest.getEmail() == null) {
-                log.warn("Login failed: email is null");
+            if (loginRequest.getEmail() == null || loginRequest.getEmail().trim().isEmpty()) {
+                log.warn("Login failed: email is null or empty");
                 return ResponseEntity.badRequest().body(
                     new LoginResponse(false, "Email is required", null, null)
+                );
+            }
+
+            if (loginRequest.getPassword() == null || loginRequest.getPassword().trim().isEmpty()) {
+                log.warn("Login failed: password is null or empty");
+                return ResponseEntity.badRequest().body(
+                    new LoginResponse(false, "Password is required", null, null)
                 );
             }
 
@@ -45,8 +52,16 @@ public class AuthController {
 
             if (user == null) {
                 log.warn("Login failed: User not found with email: {}", loginRequest.getEmail());
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new LoginResponse(false, "User not found", null, null)
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    new LoginResponse(false, "Invalid email or password", null, null)
+                );
+            }
+
+            // Validate password (simple comparison - in production use BCrypt!)
+            if (!loginRequest.getPassword().equals(user.getPassword())) {
+                log.warn("Login failed: Invalid password for email: {}", loginRequest.getEmail());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    new LoginResponse(false, "Invalid email or password", null, null)
                 );
             }
 
@@ -54,22 +69,33 @@ public class AuthController {
             String token = jwtService.generateToken(user);
             log.info("Login successful for user: {} (id: {})", user.getName(), user.getId());
 
-            // Return success response with token and user data
+            // Return success response with token and user data (without password!)
+            UserDTO safeUser = new UserDTO(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                null, // Don't send password back!
+                user.getClassName(),
+                user.getRole(),
+                user.getCreatedAt(),
+                user.getExpiredAt()
+            );
+
             return ResponseEntity.ok(
-                new LoginResponse(true, "Login successful", token, user)
+                new LoginResponse(true, "Login successful", token, safeUser)
             );
 
         } catch (Exception e) {
             log.error("Login error for email: {}", loginRequest.getEmail(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                new LoginResponse(false, "An error occurred during login: " + e.getMessage(), null, null)
+                new LoginResponse(false, "An error occurred during login", null, null)
             );
         }
     }
 
     @GetMapping("/validate")
     @Operation(summary = "Validate Token", description = "Validates if a JWT token is valid")
-    public ResponseEntity<LoginResponse> validateToken(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<LoginResponse> validateToken(@RequestHeader() String authHeader) {
         try {
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return ResponseEntity.badRequest().body(

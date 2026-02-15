@@ -46,13 +46,16 @@ public class CedarService {
     private void initialize() {
         try {
             logger.info("Initializing Cedar authorization engine...");
-            // Versuch, die Engine zu instanziieren. Dies lädt die native Bibliothek.
             this.authEngine = new BasicAuthorizationEngine();
             loadPolicies();
             logger.info("Cedar authorization engine initialized successfully");
+        } catch (UnsatisfiedLinkError e) {
+            logger.error("Failed to load Cedar native library. Make sure the cedar_java_ffi library is in your java.library.path");
+            logger.error("Cedar authorization will be BYPASSED (fail-open mode). This is NOT recommended for production!");
+            this.authEngine = null;
         } catch (Throwable e) {
-            // Fängt UnsatisfiedLinkError und andere Fehler ab
-            logger.error("Failed to initialize Cedar engine. Cedar authorization will be BYPASSED. Error: {}", e.getMessage());
+            logger.error("Failed to initialize Cedar engine: {}", e.getMessage());
+            logger.error("Cedar authorization will be BYPASSED (fail-open mode). This is NOT recommended for production!");
             this.authEngine = null;
         }
     }
@@ -75,6 +78,23 @@ public class CedarService {
         } catch (InternalException e) {
             logger.error("Failed to parse Cedar policies", e);
             throw new RuntimeException("Failed to parse Cedar policies", e);
+        }
+    }
+
+    /**
+     * Lädt Policies zur Laufzeit neu (für dynamische Policy-Updates)
+     */
+    public void reloadPolicies(String policyContent) {
+        try {
+            if (authEngine == null) {
+                logger.warn("Cannot reload policies - Cedar engine not initialized");
+                return;
+            }
+            this.policySet = PolicySet.parsePolicies(policyContent);
+            logger.info("Cedar policies reloaded successfully at runtime");
+        } catch (InternalException e) {
+            logger.error("Failed to reload Cedar policies", e);
+            throw new RuntimeException("Failed to reload Cedar policies", e);
         }
     }
 

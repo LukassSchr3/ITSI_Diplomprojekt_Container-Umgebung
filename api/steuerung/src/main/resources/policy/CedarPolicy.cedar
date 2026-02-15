@@ -1,4 +1,8 @@
-// Admin roles can perform any action on any resource
+// ====================================
+// Cedar ABAC Policy für Schüler/Lehrer/Admin System
+// ====================================
+
+// ADMIN: Kann alles
 permit(
     principal,
     action,
@@ -8,7 +12,7 @@ when {
     principal.rolle == "ADMIN"
 };
 
-// Teachers can grade tasks
+// LEHRER: Kann Aufgaben bewerten (grade)
 permit(
     principal,
     action == Action::"grade",
@@ -18,7 +22,17 @@ when {
     principal.rolle == "LEHRER"
 };
 
-// Teachers and Students can read
+// LEHRER: Kann schreiben (write)
+permit(
+    principal,
+    action == Action::"write",
+    resource
+)
+when {
+    principal.rolle == "LEHRER"
+};
+
+// LEHRER & SCHÜLER: Können lesen (read)
 permit(
     principal,
     action == Action::"read",
@@ -28,7 +42,7 @@ when {
     principal.rolle == "LEHRER" || principal.rolle == "SCHUELER"
 };
 
-// Deny access if the user account is expired
+// DENY: Abgelaufene Accounts
 forbid(
     principal,
     action,
@@ -37,3 +51,4 @@ forbid(
 when {
     principal.ablaufJahr < context.currentYear
 };
+
