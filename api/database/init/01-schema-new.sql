@@ -24,16 +24,24 @@ CREATE TABLE IF NOT EXISTS courses ( -- Semester/Kurse als Sammlung von Aufgaben
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS tasks ( -- Einzelne Aufgaben/Challenges innerhalb eines Kurses
+CREATE TABLE IF NOT EXISTS tasks ( -- Einzelne Aufgaben/Challenges (können in mehreren Kursen verwendet werden)
     id SERIAL PRIMARY KEY,
-    course_id INTEGER NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     points INTEGER NOT NULL DEFAULT 0,
     image_id INTEGER NOT NULL, -- Referenz zum Docker Image
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(course_id) REFERENCES courses(id) ON DELETE CASCADE,
     FOREIGN KEY(image_id) REFERENCES images(id) ON DELETE CASCADE
+);
+
+-- Many-to-Many: Ein Kurs kann beliebig viele Aufgaben haben und umgekehrt
+CREATE TABLE IF NOT EXISTS course_tasks (
+    course_id INTEGER NOT NULL,
+    task_id INTEGER NOT NULL,
+    order_index INTEGER DEFAULT 0, -- Reihenfolge der Aufgaben im Kurs
+    PRIMARY KEY(course_id, task_id),
+    FOREIGN KEY(course_id) REFERENCES courses(id) ON DELETE CASCADE,
+    FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE
 );
 
 -- Many-to-Many: Ein Kurs kann beliebig viele Schüler haben und umgekehrt
@@ -54,11 +62,15 @@ CREATE TABLE IF NOT EXISTS instances ( -- Finish Container Instances Table which
     image_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     task_id INTEGER, -- Optional: Verknüpfung zur Aufgabe
+    course_id INTEGER, -- Optional: Verknüpfung zum Kurs
     status VARCHAR(50) DEFAULT 'created',
     FOREIGN KEY(image_id) REFERENCES images(id),
     FOREIGN KEY(user_id) REFERENCES users(id),
-    FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE SET NULL
+    FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE SET NULL,
+    FOREIGN KEY(course_id) REFERENCES courses(id) ON DELETE SET NULL
 );
+
+
 
 CREATE TABLE IF NOT EXISTS live_environments (
      id SERIAL PRIMARY KEY,
