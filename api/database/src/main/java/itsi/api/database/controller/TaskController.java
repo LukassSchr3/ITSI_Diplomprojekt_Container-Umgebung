@@ -34,12 +34,6 @@ public class TaskController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/course/{courseId}")
-    @Operation(summary = "Alle Aufgaben eines Kurses abrufen")
-    public ResponseEntity<List<Task>> getTasksByCourseId(@PathVariable Integer courseId) {
-        return ResponseEntity.ok(taskService.findByCourseId(courseId));
-    }
-
     @GetMapping("/image/{imageId}")
     @Operation(summary = "Alle Aufgaben mit einem bestimmten Image abrufen")
     public ResponseEntity<List<Task>> getTasksByImageId(@PathVariable Integer imageId) {

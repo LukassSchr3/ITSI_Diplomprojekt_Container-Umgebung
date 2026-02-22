@@ -34,21 +34,66 @@ INSERT INTO courses (name, description) VALUES
 INSERT INTO courses (name, description) VALUES 
 ('Network Hacking', 'Netzwerk-Sicherheit und Penetration Testing');
 
--- Tasks einfügen
-INSERT INTO tasks (course_id, title, description, points, image_id) VALUES 
-(1, 'SQL Injection Challenge', 'Finde die Schwachstelle in der Login-Seite', 100, 2);
+-- Tasks einfügen (OHNE course_id, da Many-to-Many)
+INSERT INTO tasks (title, description, points, image_id) VALUES 
+('SQL Injection Challenge', 'Finde die Schwachstelle in der Login-Seite', 100, 2);
 
-INSERT INTO tasks (course_id, title, description, points, image_id) VALUES 
-(1, 'XSS Attack', 'Nutze Cross-Site Scripting um die Flag zu finden', 150, 2);
+INSERT INTO tasks (title, description, points, image_id) VALUES 
+('XSS Attack', 'Nutze Cross-Site Scripting um die Flag zu finden', 150, 2);
 
-INSERT INTO tasks (course_id, title, description, points, image_id) VALUES 
-(2, 'Linux Basics', 'Grundlegende Linux Befehle und Navigation', 50, 1);
+INSERT INTO tasks (title, description, points, image_id) VALUES 
+('Linux Basics', 'Grundlegende Linux Befehle und Navigation', 50, 1);
 
-INSERT INTO tasks (course_id, title, description, points, image_id) VALUES 
-(2, 'Database Security', 'Sichere eine PostgreSQL Datenbank ab', 200, 3);
+INSERT INTO tasks (title, description, points, image_id) VALUES 
+('Database Security', 'Sichere eine PostgreSQL Datenbank ab', 200, 3);
 
-INSERT INTO tasks (course_id, title, description, points, image_id) VALUES 
-(3, 'Port Scanning', 'Scanne das Netzwerk und finde offene Ports', 250, 1);
+INSERT INTO tasks (title, description, points, image_id) VALUES 
+('Port Scanning', 'Scanne das Netzwerk und finde offene Ports', 250, 1);
+
+INSERT INTO tasks (title, description, points, image_id) VALUES 
+('CSRF Protection', 'Implementiere CSRF-Schutz in einer Webanwendung', 120, 2);
+
+INSERT INTO tasks (title, description, points, image_id) VALUES 
+('File Upload Vulnerability', 'Finde und nutze eine File Upload Schwachstelle', 180, 2);
+
+INSERT INTO tasks (title, description, points, image_id) VALUES 
+('Privilege Escalation', 'Erlange Root-Rechte auf einem Linux-System', 300, 1);
+
+INSERT INTO tasks (title, description, points, image_id) VALUES 
+('Redis Security', 'Sichere einen Redis-Server ab', 150, 4);
+
+INSERT INTO tasks (title, description, points, image_id) VALUES 
+('Python Web Scraping', 'Erstelle einen Web Scraper mit Python', 100, 6);
+
+INSERT INTO tasks (title, description, points, image_id) VALUES 
+('API Security Testing', 'Teste eine REST API auf Sicherheitslücken', 200, 5);
+
+INSERT INTO tasks (title, description, points, image_id) VALUES 
+('Docker Container Escape', 'Versuche aus einem Docker Container auszubrechen', 400, 1);
+
+-- Aufgaben zu Kursen zuordnen (Many-to-Many mit Reihenfolge)
+-- Kurs 1 (Web Security Basics): 6 Aufgaben
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (1, 1, 1);  -- SQL Injection
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (1, 2, 2);  -- XSS Attack
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (1, 6, 3);  -- CSRF Protection
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (1, 7, 4);  -- File Upload Vulnerability
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (1, 4, 5);  -- Database Security (wiederverwendet!)
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (1, 11, 6); -- API Security Testing
+
+-- Kurs 2 (Linux Administration): 5 Aufgaben
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (2, 3, 1);  -- Linux Basics
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (2, 4, 2);  -- Database Security
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (2, 8, 3);  -- Privilege Escalation
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (2, 9, 4);  -- Redis Security
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (2, 10, 5); -- Python Web Scraping
+
+-- Kurs 3 (Network Hacking): 6 Aufgaben
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (3, 3, 1);  -- Linux Basics (wiederverwendet!)
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (3, 5, 2);  -- Port Scanning
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (3, 8, 3);  -- Privilege Escalation (wiederverwendet!)
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (3, 4, 4);  -- Database Security (wiederverwendet!)
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (3, 11, 5); -- API Security Testing (wiederverwendet!)
+INSERT INTO course_tasks (course_id, task_id, order_index) VALUES (3, 12, 6); -- Docker Container Escape
 
 -- Many-to-Many: Schüler zu Kursen zuordnen
 INSERT INTO student_courses (user_id, course_id) VALUES (2, 1); -- john_doe -> Web Security Basics
@@ -58,21 +103,21 @@ INSERT INTO student_courses (user_id, course_id) VALUES (4, 1); -- dev_user -> W
 INSERT INTO student_courses (user_id, course_id) VALUES (4, 2); -- dev_user -> Linux Administration
 INSERT INTO student_courses (user_id, course_id) VALUES (4, 3); -- dev_user -> Network Hacking
 
--- Instances einfügen (mit task_id Verknüpfung)
-INSERT INTO instances (container_id, name, image_id, user_id, task_id, status)
-VALUES ('cont_1', 'web-server-1', 2, 2, 1, 'running'); -- john_doe arbeitet an SQL Injection
+-- Instances einfügen (mit task_id und course_id Verknüpfung)
+INSERT INTO instances (container_id, name, image_id, user_id, task_id, course_id, status)
+VALUES ('cont_1', 'web-server-1', 2, 2, 1, 1, 'running'); -- john_doe arbeitet an SQL Injection in Web Security Kurs
 
-INSERT INTO instances (container_id, name, image_id, user_id, task_id, status)
-VALUES ('cont_2', 'linux-basics-env', 1, 2, 3, 'running'); -- john_doe arbeitet an Linux Basics
+INSERT INTO instances (container_id, name, image_id, user_id, task_id, course_id, status)
+VALUES ('cont_2', 'linux-basics-env', 1, 2, 3, 2, 'running'); -- john_doe arbeitet an Linux Basics in Linux Admin Kurs
 
-INSERT INTO instances (container_id, name, image_id, user_id, task_id, status)
-VALUES ('cont_3', 'xss-challenge', 2, 3, 2, 'running'); -- jane_smith arbeitet an XSS
+INSERT INTO instances (container_id, name, image_id, user_id, task_id, course_id, status)
+VALUES ('cont_3', 'xss-challenge', 2, 3, 2, 1, 'running'); -- jane_smith arbeitet an XSS in Web Security Kurs
 
-INSERT INTO instances (container_id, name, image_id, user_id, task_id, status)
-VALUES ('cont_4', 'db-security', 3, 4, 4, 'stopped'); -- dev_user hat DB Security gestoppt
+INSERT INTO instances (container_id, name, image_id, user_id, task_id, course_id, status)
+VALUES ('cont_4', 'db-security', 3, 4, 4, 2, 'stopped'); -- dev_user hat DB Security in Linux Admin gestoppt
 
-INSERT INTO instances (container_id, name, image_id, user_id, task_id, status)
-VALUES ('cont_5', 'port-scan-lab', 1, 4, 5, 'created'); -- dev_user hat Port Scanning erstellt
+INSERT INTO instances (container_id, name, image_id, user_id, task_id, course_id, status)
+VALUES ('cont_5', 'port-scan-lab', 1, 4, 5, 3, 'created'); -- dev_user hat Port Scanning in Network Hacking erstellt
 
 
 

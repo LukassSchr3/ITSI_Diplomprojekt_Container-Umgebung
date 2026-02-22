@@ -8,6 +8,5 @@ import java.util.List;
 
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Integer> {
-    List<Task> findByCourseId(Integer courseId);
     List<Task> findByImageId(Integer imageId);
 }

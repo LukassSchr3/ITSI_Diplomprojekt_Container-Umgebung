@@ -22,10 +22,6 @@ public class TaskService {
         return taskRepository.findById(id);
     }
 
-    public List<Task> findByCourseId(Integer courseId) {
-        return taskRepository.findByCourseId(courseId);
-    }
-
     public List<Task> findByImageId(Integer imageId) {
         return taskRepository.findByImageId(imageId);
     }

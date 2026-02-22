@@ -18,9 +18,6 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "course_id", nullable = false)
-    private Integer courseId;
-
     @Column(nullable = false)
     private String title;
 
