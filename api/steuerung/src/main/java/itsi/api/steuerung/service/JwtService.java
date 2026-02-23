@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import itsi.api.steuerung.dto.UserDTO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,8 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private Long expiration;
 
+    private AuthService authService;
+
     public String generateToken(UserDTO user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("rolle", user.getRole());
@@ -34,7 +37,7 @@ public class JwtService {
                 .subject(user.getName())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSigningKey())
+                .signWith(getSigningKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -53,10 +56,14 @@ public class JwtService {
 
     public boolean isTokenValid(String token) {
         try {
-            extractClaims(token);
-            return true;
+            Claims claims = extractClaims(token);
+            return this.authService.authenticate(claims, "SCHUELER") ||
+                   this.authService.authenticate(claims, "LEHRER") ||
+                   this.authService.authenticate(claims, "ADMIN");
         } catch (Exception e) {
+            System.out.println("JWT Validation Error: " + e.getMessage()); // LOG PRÜFEN!
             return false;
         }
     }
 }
+

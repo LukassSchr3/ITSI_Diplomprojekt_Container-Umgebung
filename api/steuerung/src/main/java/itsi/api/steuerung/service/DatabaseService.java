@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 
@@ -80,26 +79,6 @@ public class DatabaseService {
                 .uri("/api/images/{id}", id)
                 .retrieve()
                 .bodyToMono(ImageDTO.class)
-                .timeout(Duration.ofSeconds(30))
-                .block();
-    }
-
-    public ImageDTO[] getAllImages() {
-        log.debug("Fetching all images from database");
-        return databaseWebClient.get()
-                .uri("/api/images")
-                .retrieve()
-                .bodyToMono(ImageDTO[].class)
-                .timeout(Duration.ofSeconds(30))
-                .block();
-    }
-
-    public InstanceDTO[] getAllInstances() {
-        log.debug("Fetching all instances from database");
-        return databaseWebClient.get()
-                .uri("/api/instances")
-                .retrieve()
-                .bodyToMono(InstanceDTO[].class)
                 .timeout(Duration.ofSeconds(30))
                 .block();
     }

@@ -13,7 +13,11 @@
       <div class="exercise-card"
            [class.completed]="exercise.status === 'completed'"
            [class.in-progress]="exercise.status === 'in-progress'"
-           (click)="onExerciseClick(exercise)">
+           tabindex="0"
+           role="button"
+           (click)="onExerciseClick(exercise)"
+           (keydown.enter)="onExerciseClick(exercise)"
+           (keydown.space)="onExerciseClick(exercise)">
         <div class="exercise-icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
             <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zm-9-9h8v2h-8v-2zm0 4h5v2H9v-2z"/>
@@ -26,7 +30,11 @@
             <p class="description">{{ exercise.description }}</p>
           }
 
-          <div class="progress-section" (click)="$event.stopPropagation()">
+          <div class="progress-section"
+               tabindex="0"
+               (click)="$event.stopPropagation()"
+               (keydown.enter)="$event.stopPropagation()"
+               (keydown.space)="$event.stopPropagation()">
             <div class="progress-header">
               <span class="progress-label">Fortschritt</span>
               <span class="progress-value">{{ exercise.progress }}%</span>
@@ -44,6 +52,7 @@
                 step="10"
                 [value]="exercise.progress"
                 (input)="onProgressChange(exercise.id, $event)"
+                [disabled]="!canWrite()"
                 class="progress-slider"
               />
             </div>
