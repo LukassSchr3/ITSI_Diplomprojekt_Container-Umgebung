@@ -23,8 +23,7 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private Long expiration;
 
-    @Autowired(required = false)
-    private CedarService cedarService;
+    private AuthService authService;
 
     public String generateToken(UserDTO user) {
         Map<String, Object> claims = new HashMap<>();
@@ -57,11 +56,14 @@ public class JwtService {
 
     public boolean isTokenValid(String token) {
         try {
-            extractClaims(token); // Wenn das hier scheitert, wissen wir warum
-            return true;
+            Claims claims = extractClaims(token);
+            return this.authService.authenticate(claims, "SCHUELER") ||
+                   this.authService.authenticate(claims, "LEHRER") ||
+                   this.authService.authenticate(claims, "ADMIN");
         } catch (Exception e) {
             System.out.println("JWT Validation Error: " + e.getMessage()); // LOG PRÜFEN!
             return false;
         }
     }
 }
+
