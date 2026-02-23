@@ -15,6 +15,7 @@ interface JwtClaims {
   roles?: UserRole[];
   role?: UserRole;
   rolle?: UserRole;
+  exp?: number;
 }
 
 @Injectable({
@@ -29,8 +30,20 @@ export class AuthService {
   constructor() {
     const stored = sessionStorage.getItem('auth_token');
     if (stored) {
-      this.setToken(stored);
+      if (this.isTokenExpired(stored)) {
+        sessionStorage.removeItem('auth_token');
+      } else {
+        this.setToken(stored);
+      }
     }
+
+    // Alle 30 Sekunden prüfen ob Token abgelaufen ist
+    setInterval(() => {
+      const token = this.token();
+      if (token && this.isTokenExpired(token)) {
+        this.logout();
+      }
+    }, 30_000);
   }
 
   isLoggedIn() {
@@ -100,6 +113,14 @@ export class AuthService {
 
     const roles = claims?.roles ?? (claims?.role ? [claims.role] : claims?.rolle ? [claims.rolle] : []);
     this.roles.set(roles);
+  }
+
+  isTokenExpired(token?: string): boolean {
+    const t = token ?? this.token();
+    if (!t) return true;
+    const claims = this.parseJwt(t);
+    if (!claims?.exp) return false; // kein exp-Claim → nicht als abgelaufen werten
+    return claims.exp * 1000 < Date.now();
   }
 
   private parseJwt(token: string): JwtClaims | null {

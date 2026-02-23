@@ -48,14 +48,15 @@ public class AuthController {
             }
 
             // Fetch user from database
-            UserDTO user = databaseService.getUserByEmail(loginRequest.getEmail());
-
-            if (user == null) {
+            if(databaseService.findUserByEmail(loginRequest.getEmail()).isEmpty()) {
                 log.warn("Login failed: User not found with email: {}", loginRequest.getEmail());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                     new LoginResponse(false, "Invalid email or password", null, null)
                 );
             }
+            UserDTO user = databaseService.findUserByEmail(loginRequest.getEmail()).get();
+
+            log.info("User Passwort {}",user.getPassword());
 
             // Validate password (simple comparison - in production use BCrypt!)
             if (!loginRequest.getPassword().equals(user.getPassword())) {

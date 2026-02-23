@@ -16,6 +16,7 @@ public class UserDTO {
     private Integer id;
     private String name;
     private String email;
+    private String password;
     private String className;
     private String role;
     private Timestamp createdAt;

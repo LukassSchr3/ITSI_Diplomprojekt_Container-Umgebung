@@ -69,13 +69,6 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toDTO(savedUser));
     }
 
-    @GetMapping("/email/{email}")
-    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
-        return userService.findByEmail(email)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
 
     @PutMapping("/{id}")
     @Operation(summary = "Benutzer aktualisieren", description = "Aktualisiert Benutzerdaten (Passwort ist optional)")

@@ -10,6 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -187,6 +188,22 @@ public class DatabaseService {
                 .bodyToMono(Void.class)
                 .timeout(Duration.ofSeconds(30))
                 .block();
+    }
+
+    public Optional<UserDTO> findUserByEmail(String email) {
+        log.debug("Finding user by email: {}", email);
+        try {
+            UserDTO user = databaseWebClient.get()
+                    .uri("/api/users/email/{email}", email)
+                    .retrieve()
+                    .bodyToMono(UserDTO.class)
+                    .timeout(Duration.ofSeconds(30))
+                    .block();
+            return Optional.ofNullable(user);
+        } catch (Exception e) {
+            log.warn("No user found with email: {}", email);
+            return Optional.empty();
+        }
     }
 
     public Mono<Void> updateInstanceStatus(Integer instanceId, String status) {

@@ -1,17 +1,16 @@
 import { inject } from '@angular/core';
-import { Router, CanActivateFn } from '@angular/router';
+import { CanActivateFn } from '@angular/router';
 import { AuthService } from '../service/auth.service';
 
 export const authGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
-  const router = inject(Router);
 
-  if (authService.isLoggedIn()()) {
+  if (authService.isLoggedIn()() && !authService.isTokenExpired()) {
     return true;
   }
 
-  // Nicht eingeloggt - zum Login umleiten
-  router.navigate(['/login']);
+  // Token abgelaufen oder nicht eingeloggt → logout + Login-Seite
+  authService.logout();
   return false;
 };
 
