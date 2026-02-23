@@ -7,8 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
@@ -75,43 +73,12 @@ public class DatabaseService {
                 .block();
     }
 
-    public UserDTO getUserByEmail(String email) {
-        log.debug("Fetching user with email: {}", email);
-        return databaseWebClient.get()
-                .uri("/api/users/email/{email}", email)
-                .retrieve()
-                .bodyToMono(UserDTO.class)
-                .onErrorResume(WebClientResponseException.NotFound.class, e -> Mono.empty())
-                .timeout(Duration.ofSeconds(30))
-                .block();
-    }
-
     public ImageDTO getImageById(Integer id) {
         log.debug("Fetching image with id: {}", id);
         return databaseWebClient.get()
                 .uri("/api/images/{id}", id)
                 .retrieve()
                 .bodyToMono(ImageDTO.class)
-                .timeout(Duration.ofSeconds(30))
-                .block();
-    }
-
-    public ImageDTO[] getAllImages() {
-        log.debug("Fetching all images from database");
-        return databaseWebClient.get()
-                .uri("/api/images")
-                .retrieve()
-                .bodyToMono(ImageDTO[].class)
-                .timeout(Duration.ofSeconds(30))
-                .block();
-    }
-
-    public InstanceDTO[] getAllInstances() {
-        log.debug("Fetching all instances from database");
-        return databaseWebClient.get()
-                .uri("/api/instances")
-                .retrieve()
-                .bodyToMono(InstanceDTO[].class)
                 .timeout(Duration.ofSeconds(30))
                 .block();
     }
