@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild, signal, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Image } from '../../interfaces/Image';
+import { Image } from '../../models/Image';
 import { VncService, VNCConnectionStatus } from '../../service/vnc.service';
 import { ContainerControlService } from '../../service/container-control.service';
 import axios, {AxiosResponse} from 'axios';

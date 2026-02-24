@@ -27,6 +27,7 @@ public class JwtService {
 
     public String generateToken(UserDTO user) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId());
         claims.put("rolle", user.getRole());
         claims.put("klasse", user.getClassName());
         claims.put("ablaufJahr", user.getExpiredAt());

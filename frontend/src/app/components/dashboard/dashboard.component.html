@@ -13,6 +13,11 @@
         </p>
       </div>
     </div>
+    @if (isAdmin()) {
+      <button class="admin-button" (click)="goToAdmin()">
+        Admin
+      </button>
+    }
     <button class="logout-button" (click)="logout()">
       Abmelden
     </button>
@@ -158,4 +163,108 @@
       }
     </div>
   </div>
+
+  <!-- Kurse & Aufgaben Sektion -->
+  <div class="courses-section">
+    <h2>Meine Kurse</h2>
+
+    <!-- Lade-Spinner -->
+    @if (isLoading()) {
+      <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Kurse werden geladen...</p>
+      </div>
+    }
+
+    <!-- Fehlermeldung -->
+    @if (errorMessage()) {
+      <div class="error-banner">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Keine Kurse -->
+    @if (!isLoading() && !errorMessage() && dashboardCourses().length === 0) {
+      <div class="empty-courses">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+        </svg>
+        <p>Du bist aktuell keinem Kurs zugeordnet.</p>
+      </div>
+    }
+
+    <!-- Kurs-Cards -->
+    @if (!isLoading() && dashboardCourses().length > 0) {
+      <div class="course-grid">
+        @for (course of dashboardCourses(); track course.courseId) {
+          <div class="course-card">
+            <div class="course-card-header">
+              <div class="course-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+                </svg>
+              </div>
+              <div class="course-info">
+                <h3>{{ course.courseName }}</h3>
+                <div class="course-meta">
+                  <span class="meta-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.89 3 3 3.9 3 5v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                    </svg>
+                    Eingeschrieben: {{ course.enrolledAt | date:'dd.MM.yyyy' }}
+                  </span>
+                  @if (course.expiresAt) {
+                    <span class="meta-item">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
+                      </svg>
+                      Läuft ab: {{ course.expiresAt | date:'dd.MM.yyyy' }}
+                    </span>
+                  }
+                </div>
+              </div>
+              <span class="task-count-badge">{{ course.tasks.length }} Aufgabe{{ course.tasks.length !== 1 ? 'n' : '' }}</span>
+            </div>
+
+            <!-- Aufgaben-Liste -->
+            @if (course.tasks.length > 0) {
+              <div class="task-list">
+                @for (task of course.tasks; track task.id) {
+                  <div class="task-item"
+                       [class.clickable]="!!task.imageId"
+                       (click)="onTaskClick(task)"
+                       (keydown.enter)="onTaskClick(task)"
+                       [attr.tabindex]="task.imageId ? 0 : -1"
+                       [attr.role]="task.imageId ? 'button' : null">
+                    <div class="task-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                      </svg>
+                    </div>
+                    <div class="task-content">
+                      <span class="task-title">{{ task.title }}</span>
+                      @if (task.description) {
+                        <span class="task-description">{{ task.description }}</span>
+                      }
+                    </div>
+                    @if (task.imageId) {
+                      <svg class="task-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/>
+                      </svg>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="no-tasks">Noch keine Aufgaben in diesem Kurs.</p>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
 </div>

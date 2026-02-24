@@ -61,6 +61,15 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/class/{className}")
+    @Operation(summary = "Benutzer nach Klasse abrufen")
+    public ResponseEntity<List<UserDTO>> getUsersByClass(@PathVariable String className) {
+        List<UserDTO> users = userService.findByClassName(className).stream()
+                .map(userMapper::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(users);
+    }
+
     @PostMapping
     @Operation(summary = "Neuen Benutzer erstellen", description = "Erstellt einen neuen Benutzer und gibt die Details zurück (ohne Passwort)")
     public ResponseEntity<UserDTO> createUser(@RequestBody CreateUserDTO createUserDTO) {

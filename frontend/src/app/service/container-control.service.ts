@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Image } from '../interfaces/Image';
+import { Image } from '../models/Image';
 import axios from 'axios';
 import { AuthService } from './auth.service';
 

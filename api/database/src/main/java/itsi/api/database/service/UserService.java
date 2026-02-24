@@ -30,6 +30,10 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    public List<User> findByClassName(String className) {
+        return userRepository.findByClassName(className);
+    }
+
     public User save(User user) {
         return userRepository.save(user);
     }

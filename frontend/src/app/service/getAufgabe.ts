@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {Image} from '../interfaces/Image';
+import {Image} from '../models/Image';
 
 const baseURL: string = 'https://api.example.com/aufgaben';
 
