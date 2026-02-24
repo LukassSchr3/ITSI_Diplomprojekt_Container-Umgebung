@@ -192,6 +192,7 @@ textarea {
   font-weight: 600;
 }
 
+.alert{
   margin-top: 8px;
   padding: 11px 28px;
   background: #667eea;
