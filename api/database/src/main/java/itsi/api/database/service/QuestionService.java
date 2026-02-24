@@ -22,8 +22,8 @@ public class QuestionService {
         return questionRepository.findById(id);
     }
 
-    public List<Question> findByImageId(Integer imageId) {
-        return questionRepository.findByImageId(imageId);
+    public List<Question> findByTaskId(Integer taskId) {
+        return questionRepository.findByTaskId(taskId);
     }
 
     public Question save(Question question) {

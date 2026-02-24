@@ -1,0 +1,340 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <div class="header-left">
+      <button class="back-button" (click)="goBack()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+        Dashboard
+      </button>
+      <h1>Admin-Bereich</h1>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn" [class.active]="activeTab() === 'courses'" (click)="setTab('courses')">Kurse</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'images'" (click)="setTab('images')">Images</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'liveenvs'" (click)="setTab('liveenvs')">Live-Umgebungen</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'users'" (click)="setTab('users')">Benutzer</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'tasks'" (click)="setTab('tasks')">Aufgaben</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'enrollment'" (click)="setTab('enrollment')">Kurszuordnung</button>
+  </div>
+
+  <!-- Feedback -->
+  @if (successMsg()) {
+    <div class="alert alert-success">{{ successMsg() }}</div>
+  }
+  @if (errorMsg()) {
+    <div class="alert alert-error">{{ errorMsg() }}</div>
+  }
+
+  <!-- Kurs erstellen -->
+  @if (activeTab() === 'courses') {
+    <div class="form-card">
+      <h2>Neuen Kurs erstellen</h2>
+      <form (ngSubmit)="createCourse()" #courseForm="ngForm">
+        <div class="form-group">
+          <label for="courseName">Kursname *</label>
+          <input id="courseName" type="text" [(ngModel)]="course.name" name="name" required placeholder="z.B. ITSI 5AHITN" />
+        </div>
+        <div class="form-group">
+          <label for="courseDesc">Beschreibung</label>
+          <textarea id="courseDesc" [(ngModel)]="course.description" name="description" rows="3" placeholder="Kurzbeschreibung des Kurses"></textarea>
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="loading() || !courseForm.valid">
+          @if (loading()) { Wird gespeichert... } @else { Kurs erstellen }
+        </button>
+      </form>
+    </div>
+  }
+
+  <!-- Image erstellen -->
+  @if (activeTab() === 'images') {
+    <div class="form-card">
+      <h2>Neues Docker Image erstellen</h2>
+      <form (ngSubmit)="createImage()" #imageForm="ngForm">
+        <div class="form-group">
+          <label for="imageName">Name *</label>
+          <input id="imageName" type="text" [(ngModel)]="image.name" name="name" required placeholder="z.B. Ubuntu Lab" />
+        </div>
+        <div class="form-group">
+          <label for="imageRef">Image Referenz *</label>
+          <input id="imageRef" type="text" [(ngModel)]="image.imageRef" name="imageRef" required placeholder="z.B. ubuntu:22.04" />
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="loading() || !imageForm.valid">
+          @if (loading()) { Wird gespeichert... } @else { Image erstellen }
+        </button>
+      </form>
+    </div>
+  }
+
+  <!-- Live-Umgebung erstellen -->
+  @if (activeTab() === 'liveenvs') {
+    <div class="form-card">
+      <h2>Neue Live-Umgebung erstellen</h2>
+      <form (ngSubmit)="createLiveEnv()" #liveEnvForm="ngForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="userId">User ID *</label>
+            <input id="userId" type="number" [(ngModel)]="liveEnv.userId" name="userId" required placeholder="z.B. 42" />
+          </div>
+          <div class="form-group">
+            <label for="vncPort">VNC Port *</label>
+            <input id="vncPort" type="number" [(ngModel)]="liveEnv.vncPort" name="vncPort" required placeholder="z.B. 5900" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="vncHost">VNC Host</label>
+          <input id="vncHost" type="text" [(ngModel)]="liveEnv.vncHost" name="vncHost" placeholder="z.B. 192.168.1.100" />
+        </div>
+        <div class="form-group">
+          <label for="vncPassword">VNC Passwort</label>
+          <input id="vncPassword" type="text" [(ngModel)]="liveEnv.vncPassword" name="vncPassword" placeholder="Passwort" />
+        </div>
+        <div class="form-group">
+          <label for="envStatus">Status</label>
+          <select id="envStatus" [(ngModel)]="liveEnv.status" name="status">
+            <option value="active">Aktiv</option>
+            <option value="inactive">Inaktiv</option>
+            <option value="stopped">Gestoppt</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="loading() || !liveEnvForm.valid">
+          @if (loading()) { Wird gespeichert... } @else { Live-Umgebung erstellen }
+        </button>
+      </form>
+    </div>
+  }
+
+  <!-- Benutzer erstellen -->
+  @if (activeTab() === 'users') {
+    <div class="form-card">
+      <h2>Neuen Benutzer erstellen</h2>
+      <form (ngSubmit)="createUser()" #userForm="ngForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="userName">Benutzername *</label>
+            <input id="userName" type="text" [(ngModel)]="user.name" name="name" required placeholder="z.B. max.mustermann" />
+          </div>
+          <div class="form-group">
+            <label for="userEmail">E-Mail *</label>
+            <input id="userEmail" type="email" [(ngModel)]="user.email" name="email" required placeholder="max@tgm.ac.at" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="userPassword">Passwort *</label>
+            <input id="userPassword" type="password" [(ngModel)]="user.password" name="password" required placeholder="Passwort" />
+          </div>
+          <div class="form-group">
+            <label for="userClass">Klasse</label>
+            <input id="userClass" type="text" [(ngModel)]="user.className" name="className" placeholder="z.B. 5AHITN" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="userRole">Rolle *</label>
+            <select id="userRole" [(ngModel)]="user.role" name="role">
+              <option value="SCHUELER">Schüler</option>
+              <option value="LEHRER">Lehrer</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="userExpiry">Ablaufdatum</label>
+            <input id="userExpiry" type="datetime-local" [(ngModel)]="user.expiredAt" name="expiredAt" />
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="loading() || !userForm.valid">
+          @if (loading()) { Wird gespeichert... } @else { Benutzer erstellen }
+        </button>
+      </form>
+    </div>
+  }
+
+  <!-- Aufgaben erstellen & zuordnen -->
+  @if (activeTab() === 'tasks') {
+
+    <!-- Neue Aufgabe erstellen -->
+    <div class="form-card">
+      <h2>Neue Aufgabe erstellen</h2>
+      <form (ngSubmit)="createTask()" #taskForm="ngForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="taskTitle">Titel *</label>
+            <input id="taskTitle" type="text" [(ngModel)]="task.title" name="title" required placeholder="z.B. Linux Grundlagen" />
+          </div>
+          <div class="form-group">
+            <label for="taskPoints">Punkte</label>
+            <input id="taskPoints" type="number" [(ngModel)]="task.points" name="points" min="0" placeholder="0" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="taskDesc">Beschreibung</label>
+          <textarea id="taskDesc" [(ngModel)]="task.description" name="description" rows="3" placeholder="Aufgabenbeschreibung"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="taskImage">Docker Image *</label>
+          @if (imageOptions().length > 0) {
+            <select id="taskImage" [(ngModel)]="task.imageId" name="imageId" required>
+              <option value="">– Image auswählen –</option>
+              @for (img of imageOptions(); track img.id) {
+                <option [value]="img.id">{{ img.name }}</option>
+              }
+            </select>
+          } @else {
+            <input id="taskImage" type="number" [(ngModel)]="task.imageId" name="imageId" required placeholder="Image ID" />
+          }
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="loading() || !taskForm.valid">
+          @if (loading()) { Wird gespeichert... } @else { Aufgabe erstellen }
+        </button>
+      </form>
+    </div>
+
+    <!-- Aufgabe einem Kurs zuordnen -->
+    <div class="form-card" style="margin-top: 20px;">
+      <h2>Aufgabe einem Kurs zuordnen</h2>
+      <form (ngSubmit)="assignTaskToCourse()" #assignForm="ngForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="assignCourse">Kurs *</label>
+            @if (courseOptions().length > 0) {
+              <select id="assignCourse" [(ngModel)]="assignment.courseId" name="courseId" required>
+                <option value="">– Kurs auswählen –</option>
+                @for (c of courseOptions(); track c.id) {
+                  <option [value]="c.id">{{ c.name }}</option>
+                }
+              </select>
+            } @else {
+              <input id="assignCourse" type="number" [(ngModel)]="assignment.courseId" name="courseId" required placeholder="Kurs ID" />
+            }
+          </div>
+          <div class="form-group">
+            <label for="assignTask">Aufgabe *</label>
+            @if (taskOptions().length > 0) {
+              <select id="assignTask" [(ngModel)]="assignment.taskId" name="taskId" required>
+                <option value="">– Aufgabe auswählen –</option>
+                @for (t of taskOptions(); track t.id) {
+                  <option [value]="t.id">{{ t.title }}</option>
+                }
+              </select>
+            } @else {
+              <input id="assignTask" type="number" [(ngModel)]="assignment.taskId" name="taskId" required placeholder="Task ID" />
+            }
+          </div>
+        </div>
+        <div class="form-group" style="max-width: 200px;">
+          <label for="orderIndex">Reihenfolge</label>
+          <input id="orderIndex" type="number" [(ngModel)]="assignment.orderIndex" name="orderIndex" min="0" placeholder="0" />
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="loading() || !assignForm.valid">
+          @if (loading()) { Wird zugeordnet... } @else { Aufgabe zuordnen }
+        </button>
+      </form>
+    </div>
+  }
+  <!-- Kurszuordnung -->
+  @if (activeTab() === 'enrollment') {
+
+    <!-- Einzelnen User einschreiben -->
+    <div class="form-card">
+      <h2>Einzelnen Benutzer einschreiben</h2>
+      <form (ngSubmit)="enrollSingleUser()" #enrollUserForm="ngForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="enrUser">Benutzer *</label>
+            @if (userOptions().length > 0) {
+              <select id="enrUser" [(ngModel)]="enrollUser.userId" name="userId" required>
+                <option value="">– Benutzer auswählen –</option>
+                @for (u of userOptions(); track u.id) {
+                  <option [value]="u.id">{{ u.name }}@if (u.className) { ({{ u.className }}) }</option>
+                }
+              </select>
+            } @else {
+              <input id="enrUser" type="number" [(ngModel)]="enrollUser.userId" name="userId" required placeholder="User ID" />
+            }
+          </div>
+          <div class="form-group">
+            <label for="enrUserCourse">Kurs *</label>
+            @if (courseOptions().length > 0) {
+              <select id="enrUserCourse" [(ngModel)]="enrollUser.courseId" name="courseId" required>
+                <option value="">– Kurs auswählen –</option>
+                @for (c of courseOptions(); track c.id) {
+                  <option [value]="c.id">{{ c.name }}</option>
+                }
+              </select>
+            } @else {
+              <input id="enrUserCourse" type="number" [(ngModel)]="enrollUser.courseId" name="courseId" required placeholder="Kurs ID" />
+            }
+          </div>
+        </div>
+        <div class="form-group" style="max-width: 300px;">
+          <label for="enrUserExpiry">Ablaufdatum (optional)</label>
+          <input id="enrUserExpiry" type="datetime-local" [(ngModel)]="enrollUser.expiresAt" name="expiresAt" />
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="loading() || !enrollUserForm.valid">
+          @if (loading()) { Wird eingeschrieben... } @else { Benutzer einschreiben }
+        </button>
+      </form>
+    </div>
+
+    <!-- Gesamte Klasse einschreiben -->
+    <div class="form-card" style="margin-top: 20px;">
+      <h2>Gesamte Klasse einschreiben</h2>
+      <form (ngSubmit)="enrollByClass()" #enrollClassForm="ngForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="enrClass">Klasse *</label>
+            @if (classOptions().length > 0) {
+              <select id="enrClass" [(ngModel)]="enrollClass.className" name="className" required>
+                <option value="">– Klasse auswählen –</option>
+                @for (cls of classOptions(); track cls) {
+                  <option [value]="cls">{{ cls }}</option>
+                }
+              </select>
+            } @else {
+              <input id="enrClass" type="text" [(ngModel)]="enrollClass.className" name="className" required placeholder="z.B. 5AHITN" />
+            }
+          </div>
+          <div class="form-group">
+            <label for="enrClassCourse">Kurs *</label>
+            @if (courseOptions().length > 0) {
+              <select id="enrClassCourse" [(ngModel)]="enrollClass.courseId" name="courseId" required>
+                <option value="">– Kurs auswählen –</option>
+                @for (c of courseOptions(); track c.id) {
+                  <option [value]="c.id">{{ c.name }}</option>
+                }
+              </select>
+            } @else {
+              <input id="enrClassCourse" type="number" [(ngModel)]="enrollClass.courseId" name="courseId" required placeholder="Kurs ID" />
+            }
+          </div>
+        </div>
+        <div class="form-group" style="max-width: 300px;">
+          <label for="enrClassExpiry">Ablaufdatum (optional)</label>
+          <input id="enrClassExpiry" type="datetime-local" [(ngModel)]="enrollClass.expiresAt" name="expiresAt" />
+        </div>
+        @if (enrollClass.className) {
+          <p class="class-preview">
+            <strong>{{ countUsersInClass(enrollClass.className) }}</strong> Benutzer in dieser Klasse gefunden.
+          </p>
+        }
+        <button type="submit" class="btn-primary" [disabled]="loading() || !enrollClassForm.valid">
+          @if (loading()) { Wird eingeschrieben... } @else { Klasse einschreiben }
+        </button>
+      </form>
+
+      @if (enrollResult()) {
+        <div class="enroll-result">
+          <span class="result-enrolled">✓ {{ enrollResult()!.enrolled }} eingeschrieben</span>
+          @if (enrollResult()!.skipped > 0) {
+            <span class="result-skipped">⟳ {{ enrollResult()!.skipped }} bereits vorhanden</span>
+          }
+        </div>
+      }
+    </div>
+  }
+
+</div>
