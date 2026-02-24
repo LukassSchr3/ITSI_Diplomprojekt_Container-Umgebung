@@ -34,10 +34,10 @@ public class QuestionController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/image/{imageId}")
-    @Operation(summary = "Fragen nach Image-ID abrufen", description = "Gibt alle Fragen für ein bestimmtes Image zurück")
-    public ResponseEntity<List<Question>> getQuestionsByImageId(@PathVariable Integer imageId) {
-        List<Question> questions = questionService.findByImageId(imageId);
+    @GetMapping("/task/{taskId}")
+    @Operation(summary = "Fragen nach Task-ID abrufen", description = "Gibt alle Fragen für eine bestimmte Aufgabe zurück")
+    public ResponseEntity<List<Question>> getQuestionsByTaskId(@PathVariable Integer taskId) {
+        List<Question> questions = questionService.findByTaskId(taskId);
         return ResponseEntity.ok(questions);
     }
 

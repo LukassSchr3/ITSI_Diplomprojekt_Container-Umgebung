@@ -21,8 +21,8 @@ public class Question {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "image_id", nullable = false)
-    private Integer imageId;
+    @Column(name = "task_id", nullable = false)
+    private Integer taskId;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String frage;

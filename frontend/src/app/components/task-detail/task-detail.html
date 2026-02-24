@@ -1,0 +1,125 @@
+<div class="task-detail-container">
+
+  <!-- Header -->
+  <div class="task-header">
+    <button class="back-button" (click)="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Zurück
+    </button>
+  </div>
+
+  <!-- Lade-Zustand -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Aufgabe wird geladen...</p>
+    </div>
+  }
+
+  <!-- Fehler -->
+  @if (errorMessage()) {
+    <div class="error-banner">{{ errorMessage() }}</div>
+  }
+
+  @if (!isLoading() && !errorMessage() && task()) {
+
+    <!-- Aufgaben-Titel + Start-Button -->
+    <div class="task-title-section">
+      <h1 class="task-title">{{ task()!.title }}</h1>
+      @if (task()!.description) {
+        <p class="task-description">{{ task()!.description }}</p>
+      }
+      <button class="start-button" (click)="navigateToImage()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Aufgabe starten
+      </button>
+    </div>
+
+    @if (questions().length > 0) {
+      <!-- Trennlinie -->
+      <div class="divider">
+        <span>Fragen zur Aufgabe</span>
+      </div>
+
+      <!-- Hinweis -->
+      <p class="hint-text">
+        Bearbeite die Aufgabe und beantworte dabei die folgenden Fragen.
+      </p>
+
+      <!-- Fortschrittsanzeige -->
+      <div class="progress-section">
+        <div class="progress-label">
+          Frage {{ currentIndex() + 1 }} von {{ questions().length }}
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="progressPercent()"></div>
+        </div>
+      </div>
+
+      <!-- Alle beantwortet -->
+      @if (allAnswered()) {
+        <div class="all-done-banner">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+          Alle Fragen erfolgreich beantwortet!
+        </div>
+      }
+
+      <!-- Fragen-Karte -->
+      @if (currentQuestion() && !allAnswered()) {
+        <div class="question-card" [class.correct]="feedback() === 'correct'" [class.wrong]="feedback() === 'wrong'">
+          <p class="question-text">{{ currentQuestion()!.frage }}</p>
+
+          <div class="answers-list">
+            @for (antwort of parsedAnswers(); track $index) {
+              <button
+                class="answer-button"
+                [class.selected]="selectedAnswerIndex() === $index"
+                [class.correct-answer]="feedback() !== null && antwort.richtig"
+                [class.wrong-answer]="feedback() === 'wrong' && selectedAnswerIndex() === $index && !antwort.richtig"
+                [disabled]="feedback() !== null"
+                (click)="selectAnswer($index)">
+                <span class="answer-letter">{{ 'ABCD'[$index] }}</span>
+                <span class="answer-text">{{ antwort.text }}</span>
+              </button>
+            }
+          </div>
+
+          @if (feedback() === 'correct') {
+            <div class="feedback correct-feedback">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+              Richtig!
+            </div>
+          }
+          @if (feedback() === 'wrong') {
+            <div class="feedback wrong-feedback">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              Falsch! Versuche es erneut.
+            </div>
+          }
+
+          <div class="action-row">
+            @if (feedback() === null) {
+              <button class="submit-button" [disabled]="selectedAnswerIndex() === null" (click)="submitAnswer()">
+                Antwort bestätigen
+              </button>
+            }
+            @if (feedback() === 'correct') {
+              <button class="next-button" (click)="nextQuestion()">
+                Nächste Frage
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+              </button>
+            }
+            @if (feedback() === 'wrong') {
+              <button class="retry-button" (click)="retryAnswer()">
+                Nochmal versuchen
+              </button>
+            }
+          </div>
+        </div>
+      }
+    }
+  }
+</div>
+

@@ -6,6 +6,7 @@ import { AuthService } from '../../service/auth.service';
 import { PermissionService } from '../../service/permission.service';
 import { Exercise } from '../../models/exercise.model';
 import { DashboardCourse, CourseTask } from '../../models/DashboardCourse';
+import { StudentCourse } from '../../models/StudentCourse';
 import apiClient from '../../service/api.service';
 
 @Component({
@@ -56,21 +57,41 @@ export class DashboardComponent implements OnInit {
 
   private async loadCourses(): Promise<void> {
     const userId = this.authService.getUserId()();
-    if (!userId) return;
+    if (!userId) {
+      this.errorMessage.set('Kein Benutzer angemeldet.');
+      return;
+    }
 
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
     try {
-      const response = await apiClient.get<DashboardCourse[]>(
-        `/api/student-courses/user/${userId}/dashboard`
+      const studentCoursesRes = await apiClient.get<StudentCourse[]>(
+        `/api/student-courses/user/${userId}`
       );
-      console.log('Kursdaten geladen:', response.data);
-      this.dashboardCourses.set(response.data ?? []);
-      console.log('dashboardCourses signal:', this.dashboardCourses());
-    } catch (err: unknown) {
-      console.error('Fehler beim Laden der Kurse:', err);
-      this.errorMessage.set('Die Kursdaten konnten nicht geladen werden. Bitte versuche es später erneut.');
+      const studentCourses = studentCoursesRes.data ?? [];
+
+      const dashboardCourses = await Promise.all(
+        studentCourses.map(async (sc) => {
+          const [courseRes, tasksRes] = await Promise.all([
+            apiClient.get<{ id: number; name: string }>(`/api/courses/${sc.courseId}`),
+            apiClient.get<CourseTask[]>(`/api/course-tasks/course/${sc.courseId}/tasks`)
+          ]);
+
+          const course: DashboardCourse = {
+            courseId: sc.courseId,
+            courseName: courseRes.data?.name ?? `Kurs ${sc.courseId}`,
+            enrolledAt: sc.enrolledAt,
+            expiresAt: sc.expiresAt,
+            tasks: tasksRes.data ?? []
+          };
+          return course;
+        })
+      );
+
+      this.dashboardCourses.set(dashboardCourses);
+    } catch {
+      this.errorMessage.set('Die Kursdaten konnten nicht geladen werden. Bitte versuche es spater erneut.');
     } finally {
       this.isLoading.set(false);
     }
@@ -91,8 +112,8 @@ export class DashboardComponent implements OnInit {
   }
 
   onTaskClick(task: CourseTask) {
-    if (task.imageId) {
-      this.router.navigate(['/image', task.imageId]);
+    if (task.id) {
+      this.router.navigate(['/task', task.id]);
     }
   }
 
