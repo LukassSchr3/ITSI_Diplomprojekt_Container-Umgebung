@@ -2,9 +2,8 @@ name: Build and Test ITSI Project
 
 on:
   push:
-    branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -84,7 +83,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '21'
+        java-version: '25'
         cache: 'gradle'
         
     - name: Setup Gradle
@@ -105,6 +104,43 @@ jobs:
         path: api/database/build/libs/*.jar
         retention-days: 7
 
+  test-database-api:
+    name: Unit Tests Database API
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '25'
+        cache: 'gradle'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    - name: Grant execute permission for gradlew
+      working-directory: ./api/database
+      run: chmod +x gradlew
+
+    - name: Run unit tests
+      working-directory: ./api/database
+      run: ./gradlew test --no-daemon
+
+    - name: Upload test reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: database-api-test-reports
+        path: |
+          api/database/build/reports/tests/test/
+          api/database/build/test-results/test/
+          api/database/build/reports/jacoco/
+        retention-days: 7
+
   build-steuerung-api:
     name: Build Steuerung API (Spring Boot)
     runs-on: ubuntu-latest
@@ -117,7 +153,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '21'
+        java-version: '25'
         cache: 'gradle'
         
     - name: Setup Gradle
@@ -136,6 +172,43 @@ jobs:
       with:
         name: steuerung-api-jar
         path: api/steuerung/build/libs/*.jar
+        retention-days: 7
+
+  test-steuerung-api:
+    name: Unit Tests Steuerung API
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '25'
+        cache: 'gradle'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    - name: Grant execute permission for gradlew
+      working-directory: ./api/steuerung
+      run: chmod +x gradlew
+
+    - name: Run unit tests
+      working-directory: ./api/steuerung
+      run: ./gradlew test --no-daemon
+
+    - name: Upload test reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: steuerung-api-test-reports
+        path: |
+          api/steuerung/build/reports/tests/test/
+          api/steuerung/build/test-results/test/
+          api/steuerung/build/reports/jacoco/
         retention-days: 7
 
   build-frontend:
@@ -171,7 +244,7 @@ jobs:
   integration-test:
     name: Integration Test (All Components)
     runs-on: ubuntu-latest
-    needs: [build-database, build-backend, build-api, build-steuerung-api, build-frontend]
+    needs: [build-database, build-backend, build-api, test-database-api, build-steuerung-api, test-steuerung-api, build-frontend]
     
     steps:
     - name: Checkout code
@@ -201,7 +274,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '21'
+        java-version: '25'
         
     - name: Start Database API Server
       run: |
