@@ -164,7 +164,13 @@ func RegisterInstanceRoutes(router *gin.Engine, cli *client.Client) {
 		}
 
 		log.Printf("Stopping container: %s", givenInstance.Name)
-		if err := cli.ContainerStop(ctx, existing.ID, container.StopOptions{}); err != nil {
+
+		timeout := 30
+		stopOptions := container.StopOptions{
+			Timeout: &timeout,
+		}
+
+		if err := cli.ContainerStop(ctx, existing.ID, stopOptions); err != nil {
 			log.Printf("Failed to stop container %s: %v", givenInstance.Name, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to stop container: " + err.Error()})
 			return
@@ -206,7 +212,7 @@ func RegisterInstanceRoutes(router *gin.Engine, cli *client.Client) {
 			return
 		}
 
-		//
+		// Get full container details to preserve configuration
 		containerInfo, err := cli.ContainerInspect(ctx, existing.ID)
 		if err != nil {
 			log.Printf("Failed to inspect container %s: %v", givenInstance.Name, err)
@@ -217,7 +223,7 @@ func RegisterInstanceRoutes(router *gin.Engine, cli *client.Client) {
 		imageRef := containerInfo.Config.Image
 		log.Printf("Resetting container %s with image: %s", givenInstance.Name, imageRef)
 
-		//
+		// Stop if running
 		if existing.State == container.StateRunning {
 			log.Printf("Stopping container %s before reset", givenInstance.Name)
 			if err := cli.ContainerStop(ctx, existing.ID, container.StopOptions{}); err != nil {
@@ -227,10 +233,10 @@ func RegisterInstanceRoutes(router *gin.Engine, cli *client.Client) {
 			}
 		}
 
-		//
+		// Remove container
 		log.Printf("Removing container %s", givenInstance.Name)
 		if err := cli.ContainerRemove(ctx, existing.ID, container.RemoveOptions{
-			RemoveVolumes: true, //
+			RemoveVolumes: true,
 			Force:         true,
 		}); err != nil {
 			log.Printf("Failed to remove container %s: %v", givenInstance.Name, err)
@@ -238,14 +244,13 @@ func RegisterInstanceRoutes(router *gin.Engine, cli *client.Client) {
 			return
 		}
 
-		//
+		// Recreate with SAME configuration (preserving ports, env, etc.)
 		log.Printf("Recreating container %s with image: %s", givenInstance.Name, imageRef)
 		newContainer, err := cli.ContainerCreate(
 			ctx,
-			&container.Config{
-				Image: imageRef,
-			},
-			nil, nil, nil,
+			containerInfo.Config,     // Preserve original config
+			containerInfo.HostConfig, // Preserve host config (ports, resources)
+			nil, nil,
 			givenInstance.Name,
 		)
 
@@ -255,7 +260,7 @@ func RegisterInstanceRoutes(router *gin.Engine, cli *client.Client) {
 			return
 		}
 
-		//
+		// Start the reset container
 		log.Printf("Starting reset container %s", givenInstance.Name)
 		if err := cli.ContainerStart(ctx, newContainer.ID, container.StartOptions{}); err != nil {
 			log.Printf("Failed to start reset container %s: %v", givenInstance.Name, err)
