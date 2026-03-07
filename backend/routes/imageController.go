@@ -2,6 +2,7 @@ package routes
 
 import (
 	"ITSIContainerBackend/models"
+	"ITSIContainerBackend/utils"
 	"io"
 	"log"
 	"net/http"
@@ -26,6 +27,35 @@ func RegisterImageRoutes(router *gin.Engine, cli *client.Client) {
 		c.JSON(http.StatusOK, list)
 	})
 
+	imageRoute.POST("/inspect", func(c *gin.Context) {
+		var req struct {
+			Reference string `json:"reference" binding:"required"`
+		}
+
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx := c.Request.Context()
+
+		inspect, _, err := cli.ImageInspectWithRaw(ctx, req.Reference)
+		if err != nil {
+			log.Printf("Failed to inspect image %s: %v", req.Reference, err)
+			c.JSON(http.StatusNotFound, gin.H{"error": "Image not found: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"id":           inspect.ID,
+			"tags":         inspect.RepoTags,
+			"size":         inspect.Size,
+			"created":      inspect.Created,
+			"architecture": inspect.Architecture,
+			"os":           inspect.Os,
+		})
+	})
+
 	// POST /images/add - Zieht ein Docker Image herunter
 	imageRoute.POST("/add", func(c *gin.Context) {
 		var givenImage models.Image
@@ -34,13 +64,31 @@ func RegisterImageRoutes(router *gin.Engine, cli *client.Client) {
 			return
 		}
 
-		// Überprüft ob Reference vorhanden ist
 		if givenImage.Reference == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "imageRef is required"})
 			return
 		}
 
 		ctx := c.Request.Context()
+
+		// Check if image already exists
+		exists, err := utils.ImageExists(ctx, cli, givenImage.Reference)
+		if err != nil {
+			log.Printf("Failed to check if image exists: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check image: " + err.Error()})
+			return
+		}
+
+		if exists {
+			log.Printf("Image %s already exists, skipping pull", givenImage.Reference)
+			c.JSON(http.StatusOK, gin.H{
+				"message": "Image already exists",
+				"image":   givenImage,
+				"skipped": true,
+			})
+			return
+		}
+
 		log.Printf("Pulling image: %s", givenImage.Reference)
 
 		out, err := cli.ImagePull(ctx, givenImage.Reference, image.PullOptions{})
@@ -51,7 +99,6 @@ func RegisterImageRoutes(router *gin.Engine, cli *client.Client) {
 		}
 		defer out.Close()
 
-		//
 		buf := new(strings.Builder)
 		if _, err := io.Copy(buf, out); err != nil {
 			log.Printf("Failed to read pull output for %s: %v", givenImage.Reference, err)
@@ -59,7 +106,6 @@ func RegisterImageRoutes(router *gin.Engine, cli *client.Client) {
 			return
 		}
 
-		//
 		if strings.Contains(buf.String(), `"error"`) {
 			log.Printf("Docker pull failed for %s: %s", givenImage.Reference, buf.String())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Docker pull failed: " + buf.String()})

@@ -2,8 +2,15 @@ package main
 
 import (
 	"ITSIContainerBackend/routes"
+	"ITSIContainerBackend/services"
+	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/docker/docker/client"
@@ -25,6 +32,14 @@ func main() {
 	}()
 	log.Println("Docker client started")
 
+	liveEnvService := services.NewLiveEnvService(cli)
+	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
+	defer cleanupCancel()
+
+	maxIdleTime := 2 * time.Hour
+	cleanupInterval := 30 * time.Minute
+	liveEnvService.StartCleanupRoutine(cleanupCtx, maxIdleTime, cleanupInterval)
+
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:9090"},
@@ -41,9 +56,32 @@ func main() {
 	routes.RegisterInstanceRoutes(router, cli)
 	routes.RegisterLiveEnvironmentRoutes(router, cli)
 
-	err = router.Run(":3030")
-	if err != nil {
-		log.Fatal("Error starting server:\n", err)
+	srv := &http.Server{
+		Addr:    ":3030",
+		Handler: router,
 	}
-	log.Println("Listening on port 3030")
+
+	go func() {
+		log.Println("Listening on port 3030")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server error: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Shutting down server...")
+
+	cleanupCancel()
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+
+	log.Println("Server exited gracefully")
 }

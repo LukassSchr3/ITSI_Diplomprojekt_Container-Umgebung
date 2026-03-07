@@ -1,20 +1,27 @@
 FROM kalilinux/kali-rolling
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV DISPLAY=:99
+ENV VNC_RESOLUTION=1280x720
 
 RUN apt update && apt upgrade -y && \
     apt install -y \
         kali-linux-headless \
+        xfce4 xfce4-terminal xfce4-goodies \
+        x11vnc xvfb novnc websockify \
         net-tools iproute2 iputils-ping \
-        novnc \
-        x11vnc \
-        xvfb \
-        websockify \
-        curl wget git sudo nano vim && \
-    apt clean
+        curl wget git sudo nano vim \
+        dbus-x11 supervisor \
+    && apt clean && rm -rf /var/lib/apt/lists/*
 
-CMD Xvfb :99 -screen 0 1024x768x16 & \
-    x11vnc -display :99 -forever -shared & \
-    websockify --web=/usr/share/novnc 6080 localhost:5900
+# Copy startup script
+COPY start-vnc.sh /opt/start-vnc.sh
+RUN chmod +x /opt/start-vnc.sh
 
-CMD ["/bin/bash"]
+# Optional: Configure x11vnc password (can be overridden by env var)
+RUN mkdir -p ~/.vnc && \
+    x11vnc -storepasswd kali ~/.vnc/passwd || true
+
+EXPOSE 6080 5900
+
+CMD ["/opt/start-vnc.sh"]
