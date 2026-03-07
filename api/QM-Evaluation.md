@@ -2,7 +2,7 @@
 **Projekt:** Container-Umgebung für interaktives Security-Training  
 **Evaluierte Komponenten:** Database API (Port 5050) & Steuerung API (Port 9090)  
 **Evaluationsdatum:** 01. März 2026  
-**Durchgeführt von:** Projektgruppe ITSI, 5. Jahrgang TGM  
+**Durchgeführt von:** Lukas Schrenk
 
 ---
 
@@ -50,12 +50,6 @@ Die Evaluation wurde auf **gesamten produktiven Quellcode** beider APIs angewend
 
 Unit-Tests wurden für die **User-Domäne** als repräsentative Stichprobe implementiert (Controller, Service, Repository, Mapper).
 
-### 2.2 Ausführung
-
-```
-quality-check.bat   →   läuft automatisiert für beide APIs
-                    →   Reports in C:\tmp\itsi-build\{database|steuerung}\reports\
-```
 
 Laufzeit gesamt: ~30 Sekunden (ohne Gradle-Download)
 
@@ -174,7 +168,7 @@ Steuerung API  ████████████████████     
 | Architekturregeln | 7/7 (100%) ✅ | 7/7 (100%) ✅ |
 | Checkstyle-Warnungen | 22 ⚠️ | 8 ⚠️ |
 | Test-Abdeckung (Klassen) | ~8% (User-Domäne) ⚠️ | ~10% ⚠️ |
-| **Gesamtbewertung** | **gut** | **gut** |
+| **Gesamtbewertung** | **verbesserungswüdigt** | **verbesserungswürdigt** |
 
 ---
 
@@ -202,8 +196,6 @@ Nur die User-Domäne ist getestet. Es existieren **12 Services** in der Database
 **⚠️ Ungenutzte Imports in Steuerung:**  
 4 ungenutzte Imports deuten auf refaktorisierten Code hin, bei dem Importe nicht bereinigt wurden. Indikator für technische Schulden.
 
-**⚠️ Spring Security ohne vollständige Konfiguration:**  
-Im Test-Log sichtbar: `Using generated security password` – die Security-Konfiguration ist für Produktion noch nicht finalisiert.
 
 ---
 
@@ -218,10 +210,10 @@ Die folgenden Verbesserungen werden bis Ostern umgesetzt und im ACT-Bericht doku
 | 🔴 Hoch | Unit-Tests für alle Services erweitern (mind. CourseService, TaskService, InstanceService, ContainerService) | ~3-4h | SDG 4, SDG 9 |
 | 🔴 Hoch | Integration-Tests für Container-Start/Stop/Reset-Endpunkte | ~2-3h | SDG 9 |
 | 🟡 Mittel | Wildcard-Imports durch explizite Imports ersetzen (alle 24 Vorkommen) | ~1h | SDG 9 |
-| 🟡 Mittel | Ungenutzte Imports entfernen (4 in Steuerung API) | ~15min | SDG 9 |
+| 🟡 Mittel | Ungenutzte Imports entfernen (4 in Steuerung API) | ~5min | SDG 9 |
 | 🟡 Mittel | Newline am Dateiende hinzufügen | ~5min | SDG 9 |
 | 🟢 Niedrig | Javadoc für alle public API-Methoden ergänzen | ~3-4h | SDG 4, SDG 17 |
-| 🟢 Niedrig | Spring Security Produktionskonfiguration abschließen | ~2h | SDG 16 |
+
 
 ### 5.2 SDG-Zuordnung im Detail
 
@@ -257,18 +249,7 @@ Vollständige Dokumentation (Javadoc, OpenAPI/Swagger bereits integriert) ermög
 - ArchUnit: 1.3.0
 - Checkstyle: 10.12.4
 
-### Report-Pfade (lokal)
-```
-C:\tmp\itsi-build\database\reports\tests\test\index.html      ← JUnit + ArchUnit
-C:\tmp\itsi-build\database\reports\checkstyle\main.html       ← Checkstyle
-C:\tmp\itsi-build\steuerung\reports\tests\test\index.html     ← JUnit + ArchUnit
-C:\tmp\itsi-build\steuerung\reports\checkstyle\main.html      ← Checkstyle
-```
 
-### Ausführen der Evaluation
-```bat
-api\quality-check.bat
-```
 
 ---
 
@@ -281,3 +262,12 @@ api\quality-check.bat
 | 3 | **2× kein Newline am Dateiende** | Steuerung API | 🟡 Mittel |
 | 4 | **Geringe Testabdeckung** – nur User-Domäne getestet, 11 Services ohne Tests | Database API, Steuerung API | 🔴 Hoch |
 | 5 | **Spring Security nicht produktionsreif** – generiertes Passwort statt echter Konfiguration | Steuerung API | 🔴 Hoch |
+
+## Legende
+
+| SDG | Offizielle UN-Definition | Praktische Bedeutung in der Softwareentwicklung |
+| :---: | :--- | :--- |
+| **SDG 4** | Inklusive, gleichberechtigte und hochwertige Bildung gewährleisten und Möglichkeiten lebenslangen Lernens für alle fördern. | **Wissenstransfer & E-Learning:** Entwicklung stabiler Lernplattformen, Barrierefreiheit (Accessibility) im Code, Mentoring im Team und Bereitstellung von Open-Source-Lernmaterialien. |
+| **SDG 9** | Eine widerstandsfähige Infrastruktur aufbauen, breitenwirksame und nachhaltige Industrialisierung fördern und Innovationen unterstützen. | **Robuste Architektur & Code-Qualität:** Aufbau ausfallsicherer IT-Infrastrukturen (z. B. Container-Umgebungen), Reduzierung technischer Schulden (Refactoring, Testing) und Implementierung innovativer, effizienter Algorithmen. |
+| **SDG 16** | Friedliche und inklusive Gesellschaften fördern, allen Menschen Zugang zur Justiz ermöglichen und leistungsfähige, rechenschaftspflichtige und inklusive Institutionen aufbauen. | **IT-Security & Datenschutz:** Einhaltung von Datenschutzrichtlinien (z. B. DSGVO), Implementierung sicherer Authentifizierungssysteme (z. B. JWT), sichere Verwaltung von Nutzerdaten und Vermeidung von diskriminierenden Algorithmen. |
+| **SDG 17** | Umsetzungsmittel stärken und die Globale Partnerschaft für nachhaltige Entwicklung mit neuem Leben erfüllen. | **Kollaboration & Open-Source:** Förderung der Zusammenarbeit durch saubere Dokumentationen (z. B. Javadoc, Swagger-APIs), Teilen von Codebausteinen, Standardisierung von Schnittstellen und globale Dev-Partnerschaften. |
