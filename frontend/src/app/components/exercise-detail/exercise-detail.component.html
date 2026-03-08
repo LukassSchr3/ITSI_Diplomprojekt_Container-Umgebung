@@ -1,0 +1,74 @@
+<div class="detail-container">
+
+  <!-- Not Found -->
+  @if (notFound()) {
+    <div class="not-found">
+      <p>Übung nicht gefunden.</p>
+      <a routerLink="/exercises" class="back-btn">← Zurück zur Übersicht</a>
+    </div>
+  }
+
+  @if (exercise(); as ex) {
+
+    <!-- Header -->
+    <div class="page-header">
+      <button class="back-btn" (click)="goBack()" type="button">← Zurück</button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero-card">
+      <div class="hero-top">
+        <h1>{{ ex.title }}</h1>
+        <p class="goal-text">{{ ex.goal }}</p>
+      </div>
+
+      <div class="tools-row">
+        <span class="tools-label">Tools:</span>
+        @for (tool of ex.tools; track tool) {
+          <span class="tool-chip">{{ tool }}</span>
+        }
+      </div>
+
+      <button class="start-btn" (click)="startLiveEnv()" type="button">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Live-Umgebung starten
+      </button>
+    </div>
+
+    <!-- Background -->
+    <div class="section-card">
+      <h2 class="section-title">Hintergrundinformation</h2>
+      <p class="background-text">{{ ex.background }}</p>
+    </div>
+
+    <!-- Steps -->
+    <div class="section-card">
+      <h2 class="section-title">Aufgabenstellung ({{ ex.steps.length }} Schritte)</h2>
+
+      <div class="steps-list">
+        @for (step of ex.steps; track step.nr) {
+          <div class="step-item">
+            <div class="step-nr">{{ step.nr }}</div>
+            <div class="step-content">
+              <h3 class="step-title">{{ step.title }}</h3>
+              <p class="step-desc">{{ step.description }}</p>
+              @if (step.hint) {
+                <div class="hint-box">
+                  <span class="hint-label">Tipp:</span>
+                  <span class="hint-text">{{ step.hint }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Deliverable -->
+    <div class="section-card deliverable-card">
+      <h2 class="section-title">Abgabe</h2>
+      <p class="deliverable-text">{{ ex.deliverable }}</p>
+    </div>
+
+  }
+</div>
