@@ -1,3 +1,10 @@
+export type Bewertung =
+  'Grundkompetenz nicht erfüllt' |
+  'Grundkompetenz überwiegend erfüllt' |
+  'Grundkompetenz vollständig erfüllt' |
+  'Erweiterte Kompetenz überwiegend erfüllt' |
+  'Erweiterte Kompetenz vollständig erfüllt';
+
 export interface Exercise {
   id: string;
   title: string;
@@ -5,8 +12,5 @@ export interface Exercise {
   progress: number;
   status: 'not-started' | 'in-progress' | 'completed';
   category?: string;
-  imageId?: string; // ID des zugehörigen Docker-Images
-
-  // true = vom Lehrer bewertet, false/undefined = noch nicht bewertet
-  bewertet?: boolean;
+  bewertung?: Bewertung;
 }

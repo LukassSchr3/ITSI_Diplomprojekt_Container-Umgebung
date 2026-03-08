@@ -69,5 +69,23 @@ export class ExerciseService {
       })
     );
   }
+
+  getAllExercises() {
+    return this.exercises.asReadonly();
+  }
+
+  addExercise(exercise: Exercise): void {
+    this.exercises.update(exercises => [...exercises, exercise]);
+  }
+
+  updateExercise(id: string, updatedExercise: Partial<Exercise>): void {
+    this.exercises.update(exercises =>
+      exercises.map(ex => ex.id === id ? { ...ex, ...updatedExercise } : ex)
+    );
+  }
+
+  deleteExercise(id: string): void {
+    this.exercises.update(exercises => exercises.filter(ex => ex.id !== id));
+  }
 }
 

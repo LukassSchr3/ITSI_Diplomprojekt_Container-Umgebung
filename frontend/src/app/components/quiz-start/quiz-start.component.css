@@ -1,0 +1,161 @@
+.quiz-start-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  padding: 20px;
+}
+
+.quiz-start-card {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  width: 100%;
+  max-width: 500px;
+  padding: 40px;
+}
+
+.quiz-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.quiz-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 10px 0;
+}
+
+.quiz-description {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.quiz-info {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 25px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.info-item svg {
+  color: #667eea;
+}
+
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.form-group input {
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  font-size: 15px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.form-group input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 3px;
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid #f5c6cb;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.back-button {
+  flex: 1;
+  padding: 12px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.back-button:hover {
+  background: var(--bg-primary);
+}
+
+.start-button {
+  flex: 2;
+  padding: 12px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.start-button:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.start-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-state {
+  text-align: center;
+  padding: 20px;
+}
+
+.error-state .error-message {
+  margin-bottom: 20px;
+}
+
+.error-state .back-button {
+  width: 100%;
+}

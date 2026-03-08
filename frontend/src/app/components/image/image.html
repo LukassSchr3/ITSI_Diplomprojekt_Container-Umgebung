@@ -1,4 +1,5 @@
 <div class="image-container">
+  <!-- Header -->
   <div class="image-header">
     <div class="header-info">
       <a routerLink="/" class="back-button">
@@ -12,21 +13,85 @@
       }
     </div>
 
-    <div class="status-indicator" [class.connected]="!isConnecting()" [class.connecting]="isConnecting()">
-      <span class="status-dot"></span>
-      <span class="status-text">{{ connectionStatus() }}</span>
+    <div class="header-right">
+      <div class="status-indicator" [class.connected]="!isConnecting()" [class.connecting]="isConnecting()">
+        <span class="status-dot"></span>
+        <span class="status-text">{{ connectionStatus() }}</span>
+      </div>
+
+      <button class="sidebar-toggle-btn" (click)="toggleSidebar()" type="button"
+              [attr.aria-label]="sidebarOpen() ? 'Übungen ausblenden' : 'Übungen einblenden'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 18V6M15 18V6M3 6h18M3 12h18M3 18h18"/>
+        </svg>
+        Übungen
+      </button>
     </div>
   </div>
 
-  <div class="vnc-wrapper">
-    @if (isConnecting()) {
-      <div class="loading-overlay">
-        <div class="spinner"></div>
-        <p>{{ connectionStatus() }}</p>
-      </div>
-    }
+  <!-- Body: VNC + Sidebar -->
+  <div class="image-body">
+    <!-- VNC -->
+    <div class="vnc-wrapper">
+      @if (isConnecting()) {
+        <div class="loading-overlay">
+          <div class="spinner"></div>
+          <p>{{ connectionStatus() }}</p>
+        </div>
+      }
+      <div #vncScreen class="vnc-screen"></div>
+    </div>
 
-    <div #vncScreen class="vnc-screen"></div>
+    <!-- Exercise Sidebar -->
+    <aside class="exercise-sidebar" [class.open]="sidebarOpen()">
+      <div class="sidebar-header">
+        <h3>Übungen &amp; Fragen</h3>
+        <button class="close-btn" (click)="toggleSidebar()" type="button" aria-label="Schließen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="sidebar-content">
+        @for (exercise of exercises(); track exercise.id) {
+          <div class="accordion-item" [class.expanded]="isExpanded(exercise.id)">
+            <button class="accordion-header" (click)="toggleExercise(exercise.id)" type="button">
+              <div class="accordion-title">
+                <span class="exercise-id">{{ exercise.id }}</span>
+                <span class="exercise-name">{{ exercise.title }}</span>
+              </div>
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   [class.rotated]="isExpanded(exercise.id)">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+
+            @if (isExpanded(exercise.id)) {
+              <div class="accordion-body">
+                @if (exercise.description) {
+                  <p class="exercise-desc">{{ exercise.description }}</p>
+                }
+
+                @if (getQuiz(exercise.id); as quiz) {
+                  <div class="questions-list">
+                    <span class="questions-label">Fragen ({{ quiz.questions.length }})</span>
+                    @for (question of quiz.questions; track question.id; let i = $index) {
+                      <div class="question-item">
+                        <span class="question-nr">{{ i + 1 }}.</span>
+                        <span class="question-text">{{ question.question }}</span>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <p class="no-quiz">Kein Quiz verfügbar</p>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </aside>
   </div>
 </div>
 

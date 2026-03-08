@@ -2,10 +2,12 @@ import { Component, OnInit, OnDestroy, ElementRef, ViewChild, signal, inject } f
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Image } from '../../models/Image';
+import { Quiz } from '../../models/quiz.model';
 import { VncService, VNCConnectionStatus } from '../../service/vnc.service';
 import { ContainerControlService } from '../../service/container-control.service';
-import axios, {AxiosResponse} from 'axios';
-
+import { ExerciseService } from '../../service/exercise.service';
+import { QuizService } from '../../services/quiz.service';
+import axios, { AxiosResponse } from 'axios';
 
 export interface VncInfoResponse {
   vncPort: number;
@@ -25,20 +27,25 @@ export class ImageComponent implements OnInit, OnDestroy {
   image = signal<Image | null>(null);
   isConnecting = signal(true);
   connectionStatus = signal('Verbindung wird hergestellt...');
+  sidebarOpen = signal(true);
+
+  private expandedExercises = signal<Set<string>>(new Set());
 
   private route = inject(ActivatedRoute);
   private vncService = inject(VncService);
   private containerControlService = inject(ContainerControlService);
+  private exerciseService = inject(ExerciseService);
+  private quizService = inject(QuizService);
+
+  protected exercises = this.exerciseService.getExercises();
 
   ngOnInit(): void {
-    // Route-Parameter abonnieren
     this.route.params.subscribe(params => {
       const id = params['id'];
       this.imageId.set(id);
       this.loadImageData(id);
     });
 
-    // VNC-Status abonnieren
     this.vncService.status$.subscribe((status: VNCConnectionStatus) => {
       this.connectionStatus.set(status);
       this.isConnecting.set(status === VNCConnectionStatus.CONNECTING);
@@ -47,13 +54,34 @@ export class ImageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.disconnect();
-    // Image-Auswahl zurücksetzen wenn Komponente zerstört wird
     this.containerControlService.clearSelectedImage();
   }
 
+  toggleSidebar(): void {
+    this.sidebarOpen.update(open => !open);
+  }
+
+  toggleExercise(exerciseId: string): void {
+    this.expandedExercises.update(set => {
+      const next = new Set(set);
+      if (next.has(exerciseId)) {
+        next.delete(exerciseId);
+      } else {
+        next.add(exerciseId);
+      }
+      return next;
+    });
+  }
+
+  isExpanded(exerciseId: string): boolean {
+    return this.expandedExercises().has(exerciseId);
+  }
+
+  getQuiz(exerciseId: string): Quiz | undefined {
+    return this.quizService.getQuizByExerciseId(exerciseId);
+  }
+
   private loadImageData(id: string): void {
-    // Hier würdest du normalerweise die Daten vom Backend laden
-    // Für Demo-Zwecke verwenden wir Mock-Daten
     const mockImages: Image[] = [
       { ID: BigInt(1), Name: 'Ubuntu 22.04', URL: 'ubuntu:22.04' },
       { ID: BigInt(2), Name: 'Nginx Latest', URL: 'nginx:latest' },
@@ -63,7 +91,6 @@ export class ImageComponent implements OnInit, OnDestroy {
     const foundImage = mockImages.find(img => img.ID.toString() === id);
     if (foundImage) {
       this.image.set(foundImage);
-      // Image als ausgewählt registrieren
       this.containerControlService.setSelectedImage(foundImage);
       setTimeout(() => this.connectVNC(), 500);
     }
@@ -74,14 +101,12 @@ export class ImageComponent implements OnInit, OnDestroy {
       console.error('VNC Screen element not found');
       return;
     }
-    const userid = 1; // Beispiel-Benutzer-ID
-    const imagePort: AxiosResponse<VncInfoResponse, VncInfoResponse> = await axios.get(`http://localhost:9090/api/live-environment/vnc-port/${userid}`, {})
+    const userid = 1;
+    const imagePort: AxiosResponse<VncInfoResponse, VncInfoResponse> = await axios.get(
+      `http://localhost:9090/api/live-environment/vnc-port/${userid}`, {}
+    );
 
-    console.log(imagePort.data.vncPort)
-
-    // VNC WebSocket URL - passe diese an dein Backend an
-    // Format: ws://host:port oder wss://host:port für verschlüsselte Verbindung
-    const vncUrl = `ws://localhost:9090/ws/novnc?vncPort=${imagePort.data.vncPort}`; // Beispiel-URL
+    const vncUrl = `ws://localhost:9090/ws/novnc?vncPort=${imagePort.data.vncPort}`;
 
     this.vncService.connect(this.vncScreen.nativeElement, {
       url: vncUrl,
