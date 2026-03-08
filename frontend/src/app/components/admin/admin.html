@@ -19,6 +19,7 @@
     <button class="tab-btn" [class.active]="activeTab() === 'users'" (click)="setTab('users')">Benutzer</button>
     <button class="tab-btn" [class.active]="activeTab() === 'tasks'" (click)="setTab('tasks')">Aufgaben</button>
     <button class="tab-btn" [class.active]="activeTab() === 'enrollment'" (click)="setTab('enrollment')">Kurszuordnung</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'questions'" (click)="setTab('questions')">Fragen</button>
   </div>
 
   <!-- Feedback -->
@@ -47,6 +48,24 @@
         </button>
       </form>
     </div>
+    <div class="form-card table-card">
+      <h2>Alle Kurse</h2>
+      @if (courseList().length === 0) {
+        <p class="empty-row">Keine Kurse vorhanden</p>
+      }
+      @for (c of courseList(); track c.id) {
+        <div class="course-row">
+          <div class="course-row-info">
+            <span class="course-row-id">#{{ c.id }}</span>
+            <span class="course-row-name">{{ c.name }}</span>
+            @if (c.description) {
+              <span class="course-row-desc">{{ c.description }}</span>
+            }
+          </div>
+          <button class="btn-delete" (click)="deleteCourse(c.id)">Löschen</button>
+        </div>
+      }
+    </div>
   }
 
   <!-- Image erstellen -->
@@ -66,6 +85,27 @@
           @if (loading()) { Wird gespeichert... } @else { Image erstellen }
         </button>
       </form>
+    </div>
+    <div class="form-card table-card">
+      <h2>Alle Images</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>ID</th><th>Name</th><th>Image Referenz</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (img of imageList(); track img.id) {
+            <tr>
+              <td>{{ img.id }}</td>
+              <td>{{ img.name }}</td>
+              <td>{{ img.imageRef }}</td>
+              <td><button class="btn-delete" (click)="deleteImage(img.id)">Löschen</button></td>
+            </tr>
+          }
+          @if (imageList().length === 0) {
+            <tr><td colspan="4" class="empty-row">Keine Images vorhanden</td></tr>
+          }
+        </tbody>
+      </table>
     </div>
   }
 
@@ -104,6 +144,29 @@
           @if (loading()) { Wird gespeichert... } @else { Live-Umgebung erstellen }
         </button>
       </form>
+    </div>
+    <div class="form-card table-card">
+      <h2>Alle Live-Umgebungen</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>ID</th><th>User ID</th><th>VNC Host</th><th>VNC Port</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (env of liveEnvList(); track env.id) {
+            <tr>
+              <td>{{ env.id }}</td>
+              <td>{{ env.userId }}</td>
+              <td>{{ env.vncHost }}</td>
+              <td>{{ env.vncPort }}</td>
+              <td><span class="badge badge-{{ env.status }}">{{ env.status }}</span></td>
+              <td><button class="btn-delete" (click)="deleteLiveEnv(env.id)">Löschen</button></td>
+            </tr>
+          }
+          @if (liveEnvList().length === 0) {
+            <tr><td colspan="6" class="empty-row">Keine Live-Umgebungen vorhanden</td></tr>
+          }
+        </tbody>
+      </table>
     </div>
   }
 
@@ -150,6 +213,29 @@
           @if (loading()) { Wird gespeichert... } @else { Benutzer erstellen }
         </button>
       </form>
+    </div>
+    <div class="form-card table-card">
+      <h2>Alle Benutzer</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>ID</th><th>Name</th><th>E-Mail</th><th>Klasse</th><th>Rolle</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (u of userList(); track u.id) {
+            <tr>
+              <td>{{ u.id }}</td>
+              <td>{{ u.name }}</td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.className }}</td>
+              <td><span class="badge badge-role">{{ u.role }}</span></td>
+              <td><button class="btn-delete" (click)="deleteUser(u.id)">Löschen</button></td>
+            </tr>
+          }
+          @if (userList().length === 0) {
+            <tr><td colspan="6" class="empty-row">Keine Benutzer vorhanden</td></tr>
+          }
+        </tbody>
+      </table>
     </div>
   }
 
@@ -233,6 +319,31 @@
           @if (loading()) { Wird zugeordnet... } @else { Aufgabe zuordnen }
         </button>
       </form>
+    </div>
+
+    <!-- Aufgaben Übersicht -->
+    <div class="form-card table-card">
+      <h2>Alle Aufgaben</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>ID</th><th>Titel</th><th>Beschreibung</th><th>Punkte</th><th>Image ID</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (t of taskList(); track t.id) {
+            <tr>
+              <td>{{ t.id }}</td>
+              <td>{{ t.title }}</td>
+              <td class="desc-cell">{{ t.description }}</td>
+              <td>{{ t.points }}</td>
+              <td>{{ t.imageId }}</td>
+              <td><button class="btn-delete" (click)="deleteTask(t.id)">Löschen</button></td>
+            </tr>
+          }
+          @if (taskList().length === 0) {
+            <tr><td colspan="6" class="empty-row">Keine Aufgaben vorhanden</td></tr>
+          }
+        </tbody>
+      </table>
     </div>
   }
   <!-- Kurszuordnung -->
@@ -334,6 +445,72 @@
           }
         </div>
       }
+    </div>
+  }
+  <!-- Fragen erstellen & verwalten -->
+  @if (activeTab() === 'questions') {
+    <div class="form-card">
+      <h2>Neue Frage erstellen</h2>
+      <form (ngSubmit)="createQuestion()" #questionForm="ngForm">
+        <div class="form-group">
+          <label for="qTask">Aufgabe *</label>
+          @if (taskOptions().length > 0) {
+            <select id="qTask" [(ngModel)]="question.taskId" name="taskId" required>
+              <option value="">– Aufgabe auswählen –</option>
+              @for (t of taskOptions(); track t.id) {
+                <option [value]="t.id">{{ t.title }}</option>
+              }
+            </select>
+          } @else {
+            <input id="qTask" type="number" [(ngModel)]="question.taskId" name="taskId" required placeholder="Task ID" />
+          }
+        </div>
+        <div class="form-group">
+          <label for="qFrage">Frage *</label>
+          <textarea id="qFrage" [(ngModel)]="question.frage" name="frage" required rows="3" placeholder="Fragetext eingeben..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="qAntworten">Antworten (JSON-Array)</label>
+          <textarea id="qAntworten" [(ngModel)]="question.antworten" name="antworten" rows="3" placeholder='z.B. [{"text":"Antwort A","correct":true},{"text":"Antwort B","correct":false}]'></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="qMaxPunkte">Maximalpunkte</label>
+            <input id="qMaxPunkte" type="number" [(ngModel)]="question.maximalpunkte" name="maximalpunkte" min="0" />
+          </div>
+          <div class="form-group">
+            <label for="qBestehgrenze">Bestehgrenze (%)</label>
+            <input id="qBestehgrenze" type="number" [(ngModel)]="question.bestehgrenzeProzent" name="bestehgrenzeProzent" min="0" max="100" />
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="loading() || !questionForm.valid">
+          @if (loading()) { Wird gespeichert... } @else { Frage erstellen }
+        </button>
+      </form>
+    </div>
+
+    <div class="form-card table-card">
+      <h2>Alle Fragen</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>ID</th><th>Aufgabe</th><th>Frage</th><th>Max. Punkte</th><th>Bestehgrenze</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (q of questionList(); track q.id) {
+            <tr>
+              <td>{{ q.id }}</td>
+              <td>{{ getTaskTitle(q.taskId) }}</td>
+              <td class="desc-cell">{{ q.frage }}</td>
+              <td>{{ q.maximalpunkte }}</td>
+              <td>{{ q.bestehgrenzeProzent }}%</td>
+              <td><button class="btn-delete" (click)="deleteQuestion(q.id)">Löschen</button></td>
+            </tr>
+          }
+          @if (questionList().length === 0) {
+            <tr><td colspan="6" class="empty-row">Keine Fragen vorhanden</td></tr>
+          }
+        </tbody>
+      </table>
     </div>
   }
 
