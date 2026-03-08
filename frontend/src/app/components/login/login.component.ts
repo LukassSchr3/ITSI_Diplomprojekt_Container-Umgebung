@@ -1,8 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { AuthService } from '../../service/auth.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -12,24 +11,14 @@ import { AuthService } from '../../service/auth.service';
 })
 export class LoginComponent {
   private authService = inject(AuthService);
-  private router = inject(Router);
-
+  
   protected email = signal<string>('');
   protected password = signal<string>('');
   protected errorMessage = signal<string>('');
-  protected isSubmitting = signal<boolean>(false);
 
-  async onSubmit() {
-    if (this.isSubmitting()) return;
-    this.errorMessage.set('');
-    this.isSubmitting.set(true);
-
-    const success = await this.authService.login(this.email(), this.password());
-    this.isSubmitting.set(false);
-
-    if (success) {
-      this.router.navigate(['/dashboard']);
-    } else {
+  onSubmit() {
+    const success = this.authService.login(this.email(), this.password());
+    if (!success) {
       this.errorMessage.set('Falsche E-Mail oder Passwort');
     }
   }
