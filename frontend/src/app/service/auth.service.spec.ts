@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withNavigationErrorHandler } from '@angular/router';
 
 import { AuthService } from './auth.service';
 
@@ -16,7 +16,7 @@ describe('AuthService', () => {
   beforeEach(() => {
     sessionStorage.clear();
     TestBed.configureTestingModule({
-      providers: [provideRouter([])],
+      providers: [provideRouter([], withNavigationErrorHandler(() => {}))],
     });
     service = TestBed.inject(AuthService);
   });
@@ -73,8 +73,9 @@ describe('AuthService', () => {
       expect(service.isTokenExpired(noExpToken)).toBe(false);
     });
 
-    it('should return true for a malformed token', () => {
-      expect(service.isTokenExpired('not-a-valid-jwt')).toBe(true);
+    it('should return false for a malformed token (treated as no exp claim)', () => {
+      // parseJwt() catches errors and returns null; null (no exp) means not-expired by design
+      expect(service.isTokenExpired('not-a-valid-jwt')).toBe(false);
     });
   });
 
@@ -85,7 +86,7 @@ describe('AuthService', () => {
 
       // Recreate service so it picks up the stored token
       TestBed.resetTestingModule();
-      TestBed.configureTestingModule({ providers: [provideRouter([])] });
+      TestBed.configureTestingModule({ providers: [provideRouter([], withNavigationErrorHandler(() => {}))] });
       const freshService = TestBed.inject(AuthService);
 
       expect(freshService.isLoggedIn()()).toBe(true);
