@@ -241,10 +241,79 @@ jobs:
         path: frontend/dist/
         retention-days: 7
 
+  test-frontend:
+    name: Unit Tests Frontend (Angular/Vitest)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+
+    - name: Run unit tests
+      working-directory: ./frontend
+      run: npm test -- --watch=false
+      env:
+        CI: true
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-test-results
+        path: frontend/test-results/
+        retention-days: 7
+        if-no-files-found: ignore
+
+  test-backend:
+    name: Unit Tests Backend (Go)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25'
+        cache-dependency-path: backend/go.sum
+
+    - name: Install dependencies
+      working-directory: ./backend
+      run: go mod download
+
+    - name: Run unit tests
+      working-directory: ./backend
+      run: go test ./models/... ./utils/... -v
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-test-results
+        path: backend/test-results/
+        retention-days: 7
+        if-no-files-found: ignore
+
   integration-test:
     name: Integration Test (All Components)
     runs-on: ubuntu-latest
-    needs: [build-database, build-backend, build-api, test-database-api, build-steuerung-api, test-steuerung-api, build-frontend]
+    needs: [build-database, build-backend, build-api, test-database-api, build-steuerung-api, test-steuerung-api, build-frontend, test-frontend, test-backend]
     
     steps:
     - name: Checkout code
