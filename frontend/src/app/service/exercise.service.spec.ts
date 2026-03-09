@@ -99,22 +99,30 @@ describe('ExerciseService', () => {
     });
   });
 
-  describe('markBewertet', () => {
-    it('should mark an exercise as bewertet', () => {
+  describe('setBewertung', () => {
+    it('should set bewertung on an exercise', () => {
       const firstId = service.getExercises()()[0].id;
-      service.markBewertet(firstId);
+      service.setBewertung(firstId, 'Grundkompetenz vollständig erfüllt');
       const exercise = service.getExercises()().find((e) => e.id === firstId)!;
-      expect(exercise.bewertet).toBe(true);
+      expect(exercise.bewertung).toBe('Grundkompetenz vollständig erfüllt');
     });
 
-    it('should not change bewertet status of other exercises', () => {
+    it('should not change bewertung of other exercises', () => {
       const exercises = service.getExercises()();
       const firstId = exercises[0].id;
-      service.markBewertet(firstId);
+      service.setBewertung(firstId, 'Grundkompetenz vollständig erfüllt');
       const others = service.getExercises()().filter((e) => e.id !== firstId);
       others.forEach((e) => {
-        expect(e.bewertet).toBeFalsy();
+        expect(e.bewertung).toBeUndefined();
       });
+    });
+
+    it('should allow clearing bewertung by setting undefined', () => {
+      const firstId = service.getExercises()()[0].id;
+      service.setBewertung(firstId, 'Grundkompetenz vollständig erfüllt');
+      service.setBewertung(firstId, undefined);
+      const exercise = service.getExercises()().find((e) => e.id === firstId)!;
+      expect(exercise.bewertung).toBeUndefined();
     });
   });
 });
