@@ -107,6 +107,9 @@ jobs:
   test-database-api:
     name: Unit Tests Database API
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
     - name: Checkout code
@@ -126,9 +129,26 @@ jobs:
       working-directory: ./api/database
       run: chmod +x gradlew
 
-    - name: Run unit tests
+    - name: Run unit tests with coverage
       working-directory: ./api/database
-      run: ./gradlew test --no-daemon
+      run: ./gradlew test jacocoTestReport --no-daemon
+
+    - name: Generate coverage comment
+      if: github.event_name == 'pull_request'
+      working-directory: ./api/database
+      run: |
+        python3 "$GITHUB_WORKSPACE/.github/scripts/parse_jacoco_coverage.py" \
+          "build/reports/jacoco/test/jacocoTestReport.xml" \
+          "Database API" \
+          "/tmp/database-api-coverage.md"
+
+    - name: Post coverage comment
+      if: github.event_name == 'pull_request'
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        header: database-api-coverage
+        path: /tmp/database-api-coverage.md
 
     - name: Upload test reports
       if: always()
@@ -177,6 +197,9 @@ jobs:
   test-steuerung-api:
     name: Unit Tests Steuerung API
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
     - name: Checkout code
@@ -196,9 +219,26 @@ jobs:
       working-directory: ./api/steuerung
       run: chmod +x gradlew
 
-    - name: Run unit tests
+    - name: Run unit tests with coverage
       working-directory: ./api/steuerung
-      run: ./gradlew test --no-daemon
+      run: ./gradlew test jacocoTestReport --no-daemon
+
+    - name: Generate coverage comment
+      if: github.event_name == 'pull_request'
+      working-directory: ./api/steuerung
+      run: |
+        python3 "$GITHUB_WORKSPACE/.github/scripts/parse_jacoco_coverage.py" \
+          "build/reports/jacoco/test/jacocoTestReport.xml" \
+          "Steuerung API" \
+          "/tmp/steuerung-api-coverage.md"
+
+    - name: Post coverage comment
+      if: github.event_name == 'pull_request'
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        header: steuerung-api-coverage
+        path: /tmp/steuerung-api-coverage.md
 
     - name: Upload test reports
       if: always()
@@ -246,6 +286,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: write
 
     steps:
     - name: Checkout code
@@ -262,18 +303,56 @@ jobs:
       working-directory: ./frontend
       run: npm ci
 
-    - name: Run unit tests
+    - name: Run unit tests with coverage
       working-directory: ./frontend
-      run: npm test -- --watch=false
+      run: npm test -- --watch=false --coverage
       env:
         CI: true
+
+    - name: Generate coverage comment
+      if: github.event_name == 'pull_request'
+      run: |
+        python3 - <<'EOF'
+        import json, os
+
+        summary_path = "frontend/coverage/coverage-summary.json"
+        if not os.path.exists(summary_path):
+            with open("/tmp/frontend-coverage.md", "w") as f:
+                f.write("## 📊 Frontend – Coverage Report\n\n> No coverage data available.\n")
+            exit(0)
+
+        with open(summary_path, "r") as f:
+            data = json.load(f)
+
+        t = data.get("total", {})
+        lines = ["## 📊 Frontend – Coverage Report\n"]
+        lines.append("| Metric | Covered | Total | Coverage |")
+        lines.append("|--------|--------:|------:|---------:|")
+        for metric in ["lines", "statements", "functions", "branches"]:
+            if metric in t:
+                m = t[metric]
+                lines.append(f"| {metric.capitalize()} | {m['covered']} | {m['total']} | {m['pct']}% |")
+
+        with open("/tmp/frontend-coverage.md", "w") as f:
+            f.write("\n".join(lines) + "\n")
+        EOF
+
+    - name: Post coverage comment
+      if: github.event_name == 'pull_request'
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        header: frontend-coverage
+        path: /tmp/frontend-coverage.md
 
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: frontend-test-results
-        path: frontend/test-results/
+        path: |
+          frontend/test-results/
+          frontend/coverage/
         retention-days: 7
         if-no-files-found: ignore
 
@@ -282,6 +361,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: write
 
     steps:
     - name: Checkout code
@@ -297,16 +377,64 @@ jobs:
       working-directory: ./backend
       run: go mod download
 
-    - name: Run unit tests
+    - name: Run unit tests with coverage
       working-directory: ./backend
-      run: go test ./models/... ./utils/... -v
+      run: go test ./models/... ./utils/... -v -coverprofile=coverage.out -covermode=atomic
+
+    - name: Generate coverage comment
+      if: github.event_name == 'pull_request'
+      working-directory: ./backend
+      run: |
+        go tool cover -func=coverage.out > coverage-func.txt
+        python3 - <<'EOF'
+        import re
+
+        with open("coverage-func.txt", "r") as f:
+            lines = f.readlines()
+
+        rows = []
+        total_line = ""
+        for line in lines:
+            parts = line.split()
+            if len(parts) >= 3:
+                if parts[0] == "total:":
+                    total_line = parts[-1]
+                else:
+                    func_path = parts[0]
+                    func_name = parts[1]
+                    coverage = parts[2]
+                    # shorten path for readability
+                    short_path = re.sub(r'^.*/', '', func_path.split(":")[0])
+                    lineno = func_path.split(":")[-1] if ":" in func_path else ""
+                    rows.append(f"| `{short_path}:{lineno}` | `{func_name}` | {coverage} |")
+
+        out = ["## 📊 Backend (Go) – Coverage Report\n"]
+        if total_line:
+            out.append(f"**Total coverage: {total_line}**\n")
+        out.append("| File | Function | Coverage |")
+        out.append("|------|----------|:--------:|")
+        out.extend(rows)
+
+        with open("/tmp/backend-coverage.md", "w") as f:
+            f.write("\n".join(out) + "\n")
+        EOF
+
+    - name: Post coverage comment
+      if: github.event_name == 'pull_request'
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        header: backend-coverage
+        path: /tmp/backend-coverage.md
 
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: backend-test-results
-        path: backend/test-results/
+        path: |
+          backend/test-results/
+          backend/coverage.out
         retention-days: 7
         if-no-files-found: ignore
 
