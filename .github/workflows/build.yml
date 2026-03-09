@@ -328,13 +328,19 @@ jobs:
       env:
         CI: true
 
+    - name: Find coverage file
+      run: find frontend -name "coverage-summary.json" 2>/dev/null || echo "coverage-summary.json not found"
+
     - name: Generate coverage comment
       run: |
         python3 - <<'EOF'
-        import json, os
+        import json, os, glob
 
-        summary_path = "frontend/coverage/coverage-summary.json"
-        if not os.path.exists(summary_path):
+        # Search for coverage-summary.json anywhere under frontend/
+        candidates = glob.glob("frontend/**/coverage-summary.json", recursive=True)
+        summary_path = candidates[0] if candidates else None
+
+        if not summary_path or not os.path.exists(summary_path):
             with open("/tmp/frontend-coverage.md", "w") as f:
                 f.write("## 📊 Frontend – Coverage Report\n\n> No coverage data available.\n")
             exit(0)
@@ -399,13 +405,10 @@ jobs:
     - name: Run unit tests with coverage
       working-directory: ./backend
       run: |
-        go test ./utils/...     -coverprofile=cov-utils.out    -covermode=atomic
-        go test ./routes/...    -coverprofile=cov-routes.out   -covermode=atomic
-        go test ./services/...  -coverprofile=cov-services.out -covermode=atomic
-        # Merge profiles: keep header from first non-empty file, strip headers from the rest
-        cat cov-utils.out > coverage.out
-        grep -v "^mode:" cov-routes.out   >> coverage.out
-        grep -v "^mode:" cov-services.out >> coverage.out
+        go test ./utils/... ./routes/... ./services/... \
+          -coverprofile=coverage.out \
+          -covermode=atomic \
+          -coverpkg=./utils/...,./routes/...,./services/...
 
     - name: Show coverage summary
       working-directory: ./backend
