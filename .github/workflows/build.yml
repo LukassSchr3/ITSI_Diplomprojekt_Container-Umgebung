@@ -134,13 +134,13 @@ jobs:
       run: ./gradlew test jacocoTestReport --no-daemon
 
     - name: Generate coverage comment
-      if: github.event_name == 'pull_request'
       working-directory: ./api/database
       run: |
         python3 "$GITHUB_WORKSPACE/.github/scripts/parse_jacoco_coverage.py" \
           "build/reports/jacoco/test/jacocoTestReport.xml" \
           "Database API" \
           "/tmp/database-api-coverage.md"
+        cat /tmp/database-api-coverage.md >> "$GITHUB_STEP_SUMMARY"
 
     - name: Post coverage comment
       if: github.event_name == 'pull_request'
@@ -224,13 +224,13 @@ jobs:
       run: ./gradlew test jacocoTestReport --no-daemon
 
     - name: Generate coverage comment
-      if: github.event_name == 'pull_request'
       working-directory: ./api/steuerung
       run: |
         python3 "$GITHUB_WORKSPACE/.github/scripts/parse_jacoco_coverage.py" \
           "build/reports/jacoco/test/jacocoTestReport.xml" \
           "Steuerung API" \
           "/tmp/steuerung-api-coverage.md"
+        cat /tmp/steuerung-api-coverage.md >> "$GITHUB_STEP_SUMMARY"
 
     - name: Post coverage comment
       if: github.event_name == 'pull_request'
@@ -329,7 +329,6 @@ jobs:
         CI: true
 
     - name: Generate coverage comment
-      if: github.event_name == 'pull_request'
       run: |
         python3 - <<'EOF'
         import json, os
@@ -355,6 +354,7 @@ jobs:
         with open("/tmp/frontend-coverage.md", "w") as f:
             f.write("\n".join(lines) + "\n")
         EOF
+        cat /tmp/frontend-coverage.md >> "$GITHUB_STEP_SUMMARY"
 
     - name: Post coverage comment
       if: github.event_name == 'pull_request'
@@ -405,7 +405,6 @@ jobs:
       run: go tool cover -func=coverage.out
 
     - name: Generate coverage comment
-      if: github.event_name == 'pull_request'
       working-directory: ./backend
       run: |
         go tool cover -func=coverage.out > coverage-func.txt
@@ -441,6 +440,7 @@ jobs:
         with open("/tmp/backend-coverage.md", "w") as f:
             f.write("\n".join(out) + "\n")
         EOF
+        cat /tmp/backend-coverage.md >> "$GITHUB_STEP_SUMMARY"
 
     - name: Post coverage comment
       if: github.event_name == 'pull_request'
