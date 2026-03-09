@@ -91,7 +91,7 @@
               "src/app/services/*.ts",
               "src/app/guards/*.ts"
             ],
-            "coverageReporters": ["text", "text-summary"]
+            "coverageReporters": ["text", "text-summary", "json-summary"]
           }
         },
         "lint": {

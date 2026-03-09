@@ -398,7 +398,14 @@ jobs:
 
     - name: Run unit tests with coverage
       working-directory: ./backend
-      run: go test ./models/... ./utils/... ./routes/... ./services/... -v -coverprofile=coverage.out -covermode=atomic
+      run: |
+        go test ./utils/...     -coverprofile=cov-utils.out    -covermode=atomic
+        go test ./routes/...    -coverprofile=cov-routes.out   -covermode=atomic
+        go test ./services/...  -coverprofile=cov-services.out -covermode=atomic
+        # Merge profiles: keep header from first non-empty file, strip headers from the rest
+        cat cov-utils.out > coverage.out
+        grep -v "^mode:" cov-routes.out   >> coverage.out
+        grep -v "^mode:" cov-services.out >> coverage.out
 
     - name: Show coverage summary
       working-directory: ./backend
