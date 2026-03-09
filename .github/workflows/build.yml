@@ -134,13 +134,13 @@ jobs:
       run: ./gradlew test jacocoTestReport --no-daemon
 
     - name: Generate coverage comment
-      if: github.event_name == 'pull_request'
       working-directory: ./api/database
       run: |
         python3 "$GITHUB_WORKSPACE/.github/scripts/parse_jacoco_coverage.py" \
           "build/reports/jacoco/test/jacocoTestReport.xml" \
           "Database API" \
           "/tmp/database-api-coverage.md"
+        cat /tmp/database-api-coverage.md >> "$GITHUB_STEP_SUMMARY"
 
     - name: Post coverage comment
       if: github.event_name == 'pull_request'
@@ -224,13 +224,13 @@ jobs:
       run: ./gradlew test jacocoTestReport --no-daemon
 
     - name: Generate coverage comment
-      if: github.event_name == 'pull_request'
       working-directory: ./api/steuerung
       run: |
         python3 "$GITHUB_WORKSPACE/.github/scripts/parse_jacoco_coverage.py" \
           "build/reports/jacoco/test/jacocoTestReport.xml" \
           "Steuerung API" \
           "/tmp/steuerung-api-coverage.md"
+        cat /tmp/steuerung-api-coverage.md >> "$GITHUB_STEP_SUMMARY"
 
     - name: Post coverage comment
       if: github.event_name == 'pull_request'
@@ -303,20 +303,44 @@ jobs:
       working-directory: ./frontend
       run: npm ci
 
+    - name: Patch Angular coverage provider to Istanbul
+      working-directory: ./frontend
+      run: |
+        node -e "
+        const fs = require('fs');
+        const p = 'node_modules/@angular/build/src/builders/unit-test/runners/vitest/plugins.js';
+        let c = fs.readFileSync(p, 'utf8');
+        if (!c.includes(\"provider: 'istanbul'\")) {
+          c = c.replace(
+            'enabled: coverage.enabled,\n        excludeAfterRemap:',
+            \"enabled: coverage.enabled,\n        provider: 'istanbul',\n        excludeAfterRemap:\"
+          );
+          fs.writeFileSync(p, c);
+          console.log('Istanbul patch applied.');
+        } else {
+          console.log('Istanbul patch already present.');
+        }
+        "
+
     - name: Run unit tests with coverage
       working-directory: ./frontend
       run: npm test -- --watch=false --coverage
       env:
         CI: true
 
+    - name: Find coverage file
+      run: find frontend -name "coverage-summary.json" 2>/dev/null || echo "coverage-summary.json not found"
+
     - name: Generate coverage comment
-      if: github.event_name == 'pull_request'
       run: |
         python3 - <<'EOF'
-        import json, os
+        import json, os, glob
 
-        summary_path = "frontend/coverage/coverage-summary.json"
-        if not os.path.exists(summary_path):
+        # Search for coverage-summary.json anywhere under frontend/
+        candidates = glob.glob("frontend/**/coverage-summary.json", recursive=True)
+        summary_path = candidates[0] if candidates else None
+
+        if not summary_path or not os.path.exists(summary_path):
             with open("/tmp/frontend-coverage.md", "w") as f:
                 f.write("## 📊 Frontend – Coverage Report\n\n> No coverage data available.\n")
             exit(0)
@@ -336,6 +360,7 @@ jobs:
         with open("/tmp/frontend-coverage.md", "w") as f:
             f.write("\n".join(lines) + "\n")
         EOF
+        cat /tmp/frontend-coverage.md >> "$GITHUB_STEP_SUMMARY"
 
     - name: Post coverage comment
       if: github.event_name == 'pull_request'
@@ -379,10 +404,17 @@ jobs:
 
     - name: Run unit tests with coverage
       working-directory: ./backend
-      run: go test ./models/... ./utils/... -v -coverprofile=coverage.out -covermode=atomic
+      run: |
+        go test ./utils/... ./routes/... ./services/... \
+          -coverprofile=coverage.out \
+          -covermode=atomic \
+          -coverpkg=./utils/...,./routes/...,./services/...
+
+    - name: Show coverage summary
+      working-directory: ./backend
+      run: go tool cover -func=coverage.out
 
     - name: Generate coverage comment
-      if: github.event_name == 'pull_request'
       working-directory: ./backend
       run: |
         go tool cover -func=coverage.out > coverage-func.txt
@@ -418,6 +450,7 @@ jobs:
         with open("/tmp/backend-coverage.md", "w") as f:
             f.write("\n".join(out) + "\n")
         EOF
+        cat /tmp/backend-coverage.md >> "$GITHUB_STEP_SUMMARY"
 
     - name: Post coverage comment
       if: github.event_name == 'pull_request'
