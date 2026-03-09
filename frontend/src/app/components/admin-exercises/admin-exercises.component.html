@@ -1,0 +1,66 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <button class="back-button" (click)="goBack()">← Zurück zum Dashboard</button>
+    <h1>Übungs-Verwaltung</h1>
+  </div>
+
+  <div class="admin-content">
+    <div class="toolbar">
+      <button class="add-button" (click)="addNewExercise()">+ Neue Übung erstellen</button>
+    </div>
+
+    @if (showForm()) {
+      <div class="form-card">
+        <h2>{{ isEditing() ? 'Übung bearbeiten' : 'Neue Übung erstellen' }}</h2>
+        <div class="form-group">
+          <label>Übungs-ID</label>
+          <input type="text" [(ngModel)]="exerciseForm().id" placeholder="z.B. 9.4" [disabled]="isEditing()">
+        </div>
+        <div class="form-group">
+          <label>Titel</label>
+          <input type="text" [(ngModel)]="exerciseForm().title" placeholder="z.B. ITSI 9.4 Web Security">
+        </div>
+        <div class="form-group">
+          <label>Beschreibung</label>
+          <textarea [(ngModel)]="exerciseForm().description" placeholder="Beschreibung der Übung" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Kategorie</label>
+          <input type="text" [(ngModel)]="exerciseForm().category" placeholder="z.B. Security, Forensik, Malware">
+        </div>
+        <div class="button-group">
+          <button class="cancel-button" (click)="showForm.set(false)">Abbrechen</button>
+          <button class="save-button" (click)="saveExercise()">
+            {{ isEditing() ? 'Änderungen speichern' : 'Übung erstellen' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <div class="exercises-grid">
+      @for (exercise of exercises(); track exercise.id) {
+        <div class="exercise-card">
+          <div class="exercise-header">
+            <div>
+              <h3>{{ exercise.title }}</h3>
+              @if (exercise.category) {
+                <span class="category-badge">{{ exercise.category }}</span>
+              }
+            </div>
+            <div class="exercise-actions">
+              <button class="edit-button" (click)="editExercise(exercise)">Bearbeiten</button>
+              <button class="delete-button" (click)="deleteExercise(exercise.id)">Löschen</button>
+            </div>
+          </div>
+          @if (exercise.description) {
+            <p class="exercise-description">{{ exercise.description }}</p>
+          }
+          <div class="exercise-meta">
+            <span class="meta-item">ID: {{ exercise.id }}</span>
+            <span class="meta-item">Status: {{ exercise.status }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

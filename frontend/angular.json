@@ -5,7 +5,8 @@
     "packageManager": "npm",
     "schematicCollections": [
       "angular-eslint"
-    ]
+    ],
+    "analytics": false
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -82,7 +83,13 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "coverage": {
+              "reporter": ["text-summary", "json-summary"],
+              "reportsDirectory": "coverage"
+            }
+          }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",

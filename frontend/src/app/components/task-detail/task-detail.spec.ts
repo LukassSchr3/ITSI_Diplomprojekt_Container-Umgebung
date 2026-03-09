@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 
 import { TaskDetail } from './task-detail';
 
@@ -8,7 +9,14 @@ describe('TaskDetail', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TaskDetail]
+      imports: [TaskDetail],
+      providers: [
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: convertToParamMap({ taskId: '1' }) } },
+        },
+      ],
     })
     .compileComponents();
 
