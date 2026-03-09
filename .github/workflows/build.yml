@@ -303,6 +303,25 @@ jobs:
       working-directory: ./frontend
       run: npm ci
 
+    - name: Patch Angular coverage provider to Istanbul
+      working-directory: ./frontend
+      run: |
+        node -e "
+        const fs = require('fs');
+        const p = 'node_modules/@angular/build/src/builders/unit-test/runners/vitest/plugins.js';
+        let c = fs.readFileSync(p, 'utf8');
+        if (!c.includes(\"provider: 'istanbul'\")) {
+          c = c.replace(
+            'enabled: coverage.enabled,\n        excludeAfterRemap:',
+            \"enabled: coverage.enabled,\n        provider: 'istanbul',\n        excludeAfterRemap:\"
+          );
+          fs.writeFileSync(p, c);
+          console.log('Istanbul patch applied.');
+        } else {
+          console.log('Istanbul patch already present.');
+        }
+        "
+
     - name: Run unit tests with coverage
       working-directory: ./frontend
       run: npm test -- --watch=false --coverage
@@ -379,7 +398,11 @@ jobs:
 
     - name: Run unit tests with coverage
       working-directory: ./backend
-      run: go test ./models/... ./utils/... -v -coverprofile=coverage.out -covermode=atomic
+      run: go test ./models/... ./utils/... ./routes/... ./services/... -v -coverprofile=coverage.out -covermode=atomic
+
+    - name: Show coverage summary
+      working-directory: ./backend
+      run: go tool cover -func=coverage.out
 
     - name: Generate coverage comment
       if: github.event_name == 'pull_request'

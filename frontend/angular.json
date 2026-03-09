@@ -85,10 +85,13 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "coverage": {
-              "reporter": ["text-summary", "json-summary"],
-              "reportsDirectory": "coverage"
-            }
+            "coverage": true,
+            "coverageInclude": [
+              "src/app/service/*.ts",
+              "src/app/services/*.ts",
+              "src/app/guards/*.ts"
+            ],
+            "coverageReporters": ["text", "text-summary"]
           }
         },
         "lint": {
