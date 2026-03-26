@@ -2,11 +2,14 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '4.0.0'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'checkstyle'
+    id 'jacoco'
 }
 
 group = 'itsi.api'
 version = '0.0.1-SNAPSHOT'
 description = 'steuerung'
+
 
 java {
     toolchain {
@@ -36,13 +39,54 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
+    // ArchUnit - Architecture Testing
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.3.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation 'com.cedarpolicy:cedar-java:3.3.0'
-
 }
 
+// Normaler Test-Run: nur Unit-Tests, QS/QM-Tests (qa-Package) werden NICHT ausgeführt
 tasks.named('test') {
     useJUnitPlatform()
+    exclude '**/qa/**'
+    finalizedBy jacocoTestReport
+
+    // Immer neu ausführen – damit JetBrains/Gradle immer Testergebnisse liefert
+    outputs.upToDateWhen { false }
+}
+
+jacoco {
+    toolVersion = '0.8.13'
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/html')
+    }
+    // QA-Klassen von der Coverage ausschließen
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: ['**/qa/**', '**/SteuerungApplication.class'])
+        }))
+    }
+}
+
+// Separater Task für QS/QM-Tests (ArchUnit, SpringBootTest Context etc.)
+tasks.register('qaTest', Test) {
+    description = 'Führt nur QS/QM-Tests aus (ArchUnit, Context-Loads, ...)'
+    group = 'verification'
+    useJUnitPlatform()
+    include '**/qa/**'
+}
+
+checkstyle {
+    toolVersion = '10.12.4'
+    configFile = file("${project.rootDir}/../database/config/checkstyle/checkstyle.xml")
+    ignoreFailures = true
+    showViolations = true
 }

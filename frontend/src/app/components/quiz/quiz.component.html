@@ -1,0 +1,79 @@
+<div class="quiz-container">
+  @if (quiz && !showResults()) {
+    <div class="quiz-header">
+      <div class="quiz-title-section">
+        <h1>{{ quiz.title }}</h1>
+        <p class="question-counter">
+          Frage {{ currentQuestionIndex() + 1 }} von {{ quiz.questions.length }}
+        </p>
+      </div>
+    </div>
+
+    <div class="quiz-content">
+      @if (currentQuestion(); as question) {
+        <div class="question-card">
+          <h2 class="question-text">{{ question.question }}</h2>
+          <div class="options-list">
+            @for (option of question.options; track $index) {
+              <button
+                class="option-button"
+                [class.selected]="selectedAnswers()[currentQuestionIndex()] === $index"
+                (click)="selectAnswer($index)">
+                <span class="option-letter">{{ String.fromCharCode(65 + $index) }}</span>
+                <span class="option-text">{{ option }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="quiz-navigation">
+        <button class="nav-button" (click)="previousQuestion()" [disabled]="currentQuestionIndex() === 0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          Zurück
+        </button>
+        @if (currentQuestionIndex() < quiz.questions.length - 1) {
+          <button class="nav-button primary" (click)="nextQuestion()" [disabled]="selectedAnswers()[currentQuestionIndex()] === null">
+            Weiter
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        } @else {
+          <button class="nav-button primary finish" (click)="finishQuiz()" [disabled]="selectedAnswers()[currentQuestionIndex()] === null">
+            Quiz beenden
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  @if (showResults() && quiz) {
+    <div class="results-container">
+      <div class="results-header">
+        <h1>Quiz beendet!</h1>
+        <p class="results-score">Du hast <strong>{{ score() }} von {{ quiz.questions.length }}</strong> Fragen richtig beantwortet</p>
+        <div class="results-percentage">{{ (score() / quiz.questions.length * 100).toFixed(0) }}%</div>
+      </div>
+
+      <div class="results-details">
+        <h3>Deine Antworten</h3>
+        @for (question of quiz.questions; track $index) {
+          <div class="result-item" [class.correct]="isAnswerCorrect($index)">
+            <div class="result-question">
+              <span class="result-icon">@if (isAnswerCorrect($index)) { ✓ } @else { ✗ }</span>
+              <span>{{ question.question }}</span>
+            </div>
+            <div class="result-answer"><strong>Deine Antwort:</strong> {{ question.options[selectedAnswers()[$index] ?? -1] ?? 'Keine Antwort' }}</div>
+            @if (!isAnswerCorrect($index)) {
+              <div class="result-correct-answer"><strong>Richtige Antwort:</strong> {{ question.options[question.correctAnswer] }}</div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="results-actions">
+        <button class="action-button secondary" (click)="exitQuiz()">Zurück zu Übungen</button>
+        <button class="action-button primary" (click)="restartQuiz()">Quiz wiederholen</button>
+      </div>
+    </div>
+  }
+</div>

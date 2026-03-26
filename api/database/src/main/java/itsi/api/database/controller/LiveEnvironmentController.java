@@ -3,9 +3,12 @@ package itsi.api.database.controller;
 import itsi.api.database.entity.LiveEnvironment;
 import itsi.api.database.service.LiveEnvironmentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,5 +55,51 @@ public class LiveEnvironmentController {
     @GetMapping("/max-vnc-port")
     public Integer getMaxVncPort() {
         return service.getMaxVncPort();
+    }
+
+    // Neue Endpunkte nach userId
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<LiveEnvironment> getByUserId(@PathVariable Long userId) {
+        Optional<LiveEnvironment> env = service.findByUserId(userId);
+        return env.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/user/{userId}")
+    public ResponseEntity<LiveEnvironment> createByUserId(@PathVariable Long userId, @RequestBody LiveEnvironment env) {
+        // Wenn bereits ein LiveEnvironment für die userId existiert, geben wir 409 zurück
+        if (service.findByUserId(userId).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        env.setUserId(userId);
+        LiveEnvironment saved = service.save(env);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(URI.create(String.format("/api/live-environments/%d", saved.getId())));
+        return new ResponseEntity<>(saved, headers, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/user/{userId}")
+    public ResponseEntity<LiveEnvironment> updateByUserId(@PathVariable Long userId, @RequestBody LiveEnvironment env) {
+        Optional<LiveEnvironment> existing = service.findByUserId(userId);
+        if (!existing.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        LiveEnvironment toSave = existing.get();
+        // Aktualisiere Felder (behalte id und userId)
+        toSave.setVncPort(env.getVncPort());
+        toSave.setVncHost(env.getVncHost());
+        toSave.setVncPassword(env.getVncPassword());
+        toSave.setStatus(env.getStatus());
+
+        return ResponseEntity.ok(service.save(toSave));
+    }
+
+    @DeleteMapping("/user/{userId}")
+    public ResponseEntity<Void> deleteByUserId(@PathVariable Long userId) {
+        Optional<LiveEnvironment> existing = service.findByUserId(userId);
+        if (!existing.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        service.deleteByUserId(userId);
+        return ResponseEntity.noContent().build();
     }
 }

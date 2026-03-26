@@ -5,7 +5,8 @@
     "packageManager": "npm",
     "schematicCollections": [
       "angular-eslint"
-    ]
+    ],
+    "analytics": false
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -82,7 +83,16 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "coverage": true,
+            "coverageInclude": [
+              "src/app/service/*.ts",
+              "src/app/services/*.ts",
+              "src/app/guards/*.ts"
+            ],
+            "coverageReporters": ["text", "text-summary", "json-summary"]
+          }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",

@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { Exercise } from '../models/exercise.model';
+import { Exercise, Bewertung } from '../models/exercise.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,9 +12,7 @@ export class ExerciseService {
       description: 'Network forensics and traffic analysis',
       progress: 0,
       status: 'not-started',
-      category: 'Forensik',
-      bewertet: false,
-      imageId: '1'  // Ubuntu 22.04
+      category: 'Forensik'
     },
     {
       id: '9.2',
@@ -22,9 +20,7 @@ export class ExerciseService {
       description: 'Memory dump analysis and investigation',
       progress: 0,
       status: 'not-started',
-      category: 'Forensik',
-      bewertet: false,
-      imageId: '2'  // Nginx Latest
+      category: 'Forensik'
     },
     {
       id: '9.3',
@@ -32,9 +28,7 @@ export class ExerciseService {
       description: 'Android malware analysis and reverse engineering',
       progress: 0,
       status: 'not-started',
-      category: 'Malware',
-      bewertet: false,
-      imageId: '3'  // Node.js 20
+      category: 'Malware'
     }
   ]);
 
@@ -42,17 +36,19 @@ export class ExerciseService {
     return this.exercises.asReadonly();
   }
 
+  setBewertung(id: string, bewertung: Bewertung | undefined) {
+    this.exercises.update(exercises =>
+      exercises.map(ex => ex.id === id ? { ...ex, bewertung } : ex)
+    );
+  }
+
   updateProgress(id: string, progress: number) {
     this.exercises.update(exercises =>
       exercises.map(ex => {
         if (ex.id === id) {
           let status: Exercise['status'] = 'not-started';
-          if (progress > 0 && progress < 100) {
-            status = 'in-progress';
-          } else if (progress === 100) {
-            status = 'completed';
-          }
-          // "bewertet" bleibt unverändert und wird nicht automatisch gesetzt
+          if (progress > 0 && progress < 100) status = 'in-progress';
+          else if (progress === 100) status = 'completed';
           return { ...ex, progress, status };
         }
         return ex;
@@ -65,25 +61,13 @@ export class ExerciseService {
       exercises.map(ex => {
         if (ex.id === id) {
           let progress = 0;
-          if (status === 'in-progress') {
-            progress = 50;
-          } else if (status === 'completed') {
-            progress = 100;
-          }
-          // "bewertet" bleibt unverändert
+          if (status === 'in-progress') progress = 50;
+          else if (status === 'completed') progress = 100;
           return { ...ex, status, progress };
         }
         return ex;
       })
     );
   }
-
-  // Vom Lehrer gesetzter Bewertungsstatus
-  markBewertet(id: string) {
-    this.exercises.update(exercises =>
-      exercises.map(ex =>
-        ex.id === id ? { ...ex, bewertet: true } : ex
-      )
-    );
-  }
 }
+

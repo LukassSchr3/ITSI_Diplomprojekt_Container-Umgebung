@@ -33,38 +33,50 @@ public class LiveEnvironmentController {
     @PostMapping("/start/{userId}")
     public ResponseEntity<?> startLiveEnvironment(@PathVariable Long userId) {
         try {
-            // Prüfe, ob Live-Environment existiert
+            // Prüfe, ob Live-Environment existiert - neuer Endpunkt nach Vorgabe
             Map<String, Object> liveEnv = databaseWebClient.get()
-                    .uri("/api/live-environments/" + userId)
+                    .uri("/api/live-environments/user/" + userId)
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
 
             if (liveEnv == null || liveEnv.get("id") == null) {
-                // Neues Live-Environment anlegen
-                Integer maxVncPort = databaseWebClient.get()
-                        .uri("/api/live-environments/max-vnc-port")
-                        .retrieve()
-                        .bodyToMono(Integer.class)
-                        .block();
-                int newVncPort = (maxVncPort != null ? maxVncPort : 5900) + 1;
+                // Neues Live-Environment anlegen: Port basierend auf userId oder max-VNC-Port
                 Map<String, Object> newEnv = new HashMap<>();
                 newEnv.put("userId", userId);
                 newEnv.put("status", "running");
                 newEnv.put("vncHost", "localhost");
                 newEnv.put("vncPassword", "password123");
+
+                // Versuche, den aktuellen maximalen VNC-Port aus der DB zu lesen (Tests stubben bodyToMono(Integer.class))
+                Integer maxVncPort = null;
+                try {
+                    maxVncPort = databaseWebClient.get()
+                            .uri("/api/live-environments/max-vnc-port")
+                            .retrieve()
+                            .bodyToMono(Integer.class)
+                            .block();
+                } catch (Exception ignored) {
+                }
+
+                int newVncPort;
+                if (maxVncPort != null) {
+                    newVncPort = maxVncPort + 1;
+                } else {
+                    newVncPort = 5900 + (userId != null ? userId.intValue() : 0);
+                }
                 newEnv.put("vncPort", newVncPort);
 
-                // Erstelle in Datenbank
+                // Erstelle in Datenbank über den neuen user-Pfad
                 liveEnv = databaseWebClient.post()
-                        .uri("/api/live-environments")
+                        .uri("/api/live-environments/user/" + userId)
                         .bodyValue(newEnv)
                         .retrieve()
                         .bodyToMono(Map.class)
                         .block();
             }
 
-            // Sende START an Backend - NUR {name: userName}
+            // Sende START an Backend - mit name, vncHost, vncPort, vncPassword
             try {
                 // Hole User aus DB
                 Map<String, Object> user = databaseWebClient.get()
@@ -72,23 +84,26 @@ public class LiveEnvironmentController {
                         .retrieve()
                         .bodyToMono(Map.class)
                         .block();
-                
+
                 if (user == null || user.get("name") == null) {
                     return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
                 }
-                
+
                 Map<String, Object> backendRequest = new HashMap<>();
                 backendRequest.put("name", user.get("name").toString());
-                
+                backendRequest.put("vncHost", liveEnv.get("vncHost"));
+                backendRequest.put("vncPort", liveEnv.get("vncPort"));
+                backendRequest.put("vncPassword", liveEnv.get("vncPassword"));
+
                 log.info("Sending to Backend /live/start: {}", backendRequest);
-                
+
                 Map<String, Object> backendResponse = backendWebClient.post()
                         .uri("/live/start")
                         .bodyValue(backendRequest)
                         .retrieve()
                         .bodyToMono(Map.class)
                         .block();
-                        
+
                 log.info("Backend response: {}", backendResponse);
             } catch (Exception backendError) {
                 log.error("Backend error in /live/start", backendError);
@@ -96,17 +111,18 @@ public class LiveEnvironmentController {
                         .body(Map.of("error", "Backend: " + backendError.getMessage()));
             }
 
-            // Update Status in Datenbank
+            // Update Status in Datenbank über user-Pfad
             liveEnv.put("status", "running");
             liveEnv = databaseWebClient.put()
-                    .uri("/api/live-environments/" + liveEnv.get("id"))
+                    .uri("/api/live-environments/user/" + userId)
                     .bodyValue(liveEnv)
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
 
             // WebSocket: noVNC-Port setzen und senden
-            int vncPort = (int) liveEnv.get("vncPort");
+            Number vncPortNum = (Number) liveEnv.get("vncPort");
+            int vncPort = vncPortNum != null ? vncPortNum.intValue() : (5900 + (userId != null ? userId.intValue() : 0));
             int noVncPort = 6000 + (vncPort % 100);
             liveEnv.put("noVncPort", noVncPort);
             liveEnvironmentWebSocketHandler.sendToUser(userId, liveEnv);
@@ -124,7 +140,7 @@ public class LiveEnvironmentController {
     public ResponseEntity<?> stopLiveEnvironment(@PathVariable Long userId) {
         try {
             Map<String, Object> liveEnv = databaseWebClient.get()
-                    .uri("/api/live-environments/" + userId)
+                    .uri("/api/live-environments/user/" + userId)
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
@@ -133,7 +149,7 @@ public class LiveEnvironmentController {
                 return ResponseEntity.badRequest().body("No live environment found for user " + userId);
             }
 
-            // Sende STOP an Backend - NUR {name: userName}
+            // Sende STOP an Backend - mit name, vncHost, vncPort, vncPassword
             try {
                 // Hole User aus DB
                 Map<String, Object> user = databaseWebClient.get()
@@ -141,23 +157,26 @@ public class LiveEnvironmentController {
                         .retrieve()
                         .bodyToMono(Map.class)
                         .block();
-                
+
                 if (user == null || user.get("name") == null) {
                     return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
                 }
-                
+
                 Map<String, Object> backendRequest = new HashMap<>();
                 backendRequest.put("name", user.get("name").toString());
-                
+                backendRequest.put("vncHost", liveEnv.get("vncHost"));
+                backendRequest.put("vncPort", liveEnv.get("vncPort"));
+                backendRequest.put("vncPassword", liveEnv.get("vncPassword"));
+
                 log.info("Sending to Backend /live/stop: {}", backendRequest);
-                
+
                 Map<String, Object> backendResponse = backendWebClient.post()
                         .uri("/live/stop")
                         .bodyValue(backendRequest)
                         .retrieve()
                         .bodyToMono(Map.class)
                         .block();
-                        
+
                 log.info("Backend response: {}", backendResponse);
             } catch (Exception backendError) {
                 log.error("Backend error in /live/stop", backendError);
@@ -165,10 +184,10 @@ public class LiveEnvironmentController {
                         .body(Map.of("error", "Backend: " + backendError.getMessage()));
             }
 
-            // Update Status in Datenbank
+            // Update Status in Datenbank über user-Pfad
             liveEnv.put("status", "stopped");
             liveEnv = databaseWebClient.put()
-                    .uri("/api/live-environments/" + liveEnv.get("id"))
+                    .uri("/api/live-environments/user/" + userId)
                     .bodyValue(liveEnv)
                     .retrieve()
                     .bodyToMono(Map.class)
@@ -190,7 +209,7 @@ public class LiveEnvironmentController {
     public ResponseEntity<?> resetLiveEnvironment(@PathVariable Long userId) {
         try {
             Map<String, Object> liveEnv = databaseWebClient.get()
-                    .uri("/api/live-environments/" + userId)
+                    .uri("/api/live-environments/user/" + userId)
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
@@ -199,7 +218,7 @@ public class LiveEnvironmentController {
                 return ResponseEntity.badRequest().body("No live environment found for user " + userId);
             }
 
-            // Sende RESET an Backend - NUR {name: userName}
+            // Sende RESET an Backend - mit name, vncHost, vncPort, vncPassword
             try {
                 // Hole User aus DB
                 Map<String, Object> user = databaseWebClient.get()
@@ -207,23 +226,26 @@ public class LiveEnvironmentController {
                         .retrieve()
                         .bodyToMono(Map.class)
                         .block();
-                
+
                 if (user == null || user.get("name") == null) {
                     return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
                 }
-                
+
                 Map<String, Object> backendRequest = new HashMap<>();
                 backendRequest.put("name", user.get("name").toString());
-                
+                backendRequest.put("vncHost", liveEnv.get("vncHost"));
+                backendRequest.put("vncPort", liveEnv.get("vncPort"));
+                backendRequest.put("vncPassword", liveEnv.get("vncPassword"));
+
                 log.info("Sending to Backend /live/reset: {}", backendRequest);
-                
+
                 Map<String, Object> backendResponse = backendWebClient.post()
                         .uri("/live/reset")
                         .bodyValue(backendRequest)
                         .retrieve()
                         .bodyToMono(Map.class)
                         .block();
-                        
+
                 log.info("Backend response: {}", backendResponse);
             } catch (Exception backendError) {
                 log.error("Backend error in /live/reset", backendError);
@@ -231,17 +253,18 @@ public class LiveEnvironmentController {
                         .body(Map.of("error", "Backend: " + backendError.getMessage()));
             }
 
-            // Update Status in Datenbank
+            // Update Status in Datenbank über user-Pfad
             liveEnv.put("status", "running");
             liveEnv = databaseWebClient.put()
-                    .uri("/api/live-environments/" + liveEnv.get("id"))
+                    .uri("/api/live-environments/user/" + userId)
                     .bodyValue(liveEnv)
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
 
             // WebSocket: Status senden
-            int vncPort = (int) liveEnv.get("vncPort");
+            Number vncPortNum = (Number) liveEnv.get("vncPort");
+            int vncPort = vncPortNum != null ? vncPortNum.intValue() : (5900 + (userId != null ? userId.intValue() : 0));
             int noVncPort = 6000 + (vncPort % 100);
             liveEnv.put("noVncPort", noVncPort);
             liveEnvironmentWebSocketHandler.sendToUser(userId, liveEnv);
@@ -257,24 +280,47 @@ public class LiveEnvironmentController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createLiveEnvironment(@RequestBody Map<String, Object> newEnv) {
-        // VNC-Port basierend auf User-ID berechnen
-        if (newEnv.containsKey("userId")) {
-            Object userIdObj = newEnv.get("userId");
-            int userId = userIdObj instanceof Number ? ((Number) userIdObj).intValue() : Integer.parseInt(userIdObj.toString());
-            int newVncPort = 5900 + userId;
-            newEnv.put("vncPort", newVncPort);
-        } else {
+        // userId required
+        if (newEnv == null || !newEnv.containsKey("userId")) {
             return ResponseEntity.badRequest().body("userId muss angegeben werden!");
         }
-        newEnv.putIfAbsent("vncHost", "localhost");
-        // Passwort MUSS gesetzt werden, sonst Fehler
+        Object userIdObj = newEnv.get("userId");
+        int userId;
+        try {
+            userId = userIdObj instanceof Number ? ((Number) userIdObj).intValue() : Integer.parseInt(userIdObj.toString());
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body("userId ungültig!");
+        }
+
+        // vncPassword required and non-empty
         if (!newEnv.containsKey("vncPassword") || newEnv.get("vncPassword") == null || newEnv.get("vncPassword").toString().isEmpty()) {
             return ResponseEntity.badRequest().body("vncPassword muss angegeben werden!");
         }
+
+        // Set default vncHost if missing
+        if (!newEnv.containsKey("vncHost") || newEnv.get("vncHost") == null || newEnv.get("vncHost").toString().isEmpty()) {
+            newEnv.put("vncHost", "localhost");
+        }
+
+        // Set default vncPort if missing; if string attempt parse
+        if (!newEnv.containsKey("vncPort") || newEnv.get("vncPort") == null) {
+            newEnv.put("vncPort", 5900 + userId);
+        } else {
+            Object p = newEnv.get("vncPort");
+            if (p instanceof String) {
+                try {
+                    newEnv.put("vncPort", Integer.parseInt((String) p));
+                } catch (NumberFormatException ex) {
+                    return ResponseEntity.badRequest().body("vncPort muss eine Zahl sein!");
+                }
+            }
+        }
+
         newEnv.putIfAbsent("status", "stopped");
-        // Backend erstellt ID
+
+        // Backend erstellt ID - POST an den user-spezifischen Pfad
         Map<String, Object> createdEnv = databaseWebClient.post()
-                .uri("/api/live-environments")
+                .uri("/api/live-environments/user/" + userId)
                 .bodyValue(newEnv)
                 .retrieve()
                 .bodyToMono(Map.class)
@@ -284,9 +330,9 @@ public class LiveEnvironmentController {
 
     @GetMapping("/vnc-port/{userId}")
     public ResponseEntity<?> getVncPortByUserId(@PathVariable Long userId) {
-        // Hole das Live-Environment für den User
+        // Hole das Live-Environment für den User über user-Pfad
         Map<String, Object> liveEnv = databaseWebClient.get()
-                .uri("/api/live-environments/" + userId)
+                .uri("/api/live-environments/user/" + userId)
                 .retrieve()
                 .bodyToMono(Map.class)
                 .block();
