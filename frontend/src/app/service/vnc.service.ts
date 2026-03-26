@@ -30,7 +30,7 @@ export class VncService {
   private statusSubject = new BehaviorSubject<VNCConnectionStatus>(VNCConnectionStatus.DISCONNECTED);
   public status$: Observable<VNCConnectionStatus> = this.statusSubject.asObservable();
 
-  constructor() {}
+  constructor() { /* empty */ }
 
   private async loadRFB(): Promise<any> {
     if (window.RFB) {
