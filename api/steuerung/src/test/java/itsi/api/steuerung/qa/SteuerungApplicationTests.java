@@ -1,4 +1,4 @@
-package itsi.api.steuerung;
+package itsi.api.steuerung.qa;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,5 +8,5 @@ class SteuerungApplicationTests {
     @Test
     void contextLoads() {
     }
-
 }
+

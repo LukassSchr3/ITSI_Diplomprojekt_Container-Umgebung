@@ -21,12 +21,20 @@ public class LiveEnvironmentService {
         return repository.findById(id);
     }
 
+    public Optional<LiveEnvironment> findByUserId(Long userId) {
+        return repository.findByUserId(userId);
+    }
+
     public LiveEnvironment save(LiveEnvironment env) {
         return repository.save(env);
     }
 
     public void deleteById(Long id) {
         repository.deleteById(id);
+    }
+
+    public void deleteByUserId(Long userId) {
+        repository.deleteByUserId(userId);
     }
 
     public Integer getMaxVncPort() {

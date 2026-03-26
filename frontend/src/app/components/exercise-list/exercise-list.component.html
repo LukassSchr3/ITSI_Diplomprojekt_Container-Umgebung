@@ -1,11 +1,7 @@
 <div class="exercise-container">
   <div class="header">
-    <div class="header-icon">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M9 5v2h6.59L4 18.59 5.41 20 17 8.41V15h2V5z"/>
-      </svg>
-    </div>
-    <h1>Übungsaufgaben Labor</h1>
+    <button class="back-button" (click)="goBack()" type="button">← Zurück</button>
+    <h1>Übungsaufgaben</h1>
   </div>
 
   <div class="exercise-list">
@@ -13,16 +9,10 @@
       <div class="exercise-card"
            [class.completed]="exercise.status === 'completed'"
            [class.in-progress]="exercise.status === 'in-progress'"
+           [routerLink]="['/exercises', exercise.id]"
+           role="link"
            tabindex="0"
-           role="button"
-           (click)="onExerciseClick(exercise)"
-           (keydown.enter)="onExerciseClick(exercise)"
-           (keydown.space)="onExerciseClick(exercise)">
-        <div class="exercise-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zm-9-9h8v2h-8v-2zm0 4h5v2H9v-2z"/>
-          </svg>
-        </div>
+           (keydown.enter)="navigateTo(exercise.id)">
 
         <div class="exercise-content">
           <h2>{{ exercise.title }}</h2>
@@ -30,44 +20,43 @@
             <p class="description">{{ exercise.description }}</p>
           }
 
-          <div class="progress-section"
-               tabindex="0"
-               (click)="$event.stopPropagation()"
-               (keydown.enter)="$event.stopPropagation()"
-               (keydown.space)="$event.stopPropagation()">
-            <div class="progress-header">
-              <span class="progress-label">Fortschritt</span>
-              <span class="progress-value">{{ exercise.progress }}%</span>
-            </div>
+          <div class="meta-row">
+            <span class="status-badge" [class]="exercise.status">
+              @if (exercise.status === 'not-started') { Nicht begonnen }
+              @else if (exercise.status === 'in-progress') { In Bearbeitung }
+              @else { Abgeschlossen }
+            </span>
 
-            <div class="progress-bar-container">
-              <div class="progress-bar" [style.width.%]="exercise.progress"></div>
-            </div>
-
-            <div class="progress-controls">
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="10"
-                [value]="exercise.progress"
-                (input)="onProgressChange(exercise.id, $event)"
-                [disabled]="!canWrite()"
-                class="progress-slider"
-              />
-            </div>
-          </div>
-
-          <div class="status-badge" [class]="exercise.status">
-            @if (exercise.status === 'not-started') {
-              <span>Nicht begonnen</span>
-            } @else if (exercise.status === 'in-progress') {
-              <span>In Bearbeitung</span>
+            @if (exercise.bewertung) {
+              <span class="bewertungs-badge bewertet">{{ exercise.bewertung }}</span>
             } @else {
-              <span>✓ Abgeschlossen</span>
+              <span class="bewertungs-badge nicht-bewertet">Nicht bewertet</span>
             }
           </div>
         </div>
+
+        <div class="exercise-actions" (click)="$event.stopPropagation()">
+          @if (isTeacher()) {
+            <select class="bewertung-select"
+                    [value]="exercise.bewertung ?? ''"
+                    (change)="setBewertung(exercise.id, $any($event.target).value)">
+              <option value="">— Bewertung wählen —</option>
+              @for (option of bewertungOptions; track option) {
+                <option [value]="option">{{ option }}</option>
+              }
+            </select>
+          }
+
+          @if (hasQuiz(exercise.id)) {
+            <button type="button" class="quiz-start-btn" (click)="startQuiz(exercise.id)">
+              Quiz starten
+            </button>
+          }
+        </div>
+
+        <svg class="card-arrow" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z"/>
+        </svg>
       </div>
     }
   </div>

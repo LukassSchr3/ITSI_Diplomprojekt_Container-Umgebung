@@ -33,6 +33,9 @@ export class VncService {
   constructor() { /* empty */ }
 
   private async loadRFB(): Promise<any> {
+    if (typeof window === 'undefined') {
+      return Promise.reject(new Error('window is not available'));
+    }
     if (window.RFB) {
       return window.RFB;
     }
@@ -40,6 +43,11 @@ export class VncService {
     // Warte bis RFB verfügbar ist
     return new Promise((resolve, reject) => {
       const checkInterval = setInterval(() => {
+        if (typeof window === 'undefined') {
+          clearInterval(checkInterval);
+          reject(new Error('window is not available'));
+          return;
+        }
         if (window.RFB) {
           clearInterval(checkInterval);
           resolve(window.RFB);

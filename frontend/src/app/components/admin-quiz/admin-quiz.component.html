@@ -1,0 +1,132 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <button class="back-button" (click)="goBack()">← Zurück zum Dashboard</button>
+    <h1>Quiz-Verwaltung</h1>
+  </div>
+
+  <div class="admin-content">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h2>Alle Quizze</h2>
+        <button class="add-button" (click)="addNewQuiz()">+ Quiz erstellen</button>
+      </div>
+      <div class="quiz-list">
+        @for (quiz of quizzes(); track quiz.id) {
+          <div class="quiz-item"
+               [class.active]="selectedQuiz()?.id === quiz.id"
+               (click)="selectQuiz(quiz)">
+            <div class="quiz-item-title">{{ quiz.title }}</div>
+            <div class="quiz-item-info">{{ quiz.questions.length }} Fragen</div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="main-content">
+      @if (showQuizForm()) {
+        <div class="form-card">
+          <h2>Neues Quiz erstellen</h2>
+          <div class="form-group">
+            <label>Quiz-Titel</label>
+            <input type="text" [(ngModel)]="quizForm().title" placeholder="z.B. Linux Grundlagen Quiz">
+          </div>
+          <div class="form-group">
+            <label>Übung auswählen</label>
+            <select [(ngModel)]="quizForm().exerciseId">
+              <option value="">-- Übung wählen --</option>
+              @for (exercise of exercises(); track exercise.id) {
+                <option [value]="exercise.id">{{ exercise.title }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Passwort</label>
+            <input type="text" [(ngModel)]="quizForm().password" placeholder="z.B. quiz123">
+          </div>
+          <div class="button-group">
+            <button class="cancel-button" (click)="showQuizForm.set(false)">Abbrechen</button>
+            <button class="save-button" (click)="saveQuiz()">Quiz erstellen</button>
+          </div>
+        </div>
+      }
+
+      @if (selectedQuiz() && !showQuizForm()) {
+        <div class="quiz-details">
+          <div class="quiz-details-header">
+            <div>
+              <h2>{{ selectedQuiz()!.title }}</h2>
+              <p>Passwort: <strong>{{ selectedQuiz()!.password }}</strong></p>
+            </div>
+            <button class="delete-button" (click)="deleteQuiz(selectedQuiz()!.id)">Quiz löschen</button>
+          </div>
+
+          <div class="questions-section">
+            <div class="questions-header">
+              <h3>Fragen ({{ selectedQuiz()!.questions.length }})</h3>
+              <button class="add-button" (click)="addQuestion()">+ Frage hinzufügen</button>
+            </div>
+
+            @if (showQuestionForm()) {
+              <div class="form-card">
+                <h4>{{ editingQuestion() ? 'Frage bearbeiten' : 'Neue Frage' }}</h4>
+                <div class="form-group">
+                  <label>Frage</label>
+                  <input type="text" [(ngModel)]="questionForm().question" placeholder="Deine Frage">
+                </div>
+                <div class="form-group"><label>Antwort A</label><input type="text" [(ngModel)]="questionForm().option1" placeholder="Antwort A"></div>
+                <div class="form-group"><label>Antwort B</label><input type="text" [(ngModel)]="questionForm().option2" placeholder="Antwort B"></div>
+                <div class="form-group"><label>Antwort C (optional)</label><input type="text" [(ngModel)]="questionForm().option3" placeholder="Antwort C"></div>
+                <div class="form-group"><label>Antwort D (optional)</label><input type="text" [(ngModel)]="questionForm().option4" placeholder="Antwort D"></div>
+                <div class="form-group">
+                  <label>Richtige Antwort</label>
+                  <select [(ngModel)]="questionForm().correctAnswer">
+                    <option [value]="0">A</option>
+                    <option [value]="1">B</option>
+                    <option [value]="2">C</option>
+                    <option [value]="3">D</option>
+                  </select>
+                </div>
+                <div class="button-group">
+                  <button class="cancel-button" (click)="showQuestionForm.set(false)">Abbrechen</button>
+                  <button class="save-button" (click)="saveQuestion()">Speichern</button>
+                </div>
+              </div>
+            }
+
+            <div class="questions-list">
+              @for (question of selectedQuiz()!.questions; track question.id; let idx = $index) {
+                <div class="question-card">
+                  <div class="question-header">
+                    <strong>Frage {{ idx + 1 }}</strong>
+                    <div class="question-actions">
+                      <button class="edit-button" (click)="editQuestion(question)">Bearbeiten</button>
+                      <button class="delete-button-small" (click)="deleteQuestion(question.id)">Löschen</button>
+                    </div>
+                  </div>
+                  <p class="question-text">{{ question.question }}</p>
+                  <div class="options">
+                    @for (option of question.options; track $index) {
+                      <div class="option" [class.correct]="$index === question.correctAnswer">
+                        <span class="option-letter">{{ String.fromCharCode(65 + $index) }}</span>
+                        {{ option }}
+                        @if ($index === question.correctAnswer) {
+                          <span class="correct-badge">✓ Richtig</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (!selectedQuiz() && !showQuizForm()) {
+        <div class="empty-state">
+          <p>Wähle ein Quiz aus der Liste oder erstelle ein neues Quiz</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>

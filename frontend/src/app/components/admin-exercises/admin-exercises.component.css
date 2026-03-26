@@ -1,0 +1,35 @@
+.admin-container { min-height: 100vh; background: var(--bg-primary); padding: 20px; }
+.admin-header { max-width: 1200px; margin: 0 auto 20px; }
+.admin-header h1 { font-size: 28px; font-weight: 600; color: var(--text-primary); margin: 15px 0 0 0; }
+.back-button { padding: 8px 16px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 3px; color: var(--text-primary); font-size: 14px; cursor: pointer; transition: background 0.2s; }
+.back-button:hover { background: var(--bg-tertiary); }
+.admin-content { max-width: 1200px; margin: 0 auto; }
+.toolbar { margin-bottom: 20px; }
+.add-button { padding: 10px 18px; background: #667eea; color: white; border: none; border-radius: 3px; font-size: 14px; font-weight: 500; cursor: pointer; }
+.add-button:hover { background: #5568d3; }
+.form-card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 4px; padding: 25px; margin-bottom: 25px; }
+.form-card h2 { font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0 0 20px 0; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-size: 14px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+.form-group input, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 3px; font-size: 14px; background: var(--bg-primary); color: var(--text-primary); font-family: inherit; }
+.form-group input:focus, .form-group textarea:focus { outline: none; border-color: #667eea; }
+.form-group input:disabled { opacity: 0.6; cursor: not-allowed; }
+.button-group { display: flex; gap: 10px; margin-top: 20px; }
+.cancel-button { flex: 1; padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 3px; color: var(--text-primary); font-size: 14px; font-weight: 500; cursor: pointer; }
+.cancel-button:hover { background: var(--bg-tertiary); }
+.save-button { flex: 1; padding: 10px; background: #667eea; color: white; border: none; border-radius: 3px; font-size: 14px; font-weight: 500; cursor: pointer; }
+.save-button:hover { background: #5568d3; }
+.exercises-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; }
+.exercise-card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 4px; padding: 20px; }
+.exercise-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.exercise-header h3 { font-size: 18px; font-weight: 600; color: var(--text-primary); margin: 0 0 8px 0; }
+.category-badge { display: inline-block; padding: 4px 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 3px; font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+.exercise-actions { display: flex; gap: 8px; }
+.edit-button { padding: 6px 12px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 3px; color: var(--text-primary); font-size: 12px; font-weight: 500; cursor: pointer; }
+.edit-button:hover { background: var(--bg-tertiary); }
+.delete-button { padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 3px; font-size: 12px; font-weight: 500; cursor: pointer; }
+.delete-button:hover { background: #c82333; }
+.exercise-description { font-size: 14px; color: var(--text-secondary); margin: 0 0 15px 0; line-height: 1.5; }
+.exercise-meta { display: flex; gap: 15px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+.meta-item { font-size: 13px; color: var(--text-secondary); }
+@media (max-width: 768px) { .exercises-grid { grid-template-columns: 1fr; } }
