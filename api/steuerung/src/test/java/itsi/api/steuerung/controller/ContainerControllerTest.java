@@ -14,7 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ContainerControllerTest {
@@ -37,7 +39,7 @@ class ContainerControllerTest {
     // --- startContainer ---
 
     @Test
-    void startContainer_successReturns200() {
+    void startContainerSuccessReturns200() {
         ContainerOperationResponse resp = new ContainerOperationResponse(
                 true, "Container started successfully", "cont_1", "running", instance);
         when(containerService.startContainer(request)).thenReturn(resp);
@@ -50,7 +52,7 @@ class ContainerControllerTest {
     }
 
     @Test
-    void startContainer_failureReturnsBadRequest() {
+    void startContainerFailureReturnsBadRequest() {
         ContainerOperationResponse resp = new ContainerOperationResponse(
                 false, "Failed", null, null, null);
         when(containerService.startContainer(request)).thenReturn(resp);
@@ -62,7 +64,7 @@ class ContainerControllerTest {
     }
 
     @Test
-    void startContainer_delegatesToService() {
+    void startContainerDelegatesToService() {
         when(containerService.startContainer(request))
                 .thenReturn(new ContainerOperationResponse(true, "ok", "c1", "running", null));
 
@@ -72,7 +74,7 @@ class ContainerControllerTest {
     }
 
     @Test
-    void startContainer_successResponseContainsInstance() {
+    void startContainerSuccessResponseContainsInstance() {
         ContainerOperationResponse resp = new ContainerOperationResponse(
                 true, "ok", "cont_1", "running", instance);
         when(containerService.startContainer(request)).thenReturn(resp);
@@ -86,7 +88,7 @@ class ContainerControllerTest {
     // --- stopContainer ---
 
     @Test
-    void stopContainer_successReturns200() {
+    void stopContainerSuccessReturns200() {
         ContainerOperationResponse resp = new ContainerOperationResponse(
                 true, "Container stopped successfully", "cont_1", "stopped", instance);
         when(containerService.stopContainer(request)).thenReturn(resp);
@@ -98,7 +100,7 @@ class ContainerControllerTest {
     }
 
     @Test
-    void stopContainer_failureReturnsBadRequest() {
+    void stopContainerFailureReturnsBadRequest() {
         when(containerService.stopContainer(request))
                 .thenReturn(new ContainerOperationResponse(false, "No instance found", null, null, null));
 
@@ -108,7 +110,7 @@ class ContainerControllerTest {
     }
 
     @Test
-    void stopContainer_delegatesToService() {
+    void stopContainerDelegatesToService() {
         when(containerService.stopContainer(request))
                 .thenReturn(new ContainerOperationResponse(true, "ok", "c1", "stopped", null));
 
@@ -120,7 +122,7 @@ class ContainerControllerTest {
     // --- resetContainer ---
 
     @Test
-    void resetContainer_successReturns200() {
+    void resetContainerSuccessReturns200() {
         ContainerOperationResponse resp = new ContainerOperationResponse(
                 true, "Container reset successfully", "cont_1", "running", instance);
         when(containerService.resetContainer(request)).thenReturn(resp);
@@ -132,7 +134,7 @@ class ContainerControllerTest {
     }
 
     @Test
-    void resetContainer_failureReturnsBadRequest() {
+    void resetContainerFailureReturnsBadRequest() {
         when(containerService.resetContainer(request))
                 .thenReturn(new ContainerOperationResponse(false, "Error", null, null, null));
 
@@ -142,7 +144,7 @@ class ContainerControllerTest {
     }
 
     @Test
-    void resetContainer_delegatesToService() {
+    void resetContainerDelegatesToService() {
         when(containerService.resetContainer(request))
                 .thenReturn(new ContainerOperationResponse(true, "ok", "c1", "running", null));
 

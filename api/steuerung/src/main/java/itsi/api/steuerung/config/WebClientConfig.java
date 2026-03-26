@@ -7,8 +7,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.time.Duration;
-
 @Configuration
 public class WebClientConfig {
 

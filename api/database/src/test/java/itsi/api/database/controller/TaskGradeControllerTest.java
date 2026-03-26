@@ -17,9 +17,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TaskGradeControllerTest {
@@ -45,7 +48,7 @@ class TaskGradeControllerTest {
     }
 
     @Test
-    void getAllTaskGrades_shouldReturnList() {
+    void getAllTaskGradesShouldReturnList() {
         when(taskGradeService.findAll()).thenReturn(Arrays.asList(testGrade));
 
         ResponseEntity<List<TaskGrade>> response = taskGradeController.getAllTaskGrades();
@@ -55,14 +58,14 @@ class TaskGradeControllerTest {
     }
 
     @Test
-    void getAllTaskGrades_shouldReturnEmptyList() {
+    void getAllTaskGradesShouldReturnEmptyList() {
         when(taskGradeService.findAll()).thenReturn(Collections.emptyList());
 
         assertTrue(taskGradeController.getAllTaskGrades().getBody().isEmpty());
     }
 
     @Test
-    void getTaskGradeById_shouldReturnWhenExists() {
+    void getTaskGradeByIdShouldReturnWhenExists() {
         when(taskGradeService.findById(1)).thenReturn(Optional.of(testGrade));
 
         ResponseEntity<TaskGrade> response = taskGradeController.getTaskGradeById(1);
@@ -72,14 +75,14 @@ class TaskGradeControllerTest {
     }
 
     @Test
-    void getTaskGradeById_shouldReturn404WhenNotExists() {
+    void getTaskGradeByIdShouldReturn404WhenNotExists() {
         when(taskGradeService.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, taskGradeController.getTaskGradeById(99).getStatusCode());
     }
 
     @Test
-    void getGradesByUserId_shouldReturnList() {
+    void getGradesByUserIdShouldReturnList() {
         when(taskGradeService.findByUserId(1)).thenReturn(Arrays.asList(testGrade));
 
         ResponseEntity<List<TaskGrade>> response = taskGradeController.getGradesByUserId(1);
@@ -89,7 +92,7 @@ class TaskGradeControllerTest {
     }
 
     @Test
-    void getGradesByTaskId_shouldReturnList() {
+    void getGradesByTaskIdShouldReturnList() {
         when(taskGradeService.findByTaskId(10)).thenReturn(Arrays.asList(testGrade));
 
         ResponseEntity<List<TaskGrade>> response = taskGradeController.getGradesByTaskId(10);
@@ -99,7 +102,7 @@ class TaskGradeControllerTest {
     }
 
     @Test
-    void getGradeByUserAndTask_shouldReturnWhenExists() {
+    void getGradeByUserAndTaskShouldReturnWhenExists() {
         when(taskGradeService.findByUserIdAndTaskId(1, 10)).thenReturn(Optional.of(testGrade));
 
         ResponseEntity<TaskGrade> response = taskGradeController.getGradeByUserAndTask(1, 10);
@@ -109,14 +112,14 @@ class TaskGradeControllerTest {
     }
 
     @Test
-    void getGradeByUserAndTask_shouldReturn404WhenNotExists() {
+    void getGradeByUserAndTaskShouldReturn404WhenNotExists() {
         when(taskGradeService.findByUserIdAndTaskId(99, 99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, taskGradeController.getGradeByUserAndTask(99, 99).getStatusCode());
     }
 
     @Test
-    void getGradesByPassed_shouldReturnPassedGrades() {
+    void getGradesByPassedShouldReturnPassedGrades() {
         when(taskGradeService.findByPassed(true)).thenReturn(Arrays.asList(testGrade));
 
         ResponseEntity<List<TaskGrade>> response = taskGradeController.getGradesByPassed(true);
@@ -126,7 +129,7 @@ class TaskGradeControllerTest {
     }
 
     @Test
-    void getGradesByPassed_shouldReturnFailedGrades() {
+    void getGradesByPassedShouldReturnFailedGrades() {
         when(taskGradeService.findByPassed(false)).thenReturn(Collections.emptyList());
 
         ResponseEntity<List<TaskGrade>> response = taskGradeController.getGradesByPassed(false);
@@ -136,7 +139,7 @@ class TaskGradeControllerTest {
     }
 
     @Test
-    void createTaskGrade_shouldReturnCreated() {
+    void createTaskGradeShouldReturnCreated() {
         when(taskGradeService.findByUserIdAndTaskId(1, 10)).thenReturn(Optional.empty());
         when(taskGradeService.save(any(TaskGrade.class))).thenReturn(testGrade);
 
@@ -147,7 +150,7 @@ class TaskGradeControllerTest {
     }
 
     @Test
-    void createTaskGrade_shouldReturnConflictWhenAlreadyExists() {
+    void createTaskGradeShouldReturnConflictWhenAlreadyExists() {
         when(taskGradeService.findByUserIdAndTaskId(1, 10)).thenReturn(Optional.of(testGrade));
 
         ResponseEntity<?> response = taskGradeController.createTaskGrade(testGrade);
@@ -157,7 +160,7 @@ class TaskGradeControllerTest {
     }
 
     @Test
-    void updateTaskGrade_shouldReturnUpdated() {
+    void updateTaskGradeShouldReturnUpdated() {
         when(taskGradeService.findById(1)).thenReturn(Optional.of(testGrade));
         when(taskGradeService.save(any(TaskGrade.class))).thenReturn(testGrade);
 
@@ -168,14 +171,14 @@ class TaskGradeControllerTest {
     }
 
     @Test
-    void updateTaskGrade_shouldReturn404WhenNotExists() {
+    void updateTaskGradeShouldReturn404WhenNotExists() {
         when(taskGradeService.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, taskGradeController.updateTaskGrade(99, testGrade).getStatusCode());
     }
 
     @Test
-    void updateTaskGradeByUserAndTask_shouldReturnUpdated() {
+    void updateTaskGradeByUserAndTaskShouldReturnUpdated() {
         when(taskGradeService.findByUserIdAndTaskId(1, 10)).thenReturn(Optional.of(testGrade));
         when(taskGradeService.save(any(TaskGrade.class))).thenReturn(testGrade);
 
@@ -185,14 +188,14 @@ class TaskGradeControllerTest {
     }
 
     @Test
-    void updateTaskGradeByUserAndTask_shouldReturn404WhenNotExists() {
+    void updateTaskGradeByUserAndTaskShouldReturn404WhenNotExists() {
         when(taskGradeService.findByUserIdAndTaskId(99, 99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, taskGradeController.updateTaskGradeByUserAndTask(99, 99, testGrade).getStatusCode());
     }
 
     @Test
-    void deleteTaskGrade_shouldReturnNoContent() {
+    void deleteTaskGradeShouldReturnNoContent() {
         when(taskGradeService.findById(1)).thenReturn(Optional.of(testGrade));
 
         ResponseEntity<Void> response = taskGradeController.deleteTaskGrade(1);
@@ -202,7 +205,7 @@ class TaskGradeControllerTest {
     }
 
     @Test
-    void deleteTaskGrade_shouldReturn404WhenNotExists() {
+    void deleteTaskGradeShouldReturn404WhenNotExists() {
         when(taskGradeService.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, taskGradeController.deleteTaskGrade(99).getStatusCode());

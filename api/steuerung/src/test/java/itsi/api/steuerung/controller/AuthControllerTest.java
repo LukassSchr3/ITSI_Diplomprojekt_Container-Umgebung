@@ -17,7 +17,8 @@ import org.springframework.http.ResponseEntity;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
@@ -42,7 +43,7 @@ class AuthControllerTest {
     // --- login ---
 
     @Test
-    void login_successfulLoginReturns200() {
+    void loginSuccessfulLoginReturns200() {
         when(databaseService.findUserByEmail("max@test.at")).thenReturn(Optional.of(testUser));
         when(jwtService.generateToken(testUser)).thenReturn("jwt-token-xyz");
 
@@ -56,7 +57,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_successfulLoginResponseContainsNoPassword() {
+    void loginSuccessfulLoginResponseContainsNoPassword() {
         when(databaseService.findUserByEmail("max@test.at")).thenReturn(Optional.of(testUser));
         when(jwtService.generateToken(testUser)).thenReturn("token");
 
@@ -67,7 +68,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_successfulLoginResponseContainsUserData() {
+    void loginSuccessfulLoginResponseContainsUserData() {
         when(databaseService.findUserByEmail("max@test.at")).thenReturn(Optional.of(testUser));
         when(jwtService.generateToken(testUser)).thenReturn("token");
 
@@ -81,7 +82,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_nullEmailReturnsBadRequest() {
+    void loginNullEmailReturnsBadRequest() {
         ResponseEntity<LoginResponse> response = authController.login(
                 new LoginRequest(null, "pass123"));
 
@@ -91,7 +92,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_emptyEmailReturnsBadRequest() {
+    void loginEmptyEmailReturnsBadRequest() {
         ResponseEntity<LoginResponse> response = authController.login(
                 new LoginRequest("  ", "pass123"));
 
@@ -99,7 +100,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_nullPasswordReturnsBadRequest() {
+    void loginNullPasswordReturnsBadRequest() {
         ResponseEntity<LoginResponse> response = authController.login(
                 new LoginRequest("max@test.at", null));
 
@@ -108,7 +109,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_emptyPasswordReturnsBadRequest() {
+    void loginEmptyPasswordReturnsBadRequest() {
         ResponseEntity<LoginResponse> response = authController.login(
                 new LoginRequest("max@test.at", ""));
 
@@ -116,7 +117,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_userNotFoundReturnsUnauthorized() {
+    void loginUserNotFoundReturnsUnauthorized() {
         when(databaseService.findUserByEmail("nobody@test.at")).thenReturn(Optional.empty());
 
         ResponseEntity<LoginResponse> response = authController.login(
@@ -127,7 +128,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_wrongPasswordReturnsUnauthorized() {
+    void loginWrongPasswordReturnsUnauthorized() {
         when(databaseService.findUserByEmail("max@test.at")).thenReturn(Optional.of(testUser));
 
         ResponseEntity<LoginResponse> response = authController.login(
@@ -138,7 +139,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_serviceThrowsExceptionReturns500() {
+    void loginServiceThrowsExceptionReturns500() {
         when(databaseService.findUserByEmail(any())).thenThrow(new RuntimeException("DB down"));
 
         ResponseEntity<LoginResponse> response = authController.login(
@@ -151,7 +152,7 @@ class AuthControllerTest {
     // --- validateToken ---
 
     @Test
-    void validateToken_validBearerTokenReturns200() {
+    void validateTokenValidBearerTokenReturns200() {
         when(jwtService.isTokenValid("valid-token")).thenReturn(true);
 
         ResponseEntity<LoginResponse> response = authController.validateToken("Bearer valid-token");
@@ -161,7 +162,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void validateToken_invalidTokenReturnsUnauthorized() {
+    void validateTokenInvalidTokenReturnsUnauthorized() {
         when(jwtService.isTokenValid("bad-token")).thenReturn(false);
 
         ResponseEntity<LoginResponse> response = authController.validateToken("Bearer bad-token");
@@ -171,21 +172,21 @@ class AuthControllerTest {
     }
 
     @Test
-    void validateToken_missingBearerPrefixReturnsBadRequest() {
+    void validateTokenMissingBearerPrefixReturnsBadRequest() {
         ResponseEntity<LoginResponse> response = authController.validateToken("just-a-token");
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    void validateToken_nullHeaderReturnsBadRequest() {
+    void validateTokenNullHeaderReturnsBadRequest() {
         ResponseEntity<LoginResponse> response = authController.validateToken(null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    void validateToken_serviceThrowsReturns500() {
+    void validateTokenServiceThrowsReturns500() {
         when(jwtService.isTokenValid(any())).thenThrow(new RuntimeException("JWT error"));
 
         ResponseEntity<LoginResponse> response = authController.validateToken("Bearer crash");

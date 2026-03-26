@@ -9,7 +9,9 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class ApiInfoControllerTest {
@@ -18,7 +20,7 @@ class ApiInfoControllerTest {
     private ApiInfoController apiInfoController;
 
     @Test
-    void getApiInfo_shouldReturnOk() {
+    void getApiInfoShouldReturnOk() {
         ResponseEntity<Map<String, Object>> response = apiInfoController.getApiInfo();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -26,7 +28,7 @@ class ApiInfoControllerTest {
     }
 
     @Test
-    void getApiInfo_shouldContainName() {
+    void getApiInfoShouldContainName() {
         ResponseEntity<Map<String, Object>> response = apiInfoController.getApiInfo();
 
         assertNotNull(response.getBody());
@@ -34,7 +36,7 @@ class ApiInfoControllerTest {
     }
 
     @Test
-    void getApiInfo_shouldContainVersion() {
+    void getApiInfoShouldContainVersion() {
         ResponseEntity<Map<String, Object>> response = apiInfoController.getApiInfo();
 
         assertNotNull(response.getBody());
@@ -42,7 +44,7 @@ class ApiInfoControllerTest {
     }
 
     @Test
-    void getApiInfo_shouldContainEndpoints() {
+    void getApiInfoShouldContainEndpoints() {
         ResponseEntity<Map<String, Object>> response = apiInfoController.getApiInfo();
 
         assertNotNull(response.getBody());

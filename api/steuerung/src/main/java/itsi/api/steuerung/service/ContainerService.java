@@ -2,7 +2,6 @@ package itsi.api.steuerung.service;
 
 import itsi.api.steuerung.dto.ContainerOperationRequest;
 import itsi.api.steuerung.dto.ContainerOperationResponse;
-import itsi.api.steuerung.dto.ImageDTO;
 import itsi.api.steuerung.dto.InstanceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;

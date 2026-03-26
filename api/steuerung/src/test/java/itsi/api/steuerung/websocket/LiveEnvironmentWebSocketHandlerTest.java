@@ -20,7 +20,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class LiveEnvironmentWebSocketHandlerTest {
@@ -46,7 +52,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     // ===================== sendToUser =====================
 
     @Test
-    void sendToUser_sessionPresentAndOpen_sendsMessage() throws Exception {
+    void sendToUserSessionPresentAndOpenSendsMessage() throws Exception {
         when(session.isOpen()).thenReturn(true);
 
         Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
@@ -65,7 +71,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     }
 
     @Test
-    void sendToUser_sessionNotOpen_doesNotSend() throws Exception {
+    void sendToUserSessionNotOpenDoesNotSend() throws Exception {
         when(session.isOpen()).thenReturn(false);
 
         Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
@@ -77,7 +83,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     }
 
     @Test
-    void sendToUser_noSessionForUser_doesNothing() throws Exception {
+    void sendToUserNoSessionForUserDoesNothing() throws Exception {
         Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
         ReflectionTestUtils.setField(handler, "sessions", sessions);
 
@@ -86,7 +92,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     }
 
     @Test
-    void sendToUser_sendThrowsException_doesNotPropagate() throws Exception {
+    void sendToUserSendThrowsExceptionDoesNotPropagate() throws Exception {
         when(session.isOpen()).thenReturn(true);
         doThrow(new RuntimeException("IO error")).when(session).sendMessage(any());
 
@@ -99,7 +105,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     }
 
     @Test
-    void sendToUser_messageIsValidJson() throws Exception {
+    void sendToUserMessageIsValidJson() throws Exception {
         when(session.isOpen()).thenReturn(true);
 
         Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
@@ -123,7 +129,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     }
 
     @Test
-    void sendToUser_multipleUsers_sendsOnlyToCorrectUser() throws Exception {
+    void sendToUserMultipleUsersSendsOnlyToCorrectUser() throws Exception {
         WebSocketSession session2 = mock(WebSocketSession.class);
         when(session.isOpen()).thenReturn(true);
 
@@ -139,7 +145,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     }
 
     @Test
-    void sendToUser_emptyMapStillSendsValidJson() throws Exception {
+    void sendToUserEmptyMapStillSendsValidJson() throws Exception {
         when(session.isOpen()).thenReturn(true);
 
         Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
@@ -156,7 +162,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     // ===================== afterConnectionClosed =====================
 
     @Test
-    void afterConnectionClosed_removesSessionFromMap() throws Exception {
+    void afterConnectionClosedRemovesSessionFromMap() throws Exception {
         Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
         sessions.put(7L, session);
         ReflectionTestUtils.setField(handler, "sessions", sessions);
@@ -167,7 +173,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionClosed_unknownSession_noError() throws Exception {
+    void afterConnectionClosedUnknownSessionNoError() throws Exception {
         Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
         ReflectionTestUtils.setField(handler, "sessions", sessions);
 
@@ -176,7 +182,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionClosed_removesOnlyTargetSession() throws Exception {
+    void afterConnectionClosedRemovesOnlyTargetSession() throws Exception {
         WebSocketSession otherSession = mock(WebSocketSession.class);
 
         Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
@@ -191,7 +197,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionClosed_withServerErrorStatus_stillRemovesSession() throws Exception {
+    void afterConnectionClosedWithServerErrorStatusStillRemovesSession() throws Exception {
         Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
         sessions.put(8L, session);
         ReflectionTestUtils.setField(handler, "sessions", sessions);
@@ -204,7 +210,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     // ===================== afterConnectionEstablished – URL-Parsing =====================
 
     @Test
-    void afterConnectionEstablished_noLiveEnvironmentInPath_closesSession() throws Exception {
+    void afterConnectionEstablishedNoLiveEnvironmentInPathClosesSession() throws Exception {
         when(session.getUri()).thenReturn(new URI("/api/something/else"));
 
         handler.afterConnectionEstablished(session);
@@ -213,7 +219,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionEstablished_rootPath_closesSession() throws Exception {
+    void afterConnectionEstablishedRootPathClosesSession() throws Exception {
         when(session.getUri()).thenReturn(new URI("/"));
 
         handler.afterConnectionEstablished(session);
@@ -222,7 +228,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionEstablished_emptySegments_closesSession() throws Exception {
+    void afterConnectionEstablishedEmptySegmentsClosesSession() throws Exception {
         when(session.getUri()).thenReturn(new URI("/api/live-environment"));
 
         handler.afterConnectionEstablished(session);
@@ -233,7 +239,7 @@ class LiveEnvironmentWebSocketHandlerTest {
     // ===================== handleTextMessage =====================
 
     @Test
-    void handleTextMessage_doesNotThrow() throws Exception {
+    void handleTextMessageDoesNotThrow() throws Exception {
         // handleTextMessage ist leer – darf nicht werfen
         handler.handleTextMessage(session, new TextMessage("test"));
         verify(session, never()).close();

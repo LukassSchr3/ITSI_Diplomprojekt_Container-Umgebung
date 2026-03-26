@@ -21,10 +21,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
@@ -75,7 +82,7 @@ class UserControllerTest {
     }
 
     @Test
-    void getAllUsers_shouldReturnListOfUsers() {
+    void getAllUsersShouldReturnListOfUsers() {
         when(userService.findAll()).thenReturn(Arrays.asList(testUser));
         when(userMapper.toDTO(any(User.class))).thenReturn(testUserDTO);
 
@@ -90,7 +97,7 @@ class UserControllerTest {
     }
 
     @Test
-    void getAllUsers_shouldReturnEmptyList() {
+    void getAllUsersShouldReturnEmptyList() {
         when(userService.findAll()).thenReturn(Collections.emptyList());
 
         ResponseEntity<List<UserDTO>> response = userController.getAllUsers();
@@ -103,7 +110,7 @@ class UserControllerTest {
     }
 
     @Test
-    void getUserById_shouldReturnUser() {
+    void getUserByIdShouldReturnUser() {
         when(userService.findById(1)).thenReturn(Optional.of(testUser));
         when(userMapper.toDTO(testUser)).thenReturn(testUserDTO);
 
@@ -118,7 +125,7 @@ class UserControllerTest {
     }
 
     @Test
-    void getUserById_shouldReturn404WhenNotFound() {
+    void getUserByIdShouldReturn404WhenNotFound() {
         when(userService.findById(999)).thenReturn(Optional.empty());
 
         ResponseEntity<UserDTO> response = userController.getUserById(999);
@@ -130,7 +137,7 @@ class UserControllerTest {
     }
 
     @Test
-    void getUserByName_shouldReturnUser() {
+    void getUserByNameShouldReturnUser() {
         when(userService.findByName("testuser")).thenReturn(Optional.of(testUser));
         when(userMapper.toDTO(testUser)).thenReturn(testUserDTO);
 
@@ -144,7 +151,7 @@ class UserControllerTest {
     }
 
     @Test
-    void getUserByName_shouldReturn404WhenNotFound() {
+    void getUserByNameShouldReturn404WhenNotFound() {
         when(userService.findByName("nonexistent")).thenReturn(Optional.empty());
 
         ResponseEntity<UserDTO> response = userController.getUserByName("nonexistent");
@@ -155,7 +162,7 @@ class UserControllerTest {
     }
 
     @Test
-    void getUserByEmail_shouldReturnUser() {
+    void getUserByEmailShouldReturnUser() {
         when(userService.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(userMapper.toDTO(testUser)).thenReturn(testUserDTO);
 
@@ -169,7 +176,7 @@ class UserControllerTest {
     }
 
     @Test
-    void getUserByEmail_shouldReturn404WhenNotFound() {
+    void getUserByEmailShouldReturn404WhenNotFound() {
         when(userService.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
         ResponseEntity<UserDTO> response = userController.getUserByEmail("nonexistent@example.com");
@@ -180,7 +187,7 @@ class UserControllerTest {
     }
 
     @Test
-    void createUser_shouldReturnCreatedUser() {
+    void createUserShouldReturnCreatedUser() {
         when(userMapper.toEntity(any(CreateUserDTO.class))).thenReturn(testUser);
         when(userService.save(any(User.class))).thenReturn(testUser);
         when(userMapper.toDTO(testUser)).thenReturn(testUserDTO);
@@ -195,7 +202,7 @@ class UserControllerTest {
     }
 
     @Test
-    void updateUser_shouldReturnUpdatedUser() {
+    void updateUserShouldReturnUpdatedUser() {
         when(userService.findById(1)).thenReturn(Optional.of(testUser));
         when(userService.save(any(User.class))).thenReturn(testUser);
         when(userMapper.toDTO(testUser)).thenReturn(testUserDTO);
@@ -211,7 +218,7 @@ class UserControllerTest {
     }
 
     @Test
-    void updateUser_shouldReturn404WhenNotFound() {
+    void updateUserShouldReturn404WhenNotFound() {
         when(userService.findById(999)).thenReturn(Optional.empty());
 
         ResponseEntity<UserDTO> response = userController.updateUser(999, updateUserDTO);
@@ -223,7 +230,7 @@ class UserControllerTest {
     }
 
     @Test
-    void deleteUser_shouldReturnNoContent() {
+    void deleteUserShouldReturnNoContent() {
         when(userService.findById(1)).thenReturn(Optional.of(testUser));
         doNothing().when(userService).deleteById(1);
 
@@ -236,7 +243,7 @@ class UserControllerTest {
     }
 
     @Test
-    void deleteUser_shouldReturn404WhenNotFound() {
+    void deleteUserShouldReturn404WhenNotFound() {
         when(userService.findById(999)).thenReturn(Optional.empty());
 
         ResponseEntity<Void> response = userController.deleteUser(999);

@@ -16,9 +16,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ImageControllerTest {
@@ -40,7 +43,7 @@ class ImageControllerTest {
     }
 
     @Test
-    void getAllImages_shouldReturnList() {
+    void getAllImagesShouldReturnList() {
         when(imageService.findAll()).thenReturn(Arrays.asList(testImage));
 
         ResponseEntity<List<Image>> response = imageController.getAllImages();
@@ -50,14 +53,14 @@ class ImageControllerTest {
     }
 
     @Test
-    void getAllImages_shouldReturnEmptyList() {
+    void getAllImagesShouldReturnEmptyList() {
         when(imageService.findAll()).thenReturn(Collections.emptyList());
 
         assertTrue(imageController.getAllImages().getBody().isEmpty());
     }
 
     @Test
-    void getImageById_shouldReturnImageWhenExists() {
+    void getImageByIdShouldReturnImageWhenExists() {
         when(imageService.findById(1)).thenReturn(Optional.of(testImage));
 
         ResponseEntity<Image> response = imageController.getImageById(1);
@@ -67,14 +70,14 @@ class ImageControllerTest {
     }
 
     @Test
-    void getImageById_shouldReturn404WhenNotExists() {
+    void getImageByIdShouldReturn404WhenNotExists() {
         when(imageService.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, imageController.getImageById(99).getStatusCode());
     }
 
     @Test
-    void getImageByName_shouldReturnImageWhenExists() {
+    void getImageByNameShouldReturnImageWhenExists() {
         when(imageService.findByName("ubuntu-test")).thenReturn(Optional.of(testImage));
 
         ResponseEntity<Image> response = imageController.getImageByName("ubuntu-test");
@@ -84,14 +87,14 @@ class ImageControllerTest {
     }
 
     @Test
-    void getImageByName_shouldReturn404WhenNotExists() {
+    void getImageByNameShouldReturn404WhenNotExists() {
         when(imageService.findByName("unknown")).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, imageController.getImageByName("unknown").getStatusCode());
     }
 
     @Test
-    void getImageByRef_shouldReturnImageWhenExists() {
+    void getImageByRefShouldReturnImageWhenExists() {
         when(imageService.findByImageRef("ubuntu:22.04")).thenReturn(Optional.of(testImage));
 
         ResponseEntity<Image> response = imageController.getImageByRef("ubuntu:22.04");
@@ -101,14 +104,14 @@ class ImageControllerTest {
     }
 
     @Test
-    void getImageByRef_shouldReturn404WhenNotExists() {
+    void getImageByRefShouldReturn404WhenNotExists() {
         when(imageService.findByImageRef("unknown:latest")).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, imageController.getImageByRef("unknown:latest").getStatusCode());
     }
 
     @Test
-    void createImage_shouldReturnCreatedWhenNew() {
+    void createImageShouldReturnCreatedWhenNew() {
         when(imageService.findByName("ubuntu-test")).thenReturn(Optional.empty());
         when(imageService.findByImageRef("ubuntu:22.04")).thenReturn(Optional.empty());
         when(imageService.save(any(Image.class))).thenReturn(testImage);
@@ -120,7 +123,7 @@ class ImageControllerTest {
     }
 
     @Test
-    void createImage_shouldReturnConflictWhenNameExists() {
+    void createImageShouldReturnConflictWhenNameExists() {
         when(imageService.findByName("ubuntu-test")).thenReturn(Optional.of(testImage));
 
         ResponseEntity<?> response = imageController.createImage(testImage);
@@ -130,7 +133,7 @@ class ImageControllerTest {
     }
 
     @Test
-    void createImage_shouldReturnConflictWhenRefExists() {
+    void createImageShouldReturnConflictWhenRefExists() {
         when(imageService.findByName("ubuntu-test")).thenReturn(Optional.empty());
         when(imageService.findByImageRef("ubuntu:22.04")).thenReturn(Optional.of(testImage));
 
@@ -141,7 +144,7 @@ class ImageControllerTest {
     }
 
     @Test
-    void updateImage_shouldReturnUpdated() {
+    void updateImageShouldReturnUpdated() {
         when(imageService.findById(1)).thenReturn(Optional.of(testImage));
         when(imageService.save(any(Image.class))).thenReturn(testImage);
 
@@ -152,14 +155,14 @@ class ImageControllerTest {
     }
 
     @Test
-    void updateImage_shouldReturn404WhenNotExists() {
+    void updateImageShouldReturn404WhenNotExists() {
         when(imageService.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, imageController.updateImage(99, testImage).getStatusCode());
     }
 
     @Test
-    void deleteImage_shouldReturnNoContent() {
+    void deleteImageShouldReturnNoContent() {
         when(imageService.findById(1)).thenReturn(Optional.of(testImage));
 
         ResponseEntity<Void> response = imageController.deleteImage(1);
@@ -169,7 +172,7 @@ class ImageControllerTest {
     }
 
     @Test
-    void deleteImage_shouldReturn404WhenNotExists() {
+    void deleteImageShouldReturn404WhenNotExists() {
         when(imageService.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, imageController.deleteImage(99).getStatusCode());

@@ -17,9 +17,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class QuestionResultControllerTest {
@@ -44,7 +47,7 @@ class QuestionResultControllerTest {
     }
 
     @Test
-    void getAllResults_shouldReturnList() {
+    void getAllResultsShouldReturnList() {
         when(questionResultService.findAll()).thenReturn(Arrays.asList(testResult));
 
         ResponseEntity<List<QuestionResult>> response = questionResultController.getAllResults();
@@ -54,14 +57,14 @@ class QuestionResultControllerTest {
     }
 
     @Test
-    void getAllResults_shouldReturnEmptyList() {
+    void getAllResultsShouldReturnEmptyList() {
         when(questionResultService.findAll()).thenReturn(Collections.emptyList());
 
         assertTrue(questionResultController.getAllResults().getBody().isEmpty());
     }
 
     @Test
-    void getResultById_shouldReturnWhenExists() {
+    void getResultByIdShouldReturnWhenExists() {
         when(questionResultService.findById(1)).thenReturn(Optional.of(testResult));
 
         ResponseEntity<QuestionResult> response = questionResultController.getResultById(1);
@@ -71,14 +74,14 @@ class QuestionResultControllerTest {
     }
 
     @Test
-    void getResultById_shouldReturn404WhenNotExists() {
+    void getResultByIdShouldReturn404WhenNotExists() {
         when(questionResultService.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, questionResultController.getResultById(99).getStatusCode());
     }
 
     @Test
-    void getResultsByUserId_shouldReturnList() {
+    void getResultsByUserIdShouldReturnList() {
         when(questionResultService.findByUserId(1)).thenReturn(Arrays.asList(testResult));
 
         ResponseEntity<List<QuestionResult>> response = questionResultController.getResultsByUserId(1);
@@ -88,7 +91,7 @@ class QuestionResultControllerTest {
     }
 
     @Test
-    void getResultsByQuestionId_shouldReturnList() {
+    void getResultsByQuestionIdShouldReturnList() {
         when(questionResultService.findByQuestionId(10)).thenReturn(Arrays.asList(testResult));
 
         ResponseEntity<List<QuestionResult>> response = questionResultController.getResultsByQuestionId(10);
@@ -98,7 +101,7 @@ class QuestionResultControllerTest {
     }
 
     @Test
-    void getResultByUserAndQuestion_shouldReturnWhenExists() {
+    void getResultByUserAndQuestionShouldReturnWhenExists() {
         when(questionResultService.findByUserIdAndQuestionId(1, 10)).thenReturn(Optional.of(testResult));
 
         ResponseEntity<QuestionResult> response = questionResultController.getResultByUserAndQuestion(1, 10);
@@ -108,14 +111,14 @@ class QuestionResultControllerTest {
     }
 
     @Test
-    void getResultByUserAndQuestion_shouldReturn404WhenNotExists() {
+    void getResultByUserAndQuestionShouldReturn404WhenNotExists() {
         when(questionResultService.findByUserIdAndQuestionId(99, 99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, questionResultController.getResultByUserAndQuestion(99, 99).getStatusCode());
     }
 
     @Test
-    void getPassedResultsByUserId_shouldReturnList() {
+    void getPassedResultsByUserIdShouldReturnList() {
         when(questionResultService.findByUserIdAndBestanden(1, true)).thenReturn(Arrays.asList(testResult));
 
         ResponseEntity<List<QuestionResult>> response = questionResultController.getPassedResultsByUserId(1);
@@ -125,7 +128,7 @@ class QuestionResultControllerTest {
     }
 
     @Test
-    void getFailedResultsByUserId_shouldReturnList() {
+    void getFailedResultsByUserIdShouldReturnList() {
         when(questionResultService.findByUserIdAndBestanden(1, false)).thenReturn(Collections.emptyList());
 
         ResponseEntity<List<QuestionResult>> response = questionResultController.getFailedResultsByUserId(1);
@@ -135,7 +138,7 @@ class QuestionResultControllerTest {
     }
 
     @Test
-    void createResult_shouldReturnCreated() {
+    void createResultShouldReturnCreated() {
         when(questionResultService.findByUserIdAndQuestionId(1, 10)).thenReturn(Optional.empty());
         when(questionResultService.save(any(QuestionResult.class))).thenReturn(testResult);
 
@@ -146,7 +149,7 @@ class QuestionResultControllerTest {
     }
 
     @Test
-    void createResult_shouldReturnConflictWhenAlreadyExists() {
+    void createResultShouldReturnConflictWhenAlreadyExists() {
         when(questionResultService.findByUserIdAndQuestionId(1, 10)).thenReturn(Optional.of(testResult));
 
         ResponseEntity<?> response = questionResultController.createResult(testResult);
@@ -156,7 +159,7 @@ class QuestionResultControllerTest {
     }
 
     @Test
-    void updateResult_shouldReturnUpdated() {
+    void updateResultShouldReturnUpdated() {
         when(questionResultService.findById(1)).thenReturn(Optional.of(testResult));
         when(questionResultService.save(any(QuestionResult.class))).thenReturn(testResult);
 
@@ -166,14 +169,14 @@ class QuestionResultControllerTest {
     }
 
     @Test
-    void updateResult_shouldReturn404WhenNotExists() {
+    void updateResultShouldReturn404WhenNotExists() {
         when(questionResultService.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, questionResultController.updateResult(99, testResult).getStatusCode());
     }
 
     @Test
-    void deleteResult_shouldReturnNoContent() {
+    void deleteResultShouldReturnNoContent() {
         when(questionResultService.findById(1)).thenReturn(Optional.of(testResult));
 
         ResponseEntity<Void> response = questionResultController.deleteResult(1);
@@ -183,7 +186,7 @@ class QuestionResultControllerTest {
     }
 
     @Test
-    void deleteResult_shouldReturn404WhenNotExists() {
+    void deleteResultShouldReturn404WhenNotExists() {
         when(questionResultService.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, questionResultController.deleteResult(99).getStatusCode());

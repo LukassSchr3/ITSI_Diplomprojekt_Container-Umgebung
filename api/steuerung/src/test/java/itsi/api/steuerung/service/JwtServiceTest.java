@@ -39,19 +39,19 @@ class JwtServiceTest {
     // --- generateToken ---
 
     @Test
-    void generateToken_returnsNonNullToken() {
+    void generateTokenReturnsNonNullToken() {
         String token = jwtService.generateToken(createUser("SCHUELER"));
         assertThat(token).isNotNull().isNotBlank();
     }
 
     @Test
-    void generateToken_tokenContainsThreeParts() {
+    void generateTokenTokenContainsThreeParts() {
         String token = jwtService.generateToken(createUser("LEHRER"));
         assertThat(token.split("\\.")).hasSize(3);
     }
 
     @Test
-    void generateToken_differentUsersGetDifferentTokens() {
+    void generateTokenDifferentUsersGetDifferentTokens() {
         UserDTO u1 = createUser("SCHUELER");
         UserDTO u2 = new UserDTO(2, "Other", "other@test.at", "pass", "4AHIT", "LEHRER", null, null);
         assertThat(jwtService.generateToken(u1)).isNotEqualTo(jwtService.generateToken(u2));
@@ -60,7 +60,7 @@ class JwtServiceTest {
     // --- extractClaims ---
 
     @Test
-    void extractClaims_subjectMatchesUserName() {
+    void extractClaimsSubjectMatchesUserName() {
         UserDTO user = createUser("ADMIN");
         String token = jwtService.generateToken(user);
         Claims claims = jwtService.extractClaims(token);
@@ -68,21 +68,21 @@ class JwtServiceTest {
     }
 
     @Test
-    void extractClaims_roleClaimIsPresent() {
+    void extractClaimsRoleClaimIsPresent() {
         String token = jwtService.generateToken(createUser("LEHRER"));
         Claims claims = jwtService.extractClaims(token);
         assertThat(claims.get("rolle", String.class)).isEqualTo("LEHRER");
     }
 
     @Test
-    void extractClaims_userIdClaimIsPresent() {
+    void extractClaimsUserIdClaimIsPresent() {
         String token = jwtService.generateToken(createUser("SCHUELER"));
         Claims claims = jwtService.extractClaims(token);
         assertThat(claims.get("userId")).isNotNull();
     }
 
     @Test
-    void extractClaims_emailClaimIsPresent() {
+    void extractClaimsEmailClaimIsPresent() {
         UserDTO user = createUser("SCHUELER");
         String token = jwtService.generateToken(user);
         Claims claims = jwtService.extractClaims(token);
@@ -90,20 +90,20 @@ class JwtServiceTest {
     }
 
     @Test
-    void extractClaims_klasseClaimIsPresent() {
+    void extractClaimsKlasseClaimIsPresent() {
         String token = jwtService.generateToken(createUser("SCHUELER"));
         Claims claims = jwtService.extractClaims(token);
         assertThat(claims.get("klasse", String.class)).isEqualTo("5AHIT");
     }
 
     @Test
-    void extractClaims_invalidTokenThrowsException() {
+    void extractClaimsInvalidTokenThrowsException() {
         assertThatThrownBy(() -> jwtService.extractClaims("invalid.token.value"))
                 .isInstanceOf(Exception.class);
     }
 
     @Test
-    void extractClaims_tamperedTokenThrowsException() {
+    void extractClaimsTamperedTokenThrowsException() {
         String token = jwtService.generateToken(createUser("SCHUELER"));
         String tampered = token.substring(0, token.length() - 5) + "XXXXX";
         assertThatThrownBy(() -> jwtService.extractClaims(tampered))
@@ -113,35 +113,35 @@ class JwtServiceTest {
     // --- isTokenValid ---
 
     @Test
-    void isTokenValid_validSchuelerTokenReturnsTrue() {
+    void isTokenValidValidSchuelerTokenReturnsTrue() {
         String token = jwtService.generateToken(createUser("SCHUELER"));
         assertThat(jwtService.isTokenValid(token)).isTrue();
     }
 
     @Test
-    void isTokenValid_validLehrerTokenReturnsTrue() {
+    void isTokenValidValidLehrerTokenReturnsTrue() {
         String token = jwtService.generateToken(createUser("LEHRER"));
         assertThat(jwtService.isTokenValid(token)).isTrue();
     }
 
     @Test
-    void isTokenValid_validAdminTokenReturnsTrue() {
+    void isTokenValidValidAdminTokenReturnsTrue() {
         String token = jwtService.generateToken(createUser("ADMIN"));
         assertThat(jwtService.isTokenValid(token)).isTrue();
     }
 
     @Test
-    void isTokenValid_invalidTokenReturnsFalse() {
+    void isTokenValidInvalidTokenReturnsFalse() {
         assertThat(jwtService.isTokenValid("this.is.not.valid")).isFalse();
     }
 
     @Test
-    void isTokenValid_emptyStringReturnsFalse() {
+    void isTokenValidEmptyStringReturnsFalse() {
         assertThat(jwtService.isTokenValid("")).isFalse();
     }
 
     @Test
-    void isTokenValid_expiredTokenReturnsFalse() throws Exception {
+    void isTokenValidExpiredTokenReturnsFalse() throws Exception {
         // Erstelle Token mit negativer Ablaufzeit (sofort abgelaufen)
         JwtService shortLivedService = new JwtService();
         ReflectionTestUtils.setField(shortLivedService, "secret", SECRET);
@@ -153,7 +153,7 @@ class JwtServiceTest {
     }
 
     @Test
-    void isTokenValid_unknownRoleReturnsFalse() {
+    void isTokenValidUnknownRoleReturnsFalse() {
         // Generiere Token mit unbekannter Rolle – isTokenValid soll false zurückgeben
         UserDTO user = createUser("UNKNOWN_ROLE");
         String token = jwtService.generateToken(user);
@@ -161,7 +161,7 @@ class JwtServiceTest {
     }
 
     @Test
-    void generateToken_nullUserExpiredAtIsHandled() {
+    void generateTokenNullUserExpiredAtIsHandled() {
         UserDTO user = new UserDTO(1, "TestUser", "test@test.at", "secret", "5AHIT", "SCHUELER",
                 null, null);
         String token = jwtService.generateToken(user);
@@ -169,7 +169,7 @@ class JwtServiceTest {
     }
 
     @Test
-    void extractClaims_ablaufJahrClaimPresent() {
+    void extractClaimsAblaufJahrClaimPresent() {
         UserDTO user = new UserDTO(1, "TestUser", "test@test.at", "secret", "5AHIT", "SCHUELER",
                 null, new java.sql.Timestamp(System.currentTimeMillis() + 86400000L));
         String token = jwtService.generateToken(user);
@@ -179,7 +179,7 @@ class JwtServiceTest {
     }
 
     @Test
-    void generateToken_tokenIssuedAtIsRecent() {
+    void generateTokenTokenIssuedAtIsRecent() {
         String token = jwtService.generateToken(createUser("SCHUELER"));
         Claims claims = jwtService.extractClaims(token);
         long now = System.currentTimeMillis();
@@ -188,19 +188,19 @@ class JwtServiceTest {
     }
 
     @Test
-    void generateToken_tokenExpiresInFuture() {
+    void generateTokenTokenExpiresInFuture() {
         String token = jwtService.generateToken(createUser("SCHUELER"));
         Claims claims = jwtService.extractClaims(token);
         assertThat(claims.getExpiration().getTime()).isGreaterThan(System.currentTimeMillis());
     }
 
     @Test
-    void isTokenValid_nullTokenReturnsFalse() {
+    void isTokenValidNullTokenReturnsFalse() {
         assertThat(jwtService.isTokenValid(null)).isFalse();
     }
 
     @Test
-    void extractClaims_userIdMatchesUserObject() {
+    void extractClaimsUserIdMatchesUserObject() {
         UserDTO user = new UserDTO(42, "TestUser", "test@test.at", "secret", "5AHIT", "SCHUELER", null, null);
         String token = jwtService.generateToken(user);
         Claims claims = jwtService.extractClaims(token);
@@ -208,7 +208,7 @@ class JwtServiceTest {
     }
 
     @Test
-    void generateToken_sameUserGeneratesDifferentTokensDueToTime() throws InterruptedException {
+    void generateTokenSameUserGeneratesDifferentTokensDueToTime() throws InterruptedException {
         UserDTO user = createUser("SCHUELER");
         String token1 = jwtService.generateToken(user);
         Thread.sleep(1100); // ensure different issuedAt

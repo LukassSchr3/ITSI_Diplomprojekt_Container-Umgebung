@@ -15,8 +15,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CourseServiceTest {
@@ -39,7 +44,7 @@ class CourseServiceTest {
     }
 
     @Test
-    void findAll_shouldReturnAllCourses() {
+    void findAllShouldReturnAllCourses() {
         when(courseRepository.findAll()).thenReturn(Arrays.asList(testCourse));
 
         List<Course> result = courseService.findAll();
@@ -50,7 +55,7 @@ class CourseServiceTest {
     }
 
     @Test
-    void findAll_shouldReturnEmptyList() {
+    void findAllShouldReturnEmptyList() {
         when(courseRepository.findAll()).thenReturn(Collections.emptyList());
 
         List<Course> result = courseService.findAll();
@@ -60,7 +65,7 @@ class CourseServiceTest {
     }
 
     @Test
-    void findById_shouldReturnCourseWhenExists() {
+    void findByIdShouldReturnCourseWhenExists() {
         when(courseRepository.findById(1)).thenReturn(Optional.of(testCourse));
 
         Optional<Course> result = courseService.findById(1);
@@ -71,7 +76,7 @@ class CourseServiceTest {
     }
 
     @Test
-    void findById_shouldReturnEmptyWhenNotExists() {
+    void findByIdShouldReturnEmptyWhenNotExists() {
         when(courseRepository.findById(99)).thenReturn(Optional.empty());
 
         Optional<Course> result = courseService.findById(99);
@@ -80,7 +85,7 @@ class CourseServiceTest {
     }
 
     @Test
-    void findByName_shouldReturnCourseWhenExists() {
+    void findByNameShouldReturnCourseWhenExists() {
         when(courseRepository.findByName("5AHIT")).thenReturn(Optional.of(testCourse));
 
         Optional<Course> result = courseService.findByName("5AHIT");
@@ -91,7 +96,7 @@ class CourseServiceTest {
     }
 
     @Test
-    void findByName_shouldReturnEmptyWhenNotExists() {
+    void findByNameShouldReturnEmptyWhenNotExists() {
         when(courseRepository.findByName("NONE")).thenReturn(Optional.empty());
 
         Optional<Course> result = courseService.findByName("NONE");
@@ -100,7 +105,7 @@ class CourseServiceTest {
     }
 
     @Test
-    void save_shouldPersistAndReturnCourse() {
+    void saveShouldPersistAndReturnCourse() {
         when(courseRepository.save(testCourse)).thenReturn(testCourse);
 
         Course result = courseService.save(testCourse);
@@ -111,7 +116,7 @@ class CourseServiceTest {
     }
 
     @Test
-    void deleteById_shouldCallRepository() {
+    void deleteByIdShouldCallRepository() {
         courseService.deleteById(1);
 
         verify(courseRepository).deleteById(1);

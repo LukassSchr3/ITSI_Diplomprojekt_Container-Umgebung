@@ -15,8 +15,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TaskServiceTest {
@@ -41,7 +45,7 @@ class TaskServiceTest {
     }
 
     @Test
-    void findAll_shouldReturnAllTasks() {
+    void findAllShouldReturnAllTasks() {
         when(taskRepository.findAll()).thenReturn(Arrays.asList(testTask));
 
         List<Task> result = taskService.findAll();
@@ -52,14 +56,14 @@ class TaskServiceTest {
     }
 
     @Test
-    void findAll_shouldReturnEmptyList() {
+    void findAllShouldReturnEmptyList() {
         when(taskRepository.findAll()).thenReturn(Collections.emptyList());
 
         assertTrue(taskService.findAll().isEmpty());
     }
 
     @Test
-    void findById_shouldReturnTaskWhenExists() {
+    void findByIdShouldReturnTaskWhenExists() {
         when(taskRepository.findById(1)).thenReturn(Optional.of(testTask));
 
         Optional<Task> result = taskService.findById(1);
@@ -69,14 +73,14 @@ class TaskServiceTest {
     }
 
     @Test
-    void findById_shouldReturnEmptyWhenNotExists() {
+    void findByIdShouldReturnEmptyWhenNotExists() {
         when(taskRepository.findById(99)).thenReturn(Optional.empty());
 
         assertFalse(taskService.findById(99).isPresent());
     }
 
     @Test
-    void findByImageId_shouldReturnTasks() {
+    void findByImageIdShouldReturnTasks() {
         when(taskRepository.findByImageId(5)).thenReturn(Arrays.asList(testTask));
 
         List<Task> result = taskService.findByImageId(5);
@@ -87,14 +91,14 @@ class TaskServiceTest {
     }
 
     @Test
-    void findByImageId_shouldReturnEmptyList() {
+    void findByImageIdShouldReturnEmptyList() {
         when(taskRepository.findByImageId(99)).thenReturn(Collections.emptyList());
 
         assertTrue(taskService.findByImageId(99).isEmpty());
     }
 
     @Test
-    void save_shouldPersistAndReturnTask() {
+    void saveShouldPersistAndReturnTask() {
         when(taskRepository.save(testTask)).thenReturn(testTask);
 
         Task result = taskService.save(testTask);
@@ -105,7 +109,7 @@ class TaskServiceTest {
     }
 
     @Test
-    void deleteById_shouldCallRepository() {
+    void deleteByIdShouldCallRepository() {
         taskService.deleteById(1);
 
         verify(taskRepository).deleteById(1);

@@ -16,9 +16,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class LiveEnvironmentControllerTest {
@@ -43,7 +48,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void getAll_shouldReturnList() {
+    void getAllShouldReturnList() {
         when(service.findAll()).thenReturn(Arrays.asList(testEnv));
 
         List<LiveEnvironment> result = liveEnvironmentController.getAll();
@@ -54,14 +59,14 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void getAll_shouldReturnEmptyList() {
+    void getAllShouldReturnEmptyList() {
         when(service.findAll()).thenReturn(Collections.emptyList());
 
         assertTrue(liveEnvironmentController.getAll().isEmpty());
     }
 
     @Test
-    void getById_shouldReturnWhenExists() {
+    void getByIdShouldReturnWhenExists() {
         when(service.findById(1L)).thenReturn(Optional.of(testEnv));
 
         ResponseEntity<LiveEnvironment> response = liveEnvironmentController.getById(1L);
@@ -71,14 +76,14 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void getById_shouldReturn404WhenNotExists() {
+    void getByIdShouldReturn404WhenNotExists() {
         when(service.findById(99L)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, liveEnvironmentController.getById(99L).getStatusCode());
     }
 
     @Test
-    void create_shouldReturnSavedEnv() {
+    void createShouldReturnSavedEnv() {
         when(service.save(any(LiveEnvironment.class))).thenReturn(testEnv);
 
         LiveEnvironment result = liveEnvironmentController.create(testEnv);
@@ -89,7 +94,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void update_shouldReturnUpdatedWhenExists() {
+    void updateShouldReturnUpdatedWhenExists() {
         when(service.findById(1L)).thenReturn(Optional.of(testEnv));
         when(service.save(any(LiveEnvironment.class))).thenReturn(testEnv);
 
@@ -100,7 +105,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void update_shouldReturn404WhenNotExists() {
+    void updateShouldReturn404WhenNotExists() {
         when(service.findById(99L)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, liveEnvironmentController.update(99L, testEnv).getStatusCode());
@@ -108,7 +113,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void delete_shouldReturnNoContent() {
+    void deleteShouldReturnNoContent() {
         when(service.findById(1L)).thenReturn(Optional.of(testEnv));
 
         ResponseEntity<Void> response = liveEnvironmentController.delete(1L);
@@ -118,7 +123,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void delete_shouldReturn404WhenNotExists() {
+    void deleteShouldReturn404WhenNotExists() {
         when(service.findById(99L)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, liveEnvironmentController.delete(99L).getStatusCode());
@@ -126,7 +131,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void getMaxVncPort_shouldReturnMaxPort() {
+    void getMaxVncPortShouldReturnMaxPort() {
         when(service.getMaxVncPort()).thenReturn(5901);
 
         Integer result = liveEnvironmentController.getMaxVncPort();
@@ -136,7 +141,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void getMaxVncPort_shouldReturnNullWhenNoEntries() {
+    void getMaxVncPortShouldReturnNullWhenNoEntries() {
         when(service.getMaxVncPort()).thenReturn(null);
 
         assertNull(liveEnvironmentController.getMaxVncPort());

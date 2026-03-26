@@ -12,9 +12,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserRepositoryTest {
@@ -23,7 +29,7 @@ class UserRepositoryTest {
     private UserRepository userRepository;
 
     @Test
-    void save_shouldPersistUser() {
+    void saveShouldPersistUser() {
         User testUser = new User();
         testUser.setName("testuser");
         testUser.setEmail("test@example.com");
@@ -53,7 +59,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    void findById_shouldReturnUserWhenExists() {
+    void findByIdShouldReturnUserWhenExists() {
         User testUser = new User();
         testUser.setId(1);
         testUser.setName("testuser");
@@ -69,7 +75,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    void findById_shouldReturnEmptyWhenNotExists() {
+    void findByIdShouldReturnEmptyWhenNotExists() {
         when(userRepository.findById(9999)).thenReturn(Optional.empty());
 
         Optional<User> found = userRepository.findById(9999);
@@ -79,7 +85,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    void findByName_shouldReturnUserWhenExists() {
+    void findByNameShouldReturnUserWhenExists() {
         User testUser = new User();
         testUser.setName("testuser");
         testUser.setEmail("test@example.com");
@@ -95,7 +101,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    void findByName_shouldReturnEmptyWhenNotExists() {
+    void findByNameShouldReturnEmptyWhenNotExists() {
         when(userRepository.findByName("nonexistent")).thenReturn(Optional.empty());
 
         Optional<User> found = userRepository.findByName("nonexistent");
@@ -105,7 +111,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    void findByEmail_shouldReturnUserWhenExists() {
+    void findByEmailShouldReturnUserWhenExists() {
         User testUser = new User();
         testUser.setEmail("test@example.com");
         testUser.setName("testuser");
@@ -121,7 +127,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    void findByEmail_shouldReturnEmptyWhenNotExists() {
+    void findByEmailShouldReturnEmptyWhenNotExists() {
         when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
         Optional<User> found = userRepository.findByEmail("nonexistent@example.com");
@@ -131,7 +137,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    void findAll_shouldReturnAllUsers() {
+    void findAllShouldReturnAllUsers() {
         User user1 = new User();
         user1.setName("testuser1");
 
@@ -148,7 +154,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    void findAll_shouldReturnEmptyListWhenNoUsers() {
+    void findAllShouldReturnEmptyListWhenNoUsers() {
         when(userRepository.findAll()).thenReturn(Collections.emptyList());
 
         List<User> users = userRepository.findAll();
@@ -159,7 +165,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    void deleteById_shouldRemoveUser() {
+    void deleteByIdShouldRemoveUser() {
         doNothing().when(userRepository).deleteById(1);
 
         userRepository.deleteById(1);
@@ -168,7 +174,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    void update_shouldModifyExistingUser() {
+    void updateShouldModifyExistingUser() {
         User existingUser = new User();
         existingUser.setId(1);
         existingUser.setName("oldname");

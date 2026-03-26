@@ -9,9 +9,9 @@ public class AuthService {
         this.databaseService = databaseService;
     }
 
-    public boolean authenticate(Claims claims, String benötigteRolle) {
+    public boolean authenticate(Claims claims, String benoetigteRolle) {
         // Hier könnte eine echte Authentifizierungslogik implementiert werden
         // Zum Beispiel könnte
-        return claims.get("rolle", String.class).equals(benötigteRolle);
+        return claims.get("rolle", String.class).equals(benoetigteRolle);
     }
 }

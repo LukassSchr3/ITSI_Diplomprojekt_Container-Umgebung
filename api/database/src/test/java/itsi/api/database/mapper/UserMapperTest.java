@@ -9,7 +9,10 @@ import org.junit.jupiter.api.Test;
 
 import java.sql.Timestamp;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class UserMapperTest {
 
@@ -21,7 +24,7 @@ class UserMapperTest {
     }
 
     @Test
-    void toDTO_shouldConvertUserToUserDTO() {
+    void toDTOShouldConvertUserToUserDTO() {
         User user = new User();
         user.setId(1);
         user.setName("testuser");
@@ -45,13 +48,13 @@ class UserMapperTest {
     }
 
     @Test
-    void toDTO_shouldReturnNullForNullUser() {
+    void toDTOShouldReturnNullForNullUser() {
         UserDTO dto = userMapper.toDTO(null);
         assertNull(dto);
     }
 
     @Test
-    void toEntity_shouldConvertCreateUserDTOToUser() {
+    void toEntityShouldConvertCreateUserDTOToUser() {
         CreateUserDTO createDTO = new CreateUserDTO();
         createDTO.setName("newuser");
         createDTO.setEmail("new@example.com");
@@ -74,13 +77,13 @@ class UserMapperTest {
     }
 
     @Test
-    void toEntity_shouldReturnNullForNullDTO() {
+    void toEntityShouldReturnNullForNullDTO() {
         User user = userMapper.toEntity(null);
         assertNull(user);
     }
 
     @Test
-    void updateEntity_shouldUpdateAllFields() {
+    void updateEntityShouldUpdateAllFields() {
         User existingUser = new User();
         existingUser.setId(1);
         existingUser.setName("oldname");
@@ -111,7 +114,7 @@ class UserMapperTest {
     }
 
     @Test
-    void updateEntity_shouldOnlyUpdateNonNullFields() {
+    void updateEntityShouldOnlyUpdateNonNullFields() {
         User existingUser = new User();
         existingUser.setId(1);
         existingUser.setName("oldname");
@@ -133,7 +136,7 @@ class UserMapperTest {
     }
 
     @Test
-    void updateEntity_shouldNotUpdatePasswordIfEmpty() {
+    void updateEntityShouldNotUpdatePasswordIfEmpty() {
         User existingUser = new User();
         existingUser.setPassword("oldpassword");
 
@@ -146,7 +149,7 @@ class UserMapperTest {
     }
 
     @Test
-    void updateEntity_shouldHandleNullUserGracefully() {
+    void updateEntityShouldHandleNullUserGracefully() {
         UpdateUserDTO updateDTO = new UpdateUserDTO();
         updateDTO.setName("newname");
 
@@ -154,7 +157,7 @@ class UserMapperTest {
     }
 
     @Test
-    void updateEntity_shouldHandleNullDTOGracefully() {
+    void updateEntityShouldHandleNullDTOGracefully() {
         User existingUser = new User();
         existingUser.setName("oldname");
 
