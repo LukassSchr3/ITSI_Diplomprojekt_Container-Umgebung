@@ -18,9 +18,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class InstanceControllerTest {
@@ -50,7 +53,7 @@ class InstanceControllerTest {
     }
 
     @Test
-    void getAllInstances_shouldReturnList() {
+    void getAllInstancesShouldReturnList() {
         when(instanceService.findAll()).thenReturn(Arrays.asList(testInstance));
 
         ResponseEntity<List<Instance>> response = instanceController.getAllInstances();
@@ -60,14 +63,14 @@ class InstanceControllerTest {
     }
 
     @Test
-    void getAllInstances_shouldReturnEmptyList() {
+    void getAllInstancesShouldReturnEmptyList() {
         when(instanceService.findAll()).thenReturn(Collections.emptyList());
 
         assertTrue(instanceController.getAllInstances().getBody().isEmpty());
     }
 
     @Test
-    void getInstanceById_shouldReturnWhenExists() {
+    void getInstanceByIdShouldReturnWhenExists() {
         when(instanceService.findById(1)).thenReturn(Optional.of(testInstance));
 
         ResponseEntity<Instance> response = instanceController.getInstanceById(1);
@@ -77,14 +80,14 @@ class InstanceControllerTest {
     }
 
     @Test
-    void getInstanceById_shouldReturn404WhenNotExists() {
+    void getInstanceByIdShouldReturn404WhenNotExists() {
         when(instanceService.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, instanceController.getInstanceById(99).getStatusCode());
     }
 
     @Test
-    void getInstanceByContainerId_shouldReturnWhenExists() {
+    void getInstanceByContainerIdShouldReturnWhenExists() {
         when(instanceService.findByContainerId("abc123")).thenReturn(Optional.of(testInstance));
 
         ResponseEntity<Instance> response = instanceController.getInstanceByContainerId("abc123");
@@ -94,14 +97,14 @@ class InstanceControllerTest {
     }
 
     @Test
-    void getInstanceByContainerId_shouldReturn404WhenNotExists() {
+    void getInstanceByContainerIdShouldReturn404WhenNotExists() {
         when(instanceService.findByContainerId("unknown")).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, instanceController.getInstanceByContainerId("unknown").getStatusCode());
     }
 
     @Test
-    void getInstanceByName_shouldReturnWhenExists() {
+    void getInstanceByNameShouldReturnWhenExists() {
         when(instanceService.findByName("test-container")).thenReturn(Optional.of(testInstance));
 
         ResponseEntity<Instance> response = instanceController.getInstanceByName("test-container");
@@ -110,14 +113,14 @@ class InstanceControllerTest {
     }
 
     @Test
-    void getInstanceByName_shouldReturn404WhenNotExists() {
+    void getInstanceByNameShouldReturn404WhenNotExists() {
         when(instanceService.findByName("unknown")).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, instanceController.getInstanceByName("unknown").getStatusCode());
     }
 
     @Test
-    void getInstancesByUserId_shouldReturnList() {
+    void getInstancesByUserIdShouldReturnList() {
         when(instanceService.findByUserId(1)).thenReturn(Arrays.asList(testInstance));
 
         ResponseEntity<List<Instance>> response = instanceController.getInstancesByUserId(1);
@@ -127,7 +130,7 @@ class InstanceControllerTest {
     }
 
     @Test
-    void getInstancesByImageId_shouldReturnList() {
+    void getInstancesByImageIdShouldReturnList() {
         when(instanceService.findByImageId(1)).thenReturn(Arrays.asList(testInstance));
 
         ResponseEntity<List<Instance>> response = instanceController.getInstancesByImageId(1);
@@ -137,7 +140,7 @@ class InstanceControllerTest {
     }
 
     @Test
-    void getInstancesByStatus_shouldReturnList() {
+    void getInstancesByStatusShouldReturnList() {
         when(instanceService.findByStatus("running")).thenReturn(Arrays.asList(testInstance));
 
         ResponseEntity<List<Instance>> response = instanceController.getInstancesByStatus("running");
@@ -147,7 +150,7 @@ class InstanceControllerTest {
     }
 
     @Test
-    void createInstance_shouldReturnCreated() {
+    void createInstanceShouldReturnCreated() {
         when(instanceService.save(any(Instance.class))).thenReturn(testInstance);
 
         ResponseEntity<Instance> response = instanceController.createInstance(testInstance);
@@ -157,7 +160,7 @@ class InstanceControllerTest {
     }
 
     @Test
-    void updateInstance_shouldReturnUpdated() {
+    void updateInstanceShouldReturnUpdated() {
         when(instanceService.findById(1)).thenReturn(Optional.of(testInstance));
         when(instanceService.save(any(Instance.class))).thenReturn(testInstance);
 
@@ -167,14 +170,14 @@ class InstanceControllerTest {
     }
 
     @Test
-    void updateInstance_shouldReturn404WhenNotExists() {
+    void updateInstanceShouldReturn404WhenNotExists() {
         when(instanceService.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, instanceController.updateInstance(99, testInstance).getStatusCode());
     }
 
     @Test
-    void deleteInstance_shouldReturnNoContent() {
+    void deleteInstanceShouldReturnNoContent() {
         when(instanceService.findById(1)).thenReturn(Optional.of(testInstance));
 
         ResponseEntity<Void> response = instanceController.deleteInstance(1);
@@ -184,7 +187,7 @@ class InstanceControllerTest {
     }
 
     @Test
-    void deleteInstance_shouldReturn404WhenNotExists() {
+    void deleteInstanceShouldReturn404WhenNotExists() {
         when(instanceService.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, instanceController.deleteInstance(99).getStatusCode());
@@ -192,7 +195,7 @@ class InstanceControllerTest {
     }
 
     @Test
-    void getMaxContainerId_shouldReturnOkWhenExists() {
+    void getMaxContainerIdShouldReturnOkWhenExists() {
         when(instanceService.findMaxContainerId()).thenReturn(Optional.of("abc999"));
 
         ResponseEntity<String> response = instanceController.getMaxContainerId();
@@ -202,7 +205,7 @@ class InstanceControllerTest {
     }
 
     @Test
-    void getMaxContainerId_shouldReturnNoContentWhenEmpty() {
+    void getMaxContainerIdShouldReturnNoContentWhenEmpty() {
         when(instanceService.findMaxContainerId()).thenReturn(Optional.empty());
 
         ResponseEntity<String> response = instanceController.getMaxContainerId();

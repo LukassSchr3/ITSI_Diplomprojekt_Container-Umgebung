@@ -11,10 +11,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DashboardCourseDTO {
-
-    private Integer id;
-    private String name;
-    private String description;
+    private Integer courseId;
+    private String courseName;
+    private String courseDescription;
     private LocalDateTime enrolledAt;
     private LocalDateTime expiresAt;
     private List<TaskDTO> tasks;
@@ -30,4 +29,3 @@ public class DashboardCourseDTO {
         private Integer imageId;
     }
 }
-

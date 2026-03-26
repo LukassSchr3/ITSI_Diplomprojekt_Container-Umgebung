@@ -16,8 +16,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CourseTaskServiceTest {
@@ -49,7 +53,7 @@ class CourseTaskServiceTest {
     }
 
     @Test
-    void findAll_shouldReturnAllCourseTasks() {
+    void findAllShouldReturnAllCourseTasks() {
         when(courseTaskRepository.findAll()).thenReturn(Arrays.asList(testCourseTask));
 
         List<CourseTask> result = courseTaskService.findAll();
@@ -59,14 +63,14 @@ class CourseTaskServiceTest {
     }
 
     @Test
-    void findAll_shouldReturnEmptyList() {
+    void findAllShouldReturnEmptyList() {
         when(courseTaskRepository.findAll()).thenReturn(Collections.emptyList());
 
         assertTrue(courseTaskService.findAll().isEmpty());
     }
 
     @Test
-    void findByCourseId_shouldReturnCourseTasks() {
+    void findByCourseIdShouldReturnCourseTasks() {
         when(courseTaskRepository.findByCourseIdOrderByOrderIndex(10)).thenReturn(Arrays.asList(testCourseTask));
 
         List<CourseTask> result = courseTaskService.findByCourseId(10);
@@ -77,7 +81,7 @@ class CourseTaskServiceTest {
     }
 
     @Test
-    void findTasksByCourseId_shouldReturnTaskObjects() {
+    void findTasksByCourseIdShouldReturnTaskObjects() {
         when(courseTaskRepository.findByCourseIdOrderByOrderIndex(10)).thenReturn(Arrays.asList(testCourseTask));
         when(taskRepository.findById(1)).thenReturn(Optional.of(testTask));
 
@@ -88,7 +92,7 @@ class CourseTaskServiceTest {
     }
 
     @Test
-    void findTasksByCourseId_shouldSkipMissingTasks() {
+    void findTasksByCourseIdShouldSkipMissingTasks() {
         when(courseTaskRepository.findByCourseIdOrderByOrderIndex(10)).thenReturn(Arrays.asList(testCourseTask));
         when(taskRepository.findById(1)).thenReturn(Optional.empty());
 
@@ -98,7 +102,7 @@ class CourseTaskServiceTest {
     }
 
     @Test
-    void findByTaskId_shouldReturnCourseTasks() {
+    void findByTaskIdShouldReturnCourseTasks() {
         when(courseTaskRepository.findByTaskId(1)).thenReturn(Arrays.asList(testCourseTask));
 
         List<CourseTask> result = courseTaskService.findByTaskId(1);
@@ -108,7 +112,7 @@ class CourseTaskServiceTest {
     }
 
     @Test
-    void findByCourseIdAndTaskId_shouldReturnWhenExists() {
+    void findByCourseIdAndTaskIdShouldReturnWhenExists() {
         when(courseTaskRepository.findByCourseIdAndTaskId(10, 1)).thenReturn(Optional.of(testCourseTask));
 
         Optional<CourseTask> result = courseTaskService.findByCourseIdAndTaskId(10, 1);
@@ -118,14 +122,14 @@ class CourseTaskServiceTest {
     }
 
     @Test
-    void findByCourseIdAndTaskId_shouldReturnEmptyWhenNotExists() {
+    void findByCourseIdAndTaskIdShouldReturnEmptyWhenNotExists() {
         when(courseTaskRepository.findByCourseIdAndTaskId(99, 99)).thenReturn(Optional.empty());
 
         assertFalse(courseTaskService.findByCourseIdAndTaskId(99, 99).isPresent());
     }
 
     @Test
-    void save_shouldPersistAndReturnCourseTask() {
+    void saveShouldPersistAndReturnCourseTask() {
         when(courseTaskRepository.save(testCourseTask)).thenReturn(testCourseTask);
 
         CourseTask result = courseTaskService.save(testCourseTask);
@@ -136,7 +140,7 @@ class CourseTaskServiceTest {
     }
 
     @Test
-    void deleteByCourseIdAndTaskId_shouldCallDeleteById() {
+    void deleteByCourseIdAndTaskIdShouldCallDeleteById() {
         courseTaskService.deleteByCourseIdAndTaskId(10, 1);
 
         verify(courseTaskRepository).deleteById(new CourseTask.CourseTaskId(10, 1));

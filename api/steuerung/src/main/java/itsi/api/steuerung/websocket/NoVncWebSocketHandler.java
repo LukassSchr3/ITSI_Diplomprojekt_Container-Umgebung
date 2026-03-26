@@ -134,3 +134,4 @@ public class NoVncWebSocketHandler extends BinaryWebSocketHandler {
         }
     }
 }
+

@@ -15,8 +15,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -79,7 +83,7 @@ class DatabaseServiceTest {
     // ===================== getInstanceById =====================
 
     @Test
-    void getInstanceById_returnsInstance() {
+    void getInstanceByIdReturnsInstance() {
         InstanceDTO inst = new InstanceDTO(5, "cont_5", "test", null, null, "running");
         mockGet(inst);
         InstanceDTO result = databaseService.getInstanceById(5);
@@ -90,7 +94,7 @@ class DatabaseServiceTest {
     // ===================== getInstanceByContainerId =====================
 
     @Test
-    void getInstanceByContainerId_returnsInstance() {
+    void getInstanceByContainerIdReturnsInstance() {
         InstanceDTO inst = new InstanceDTO(3, "cont_3", "test", null, null, "stopped");
         mockGet(inst);
         InstanceDTO result = databaseService.getInstanceByContainerId("cont_3");
@@ -101,7 +105,7 @@ class DatabaseServiceTest {
     // ===================== getUserById =====================
 
     @Test
-    void getUserById_returnsUser() {
+    void getUserByIdReturnsUser() {
         UserDTO user = new UserDTO(1, "Max", "m@t.at", null, "5A", "SCHUELER", null, null);
         mockGet(user);
         UserDTO result = databaseService.getUserById(1);
@@ -112,7 +116,7 @@ class DatabaseServiceTest {
     // ===================== getImageById =====================
 
     @Test
-    void getImageById_returnsImage() {
+    void getImageByIdReturnsImage() {
         ImageDTO img = new ImageDTO(2, "ubuntu", "ubuntu:22.04");
         mockGet(img);
         ImageDTO result = databaseService.getImageById(2);
@@ -123,14 +127,14 @@ class DatabaseServiceTest {
     // ===================== getMaxContainerId =====================
 
     @Test
-    void getMaxContainerId_returnsMaxId() {
+    void getMaxContainerIdReturnsMaxId() {
         mockGet("cont_5");
         String result = databaseService.getMaxContainerId();
         assertThat(result).isEqualTo("cont_5");
     }
 
     @Test
-    void getMaxContainerId_returnsNullWhenEmpty() {
+    void getMaxContainerIdReturnsNullWhenEmpty() {
         when(databaseWebClient.get()).thenReturn(getUriSpec);
         when(getUriSpec.uri(anyString(), any(Object[].class))).thenReturn(getHeadersSpec);
         when(getHeadersSpec.retrieve()).thenReturn(getResponseSpec);
@@ -142,7 +146,7 @@ class DatabaseServiceTest {
     // ===================== createInstance =====================
 
     @Test
-    void createInstance_returnsCreatedInstance() {
+    void createInstanceReturnsCreatedInstance() {
         InstanceDTO inst = new InstanceDTO(10, "", "ubuntu_Max", null, null, "created");
         when(databaseWebClient.post()).thenReturn(postUriSpec);
         when(postUriSpec.uri(anyString())).thenReturn(postBodySpec);
@@ -158,7 +162,7 @@ class DatabaseServiceTest {
     // ===================== updateInstance =====================
 
     @Test
-    void updateInstance_returnsUpdatedInstance() {
+    void updateInstanceReturnsUpdatedInstance() {
         InstanceDTO inst = new InstanceDTO(10, "cont_1", "ubuntu_Max", null, null, "running");
         when(databaseWebClient.put()).thenReturn(putUriSpec);
         when(putUriSpec.uri(anyString(), any(Object[].class))).thenReturn(putBodySpec);
@@ -174,7 +178,7 @@ class DatabaseServiceTest {
     // ===================== findUserByEmail =====================
 
     @Test
-    void findUserByEmail_returnsUserInOptional() {
+    void findUserByEmailReturnsUserInOptional() {
         UserDTO user = new UserDTO(1, "Max", "max@test.at", "pw", "5A", "SCHUELER", null, null);
         mockGet(user);
         Optional<UserDTO> result = databaseService.findUserByEmail("max@test.at");
@@ -183,7 +187,7 @@ class DatabaseServiceTest {
     }
 
     @Test
-    void findUserByEmail_returnsEmptyOptionalOnException() {
+    void findUserByEmailReturnsEmptyOptionalOnException() {
         mockGetError(new RuntimeException("not found"));
         Optional<UserDTO> result = databaseService.findUserByEmail("nobody@test.at");
         assertThat(result).isEmpty();
@@ -192,7 +196,7 @@ class DatabaseServiceTest {
     // ===================== getLiveEnvironmentByUserId =====================
 
     @Test
-    void getLiveEnvironmentByUserId_returnsMap() {
+    void getLiveEnvironmentByUserIdReturnsMap() {
         Map<String, Object> liveEnv = Map.of("id", 1, "status", "running");
         mockGet(liveEnv);
         Map<String, Object> result = databaseService.getLiveEnvironmentByUserId(1);
@@ -201,7 +205,7 @@ class DatabaseServiceTest {
     }
 
     @Test
-    void getLiveEnvironmentByUserId_returnsNullOnException() {
+    void getLiveEnvironmentByUserIdReturnsNullOnException() {
         mockGetError(new RuntimeException("not found"));
         Map<String, Object> result = databaseService.getLiveEnvironmentByUserId(99);
         assertThat(result).isNull();
@@ -210,7 +214,7 @@ class DatabaseServiceTest {
     // ===================== createImage =====================
 
     @Test
-    void createImage_returnsCreatedImage() {
+    void createImageReturnsCreatedImage() {
         Map<String, Object> img = Map.of("id", 5, "name", "alpine");
         when(databaseWebClient.post()).thenReturn(postUriSpec);
         when(postUriSpec.uri(anyString())).thenReturn(postBodySpec);
@@ -226,7 +230,7 @@ class DatabaseServiceTest {
     // ===================== deleteInstance =====================
 
     @Test
-    void deleteInstance_executesWithoutException() {
+    void deleteInstanceExecutesWithoutException() {
         when(databaseWebClient.delete()).thenReturn(deleteUriSpec);
         when(deleteUriSpec.uri(anyString(), any(Object[].class))).thenReturn(deleteHeadersSpec);
         when(deleteHeadersSpec.retrieve()).thenReturn(deleteResponseSpec);
@@ -239,7 +243,7 @@ class DatabaseServiceTest {
     // ===================== deleteImage =====================
 
     @Test
-    void deleteImage_executesWithoutException() {
+    void deleteImageExecutesWithoutException() {
         when(databaseWebClient.delete()).thenReturn(deleteUriSpec);
         when(deleteUriSpec.uri(anyString(), any(Object[].class))).thenReturn(deleteHeadersSpec);
         when(deleteHeadersSpec.retrieve()).thenReturn(deleteResponseSpec);
@@ -252,7 +256,7 @@ class DatabaseServiceTest {
     // ===================== getInstancesByUserAndImage =====================
 
     @Test
-    void getInstancesByUserAndImage_filtersCorrectly() {
+    void getInstancesByUserAndImageFiltersCorrectly() {
         ImageDTO img1 = new ImageDTO(2, "ubuntu", "ubuntu:22");
         ImageDTO img2 = new ImageDTO(3, "alpine", "alpine:3");
         UserDTO user = new UserDTO(1, "Max", "m@t.at", null, "5A", "SCHUELER", null, null);
@@ -268,7 +272,7 @@ class DatabaseServiceTest {
     }
 
     @Test
-    void getInstancesByUserAndImage_returnsEmptyArrayWhenNullResponse() {
+    void getInstancesByUserAndImageReturnsEmptyArrayWhenNullResponse() {
         when(databaseWebClient.get()).thenReturn(getUriSpec);
         when(getUriSpec.uri(anyString(), any(Object[].class))).thenReturn(getHeadersSpec);
         when(getHeadersSpec.retrieve()).thenReturn(getResponseSpec);
@@ -279,7 +283,7 @@ class DatabaseServiceTest {
     }
 
     @Test
-    void getInstancesByUserAndImage_noMatchReturnsEmptyArray() {
+    void getInstancesByUserAndImageNoMatchReturnsEmptyArray() {
         ImageDTO img = new ImageDTO(99, "other", "other:1");
         UserDTO user = new UserDTO(1, "Max", "m@t.at", null, "5A", "SCHUELER", null, null);
         InstanceDTO i1 = new InstanceDTO(10, "c1", "n1", img, user, "running");
@@ -294,7 +298,7 @@ class DatabaseServiceTest {
     // ===================== findOrCreateInstance =====================
 
     @Test
-    void findOrCreateInstance_returnsExistingInstance() {
+    void findOrCreateInstanceReturnsExistingInstance() {
         ImageDTO img = new ImageDTO(2, "ubuntu", "ubuntu:22");
         UserDTO user = new UserDTO(1, "Max", "m@t.at", null, "5A", "SCHUELER", null, null);
         InstanceDTO existing = new InstanceDTO(10, "cont_1", "ubuntu_Max", img, user, "running");
@@ -308,7 +312,7 @@ class DatabaseServiceTest {
     }
 
     @Test
-    void findOrCreateInstance_createsNewInstanceWhenNoneExists() {
+    void findOrCreateInstanceCreatesNewInstanceWhenNoneExists() {
         // First call (getInstancesByUserAndImage) returns empty array
         when(databaseWebClient.get()).thenReturn(getUriSpec);
         when(getUriSpec.uri(anyString(), any(Object[].class))).thenReturn(getHeadersSpec);
@@ -340,7 +344,7 @@ class DatabaseServiceTest {
     // ===================== updateInstanceStatus =====================
 
     @Test
-    void updateInstanceStatus_completesSuccessfully() {
+    void updateInstanceStatusCompletesSuccessfully() {
         InstanceDTO inst = new InstanceDTO(5, "cont_5", "test", null, null, "running");
 
         when(databaseWebClient.get()).thenReturn(getUriSpec);
@@ -360,7 +364,7 @@ class DatabaseServiceTest {
     }
 
     @Test
-    void updateInstanceStatus_onErrorResumesGracefully() {
+    void updateInstanceStatusOnErrorResumesGracefully() {
         when(databaseWebClient.get()).thenReturn(getUriSpec);
         when(getUriSpec.uri(anyString(), any(Object[].class))).thenReturn(getHeadersSpec);
         when(getHeadersSpec.retrieve()).thenReturn(getResponseSpec);
@@ -374,7 +378,7 @@ class DatabaseServiceTest {
     // ===================== updateLiveEnvironmentStatus =====================
 
     @Test
-    void updateLiveEnvironmentStatus_completesSuccessfully() {
+    void updateLiveEnvironmentStatusCompletesSuccessfully() {
         Map<String, Object> result = Map.of("id", 1, "status", "stopped");
 
         when(databaseWebClient.put()).thenReturn(putUriSpec);
@@ -388,7 +392,7 @@ class DatabaseServiceTest {
     }
 
     @Test
-    void updateLiveEnvironmentStatus_onErrorResumesGracefully() {
+    void updateLiveEnvironmentStatusOnErrorResumesGracefully() {
         when(databaseWebClient.put()).thenReturn(putUriSpec);
         when(putUriSpec.uri(anyString(), any(Object[].class))).thenReturn(putBodySpec);
         when(putBodySpec.bodyValue(any())).thenReturn(putHeadersSpec);

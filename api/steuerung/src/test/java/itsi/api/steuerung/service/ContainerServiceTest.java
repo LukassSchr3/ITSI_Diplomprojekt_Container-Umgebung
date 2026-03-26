@@ -15,7 +15,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,7 +60,7 @@ class ContainerServiceTest {
     // ===================== startContainer =====================
 
     @Test
-    void startContainer_existingInstanceWithContainerIdReturnsSuccess() {
+    void startContainerExistingInstanceWithContainerIdReturnsSuccess() {
         InstanceDTO instance = buildInstance("cont_5");
         when(databaseService.findOrCreateInstance(1, 2)).thenReturn(instance);
         when(databaseService.updateInstance(eq(10), any())).thenReturn(instance);
@@ -72,7 +75,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void startContainer_instanceWithNoContainerIdCallsCreateAndStart() {
+    void startContainerInstanceWithNoContainerIdCallsCreateAndStart() {
         InstanceDTO instanceNoId = buildInstance("");
         InstanceDTO createdInstance = buildInstance("cont_1");
         when(databaseService.findOrCreateInstance(1, 2)).thenReturn(instanceNoId);
@@ -88,7 +91,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void startContainer_nullContainerIdCallsCreateAndStart() {
+    void startContainerNullContainerIdCallsCreateAndStart() {
         InstanceDTO instanceNoId = buildInstance(null);
         InstanceDTO createdInstance = buildInstance("cont_1");
         when(databaseService.findOrCreateInstance(1, 2)).thenReturn(instanceNoId);
@@ -103,7 +106,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void startContainer_instanceMissingImageRefReturnsFailure() {
+    void startContainerInstanceMissingImageRefReturnsFailure() {
         ImageDTO imageNoRef = new ImageDTO(2, "ubuntu", null);
         UserDTO user = new UserDTO(1, "Max", "m@t.at", null, "5A", "SCHUELER", null, null);
         InstanceDTO instance = new InstanceDTO(10, "cont_5", "ubuntu_Max", imageNoRef, user, "stopped");
@@ -117,7 +120,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void startContainer_serviceThrowsReturnsFailure() {
+    void startContainerServiceThrowsReturnsFailure() {
         when(databaseService.findOrCreateInstance(1, 2))
                 .thenThrow(new RuntimeException("DB error"));
 
@@ -131,7 +134,7 @@ class ContainerServiceTest {
     // ===================== stopContainer =====================
 
     @Test
-    void stopContainer_successReturnsStoppedStatus() {
+    void stopContainerSuccessReturnsStoppedStatus() {
         InstanceDTO instance = buildInstance("cont_5");
         when(databaseService.getInstancesByUserAndImage(1, 2))
                 .thenReturn(new InstanceDTO[]{instance});
@@ -146,7 +149,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void stopContainer_noInstanceFoundReturnsFailure() {
+    void stopContainerNoInstanceFoundReturnsFailure() {
         when(databaseService.getInstancesByUserAndImage(1, 2))
                 .thenReturn(new InstanceDTO[0]);
 
@@ -158,7 +161,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void stopContainer_nullInstancesArrayReturnsFailure() {
+    void stopContainerNullInstancesArrayReturnsFailure() {
         when(databaseService.getInstancesByUserAndImage(1, 2)).thenReturn(null);
 
         ContainerOperationResponse resp = containerService.stopContainer(
@@ -168,7 +171,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void stopContainer_instanceWithoutImageRefStillSendsRequest() {
+    void stopContainerInstanceWithoutImageRefStillSendsRequest() {
         ImageDTO imageNoRef = new ImageDTO(2, "ubuntu", null);
         UserDTO user = new UserDTO(1, "Max", "m@t.at", null, "5A", "SCHUELER", null, null);
         InstanceDTO instance = new InstanceDTO(10, "cont_5", "ubuntu_Max", imageNoRef, user, "running");
@@ -184,7 +187,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void stopContainer_serviceThrowsReturnsFailure() {
+    void stopContainerServiceThrowsReturnsFailure() {
         when(databaseService.getInstancesByUserAndImage(1, 2))
                 .thenThrow(new RuntimeException("network error"));
 
@@ -197,7 +200,7 @@ class ContainerServiceTest {
     // ===================== resetContainer =====================
 
     @Test
-    void resetContainer_successReturnsRunningStatus() {
+    void resetContainerSuccessReturnsRunningStatus() {
         InstanceDTO instance = buildInstance("cont_5");
         when(databaseService.getInstancesByUserAndImage(1, 2))
                 .thenReturn(new InstanceDTO[]{instance});
@@ -212,7 +215,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void resetContainer_noInstanceFoundReturnsFailure() {
+    void resetContainerNoInstanceFoundReturnsFailure() {
         when(databaseService.getInstancesByUserAndImage(1, 2))
                 .thenReturn(new InstanceDTO[0]);
 
@@ -224,7 +227,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void resetContainer_missingImageRefReturnsFailure() {
+    void resetContainerMissingImageRefReturnsFailure() {
         ImageDTO imageNoRef = new ImageDTO(2, "ubuntu", null);
         UserDTO user = new UserDTO(1, "Max", "m@t.at", null, "5A", "SCHUELER", null, null);
         InstanceDTO instance = new InstanceDTO(10, "cont_5", "ubuntu_Max", imageNoRef, user, "running");
@@ -239,7 +242,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void resetContainer_serviceThrowsReturnsFailure() {
+    void resetContainerServiceThrowsReturnsFailure() {
         when(databaseService.getInstancesByUserAndImage(1, 2))
                 .thenThrow(new RuntimeException("timeout"));
 
@@ -252,7 +255,7 @@ class ContainerServiceTest {
     // ===================== createAndStartContainerIfMissing =====================
 
     @Test
-    void createAndStartContainerIfMissing_alreadyHasContainerIdReturnsInstance() {
+    void createAndStartContainerIfMissingAlreadyHasContainerIdReturnsInstance() {
         InstanceDTO instance = buildInstance("cont_7");
         when(databaseService.findOrCreateInstance(1, 2)).thenReturn(instance);
 
@@ -264,7 +267,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void createAndStartContainerIfMissing_noContainerIdCreatesNewOne() {
+    void createAndStartContainerIfMissingNoContainerIdCreatesNewOne() {
         InstanceDTO instanceNoId = buildInstance("");
         InstanceDTO updated = buildInstance("cont_1");
         when(databaseService.findOrCreateInstance(1, 2)).thenReturn(instanceNoId);
@@ -279,7 +282,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void createAndStartContainerIfMissing_nullMaxContainerIdStartsFromOne() {
+    void createAndStartContainerIfMissingNullMaxContainerIdStartsFromOne() {
         InstanceDTO instanceNoId = buildInstance(null);
         InstanceDTO updated = buildInstance("cont_1");
         when(databaseService.findOrCreateInstance(1, 2)).thenReturn(instanceNoId);
@@ -293,7 +296,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void createAndStartContainerIfMissing_unparsableMaxIdDefaultsToOne() {
+    void createAndStartContainerIfMissingUnparsableMaxIdDefaultsToOne() {
         InstanceDTO instanceNoId = buildInstance("");
         InstanceDTO updated = buildInstance("cont_1");
         when(databaseService.findOrCreateInstance(1, 2)).thenReturn(instanceNoId);
@@ -307,7 +310,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void createAndStartContainerIfMissing_nullInstanceFromDbReturnsNull() {
+    void createAndStartContainerIfMissingNullInstanceFromDbReturnsNull() {
         when(databaseService.findOrCreateInstance(1, 2)).thenReturn(null);
 
         InstanceDTO result = containerService.createAndStartContainerIfMissing(1, 2);
@@ -316,7 +319,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void createAndStartContainerIfMissing_noImageRefReturnsNull() {
+    void createAndStartContainerIfMissingNoImageRefReturnsNull() {
         ImageDTO imageNoRef = new ImageDTO(2, "ubuntu", null);
         UserDTO user = new UserDTO(1, "Max", "m@t.at", null, "5A", "SCHUELER", null, null);
         InstanceDTO instance = new InstanceDTO(10, "", "ubuntu_Max", imageNoRef, user, "stopped");
@@ -331,7 +334,7 @@ class ContainerServiceTest {
     // ===================== Additional startContainer edge cases =====================
 
     @Test
-    void startContainer_emptyContainerIdCallsCreateAndStart() {
+    void startContainerEmptyContainerIdCallsCreateAndStart() {
         InstanceDTO instanceNoId = buildInstance("");
         InstanceDTO createdInstance = buildInstance("cont_3");
         when(databaseService.findOrCreateInstance(1, 2)).thenReturn(instanceNoId);
@@ -347,7 +350,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void startContainer_failedCreateAndStartReturnsFailure() {
+    void startContainerFailedCreateAndStartReturnsFailure() {
         InstanceDTO instanceNoId = buildInstance(null);
         when(databaseService.findOrCreateInstance(1, 2)).thenReturn(instanceNoId);
         // createAndStartContainerIfMissing will return null due to missing imageRef
@@ -364,7 +367,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void startContainer_requestWithNullUserIdStillHandled() {
+    void startContainerRequestWithNullUserIdStillHandled() {
         when(databaseService.findOrCreateInstance(null, 2))
                 .thenThrow(new RuntimeException("null userId"));
 
@@ -378,7 +381,7 @@ class ContainerServiceTest {
     // ===================== Additional stopContainer edge cases =====================
 
     @Test
-    void stopContainer_nullArrayReturnsFailure() {
+    void stopContainerNullArrayReturnsFailure() {
         when(databaseService.getInstancesByUserAndImage(1, 2)).thenReturn(null);
 
         ContainerOperationResponse resp = containerService.stopContainer(
@@ -389,7 +392,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void stopContainer_multipleInstancesUsesFirst() {
+    void stopContainerMultipleInstancesUsesFirst() {
         InstanceDTO inst1 = buildInstance("cont_5");
         InstanceDTO inst2 = buildInstance("cont_6");
         when(databaseService.getInstancesByUserAndImage(1, 2))
@@ -407,7 +410,7 @@ class ContainerServiceTest {
     // ===================== Additional resetContainer edge cases =====================
 
     @Test
-    void resetContainer_nullInstancesArrayReturnsFailure() {
+    void resetContainerNullInstancesArrayReturnsFailure() {
         when(databaseService.getInstancesByUserAndImage(1, 2)).thenReturn(null);
 
         ContainerOperationResponse resp = containerService.resetContainer(
@@ -418,7 +421,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void resetContainer_multipleInstancesUsesFirst() {
+    void resetContainerMultipleInstancesUsesFirst() {
         InstanceDTO inst1 = buildInstance("cont_7");
         InstanceDTO inst2 = buildInstance("cont_8");
         when(databaseService.getInstancesByUserAndImage(1, 2))
@@ -434,7 +437,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void resetContainer_noImageNullRefStillSendsRequest() {
+    void resetContainerNoImageNullRefStillSendsRequest() {
         InstanceDTO instance = buildInstance("cont_5");
         when(databaseService.getInstancesByUserAndImage(1, 2))
                 .thenReturn(new InstanceDTO[]{instance});
@@ -451,7 +454,7 @@ class ContainerServiceTest {
     // ===================== createAndStartContainerIfMissing – more edge cases =====================
 
     @Test
-    void createAndStartContainerIfMissing_noUserNameFallsBackToUser() {
+    void createAndStartContainerIfMissingNoUserNameFallsBackToUser() {
         ImageDTO img = new ImageDTO(2, "ubuntu", "ubuntu:22");
         UserDTO userNoName = new UserDTO(1, null, "m@t.at", null, "5A", "SCHUELER", null, null);
         InstanceDTO instanceNoId = new InstanceDTO(10, "", "ubuntu_", img, userNoName, "stopped");
@@ -467,7 +470,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void createAndStartContainerIfMissing_noImageNameFallsBackToImg() {
+    void createAndStartContainerIfMissingNoImageNameFallsBackToImg() {
         ImageDTO imgNoName = new ImageDTO(2, null, "ubuntu:22");
         UserDTO user = new UserDTO(1, "Max", "m@t.at", null, "5A", "SCHUELER", null, null);
         InstanceDTO instanceNoId = new InstanceDTO(10, "", "_Max", imgNoName, user, "stopped");
@@ -483,7 +486,7 @@ class ContainerServiceTest {
     }
 
     @Test
-    void createAndStartContainerIfMissing_maxContainerIdIsZeroStartsAtOne() {
+    void createAndStartContainerIfMissingMaxContainerIdIsZeroStartsAtOne() {
         InstanceDTO instanceNoId = buildInstance("");
         InstanceDTO updated = buildInstance("cont_1");
         when(databaseService.findOrCreateInstance(1, 2)).thenReturn(instanceNoId);

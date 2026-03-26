@@ -42,17 +42,9 @@
     </div>
   </div>
 
-  <div class="navigation-section">
-    @if (isTeacher()) {
-      <div class="admin-panel">
-        <h2>Admin-Bereich</h2>
-        <p class="admin-hint">Übungen und Quizze verwalten</p>
-        <div class="admin-buttons">
-          <a routerLink="/admin/exercises" class="admin-button">Übungen verwalten</a>
-          <a routerLink="/admin/quiz" class="admin-button">Quizze verwalten</a>
-        </div>
-      </div>
-    }
+  <!-- Kurse & Aufgaben Sektion -->
+  <div class="courses-section">
+    <h2>Meine Kurse</h2>
 
     <a routerLink="/exercises" class="nav-button">
       <div>

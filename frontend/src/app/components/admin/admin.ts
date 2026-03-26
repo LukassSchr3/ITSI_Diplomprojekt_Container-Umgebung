@@ -2,10 +2,9 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import apiClient from '../../service/api.service';
+import { AdminService, CourseItem, ImageItem, LiveEnvItem, UserItem, TaskItem, QuestionItem } from '../../service/admin.service';
 
-type Tab = 'courses' | 'images' | 'liveenvs' | 'users' | 'tasks' | 'enrollment';
-
+type Tab = 'courses' | 'images' | 'liveenvs' | 'users' | 'tasks' | 'enrollment' | 'questions';
 interface CourseOption { id: number; name: string; }
 interface ImageOption  { id: number; name: string; }
 interface TaskOption   { id: number; title: string; }
@@ -18,7 +17,7 @@ interface UserOption   { id: number; name: string; className: string; }
   styleUrl: './admin.css',
 })
 export class Admin implements OnInit {
-  constructor(private router: Router) {}
+  constructor(private router: Router, private adminService: AdminService) {}
 
   activeTab = signal<Tab>('courses');
 
@@ -33,6 +32,14 @@ export class Admin implements OnInit {
   taskOptions   = signal<TaskOption[]>([]);
   userOptions   = signal<UserOption[]>([]);
   classOptions  = signal<string[]>([]);
+
+  // Full list data for overview tables
+  courseList   = signal<CourseItem[]>([]);
+  imageList    = signal<ImageItem[]>([]);
+  liveEnvList  = signal<LiveEnvItem[]>([]);
+  userList     = signal<UserItem[]>([]);
+  taskList     = signal<TaskItem[]>([]);
+  questionList = signal<QuestionItem[]>([]);
 
   // Course form
   course = { name: '', description: '' };
@@ -52,34 +59,35 @@ export class Admin implements OnInit {
   // Course-Task assignment form
   assignment = { courseId: '', taskId: '', orderIndex: 0 };
 
+  // Question form
+  question = { taskId: '', frage: '', antworten: '[]', bestehgrenzeProzent: 50, maximalpunkte: 10 };
+
   // Enrollment forms
   enrollUser  = { userId: '', courseId: '', expiresAt: '' };
   enrollClass = { className: '', courseId: '', expiresAt: '' };
   enrollResult = signal<{ enrolled: number; skipped: number; message: string } | null>(null);
 
   async ngOnInit() {
-    await this.loadDropdowns();
+    await this.refreshData();
   }
 
-  private async loadDropdowns() {
+  private async refreshData() {
     try {
-      const [coursesRes, imagesRes, tasksRes, usersRes] = await Promise.all([
-        apiClient.get<CourseOption[]>('/api/courses'),
-        apiClient.get<ImageOption[]>('/api/images'),
-        apiClient.get<TaskOption[]>('/api/tasks'),
-        apiClient.get<UserOption[]>('/api/users'),
-      ]);
-      this.courseOptions.set(coursesRes.data ?? []);
-      this.imageOptions.set(imagesRes.data ?? []);
-      this.taskOptions.set(tasksRes.data ?? []);
-      this.userOptions.set(usersRes.data ?? []);
-      // Eindeutige Klassen aus Users ableiten
-      const classes = [...new Set(
-        (usersRes.data ?? []).map(u => u.className).filter(Boolean)
-      )].sort();
-      this.classOptions.set(classes);
+      const data = await this.adminService.loadAll();
+      this.courseOptions.set(data.courses.map(c => ({ id: c.id, name: c.name })));
+      this.imageOptions.set(data.images.map(i => ({ id: i.id, name: i.name })));
+      this.taskOptions.set(data.tasks.map(t => ({ id: t.id, title: t.title })));
+      this.userOptions.set(data.users.map(u => ({ id: u.id, name: u.name, className: u.className ?? '' })));
+      this.courseList.set(data.courses);
+      this.imageList.set(data.images);
+      this.taskList.set(data.tasks);
+      this.userList.set(data.users);
+      this.liveEnvList.set(data.liveEnvs);
+      this.questionList.set(data.questions);
+      const classes = [...new Set(data.users.map(u => u.className).filter(Boolean))].sort();
+      this.classOptions.set(classes as string[]);
     } catch {
-      // dropdowns bleiben leer – manuelle Eingabe möglich
+      // Dropdowns bleiben leer – manuelle Eingabe möglich
     }
   }
 
@@ -116,10 +124,10 @@ export class Admin implements OnInit {
     this.loading.set(true);
     this.clearMessages();
     try {
-      await apiClient.post('/api/courses', this.course);
+      await this.adminService.createCourse(this.course);
       this.handleSuccess(`Kurs "${this.course.name}" erfolgreich erstellt.`);
       this.course = { name: '', description: '' };
-      await this.loadDropdowns();
+      await this.refreshData();
     } catch (e) { this.handleError(e); }
   }
 
@@ -127,10 +135,10 @@ export class Admin implements OnInit {
     this.loading.set(true);
     this.clearMessages();
     try {
-      await apiClient.post('/api/images', this.image);
+      await this.adminService.createImage(this.image);
       this.handleSuccess(`Image "${this.image.name}" erfolgreich erstellt.`);
       this.image = { name: '', imageRef: '' };
-      await this.loadDropdowns();
+      await this.refreshData();
     } catch (e) { this.handleError(e); }
   }
 
@@ -138,14 +146,13 @@ export class Admin implements OnInit {
     this.loading.set(true);
     this.clearMessages();
     try {
-      const payload = {
+      await this.adminService.createLiveEnv({
         userId: Number(this.liveEnv.userId),
         vncPort: Number(this.liveEnv.vncPort),
         vncHost: this.liveEnv.vncHost,
         vncPassword: this.liveEnv.vncPassword,
         status: this.liveEnv.status,
-      };
-      await apiClient.post('/api/live-environments', payload);
+      });
       this.handleSuccess(`Live-Umgebung für User ${this.liveEnv.userId} erfolgreich erstellt.`);
       this.liveEnv = { userId: '', vncPort: '', vncHost: '', vncPassword: '', status: 'active' };
     } catch (e) { this.handleError(e); }
@@ -155,15 +162,14 @@ export class Admin implements OnInit {
     this.loading.set(true);
     this.clearMessages();
     try {
-      const payload = {
+      await this.adminService.createUser({
         name: this.user.name,
         email: this.user.email,
         password: this.user.password,
         className: this.user.className,
         role: this.user.role,
         expiredAt: this.user.expiredAt ? new Date(this.user.expiredAt).toISOString() : null,
-      };
-      await apiClient.post('/api/users', payload);
+      });
       this.handleSuccess(`Benutzer "${this.user.name}" erfolgreich erstellt.`);
       this.user = { name: '', email: '', password: '', className: '', role: 'SCHUELER', expiredAt: '' };
     } catch (e) { this.handleError(e); }
@@ -173,19 +179,17 @@ export class Admin implements OnInit {
     this.loading.set(true);
     this.clearMessages();
     try {
-      const payload = {
+      const created = await this.adminService.createTask({
         title: this.task.title,
         description: this.task.description,
         points: Number(this.task.points),
         imageId: Number(this.task.imageId),
-      };
-      const res = await apiClient.post<TaskOption>('/api/tasks', payload);
+      });
       this.handleSuccess(`Aufgabe "${this.task.title}" erfolgreich erstellt.`);
       this.task = { title: '', description: '', points: 0, imageId: '' };
-      await this.loadDropdowns();
-      // Neue Task direkt im Zuordnungs-Dropdown vorauswählen
-      if (res.data?.id) {
-        this.assignment.taskId = String(res.data.id);
+      await this.refreshData();
+      if (created?.id) {
+        this.assignment.taskId = String(created.id);
       }
     } catch (e) { this.handleError(e); }
   }
@@ -194,14 +198,13 @@ export class Admin implements OnInit {
     this.loading.set(true);
     this.clearMessages();
     try {
-      const payload = {
+      await this.adminService.assignTaskToCourse({
         courseId: Number(this.assignment.courseId),
         taskId:   Number(this.assignment.taskId),
         orderIndex: Number(this.assignment.orderIndex),
-      };
-      await apiClient.post('/api/course-tasks', payload);
-      const courseName = this.courseOptions().find(c => c.id === payload.courseId)?.name ?? payload.courseId;
-      const taskTitle  = this.taskOptions().find(t => t.id === payload.taskId)?.title ?? payload.taskId;
+      });
+      const courseName = this.courseOptions().find(c => c.id === Number(this.assignment.courseId))?.name ?? this.assignment.courseId;
+      const taskTitle  = this.taskOptions().find(t => t.id === Number(this.assignment.taskId))?.title ?? this.assignment.taskId;
       this.handleSuccess(`Aufgabe "${taskTitle}" wurde Kurs "${courseName}" zugeordnet.`);
       this.assignment = { courseId: '', taskId: '', orderIndex: 0 };
     } catch (e) { this.handleError(e); }
@@ -223,7 +226,7 @@ export class Admin implements OnInit {
       if (this.enrollUser.expiresAt) {
         payload['expiresAt'] = new Date(this.enrollUser.expiresAt).toISOString().slice(0, 19);
       }
-      await apiClient.post('/api/student-courses', payload);
+      await this.adminService.enrollSingleUser(payload);
       const userName   = this.userOptions().find(u => u.id === payload['userId'])?.name ?? payload['userId'];
       const courseName = this.courseOptions().find(c => c.id === payload['courseId'])?.name ?? payload['courseId'];
       this.handleSuccess(`Benutzer "${userName}" wurde in Kurs "${courseName}" eingeschrieben.`);
@@ -243,12 +246,92 @@ export class Admin implements OnInit {
       if (this.enrollClass.expiresAt) {
         payload['expiresAt'] = new Date(this.enrollClass.expiresAt).toISOString().slice(0, 19);
       }
-      const res = await apiClient.post<{ enrolled: number; skipped: number; message: string }>(
-        '/api/student-courses/enroll-class', payload
-      );
-      this.enrollResult.set(res.data);
-      this.handleSuccess(res.data.message);
+      const result = await this.adminService.enrollByClass(payload);
+      this.enrollResult.set(result);
+      this.handleSuccess(result.message);
       this.enrollClass = { className: '', courseId: '', expiresAt: '' };
     } catch (e) { this.handleError(e); }
   }
+
+  async deleteCourse(id: number) {
+    if (!confirm('Kurs wirklich löschen?')) return;
+    try {
+      await this.adminService.deleteCourse(id);
+      this.courseList.set(this.courseList().filter(c => c.id !== id));
+      this.courseOptions.set(this.courseOptions().filter(c => c.id !== id));
+      this.successMsg.set('Kurs gelöscht.');
+    } catch (e) { this.handleError(e); }
+  }
+
+  async deleteImage(id: number) {
+    if (!confirm('Image wirklich löschen?')) return;
+    try {
+      await this.adminService.deleteImage(id);
+      this.imageList.set(this.imageList().filter(i => i.id !== id));
+      this.imageOptions.set(this.imageOptions().filter(i => i.id !== id));
+      this.successMsg.set('Image gelöscht.');
+    } catch (e) { this.handleError(e); }
+  }
+
+  async deleteLiveEnv(id: number) {
+    if (!confirm('Live-Umgebung wirklich löschen?')) return;
+    try {
+      await this.adminService.deleteLiveEnv(id);
+      this.liveEnvList.set(this.liveEnvList().filter(e => e.id !== id));
+      this.successMsg.set('Live-Umgebung gelöscht.');
+    } catch (e) { this.handleError(e); }
+  }
+
+  async deleteUser(id: number) {
+    if (!confirm('Benutzer wirklich löschen?')) return;
+    try {
+      await this.adminService.deleteUser(id);
+      this.userList.set(this.userList().filter(u => u.id !== id));
+      this.userOptions.set(this.userOptions().filter(u => u.id !== id));
+      this.successMsg.set('Benutzer gelöscht.');
+    } catch (e) { this.handleError(e); }
+  }
+
+  async deleteTask(id: number) {
+    if (!confirm('Aufgabe wirklich löschen?')) return;
+    try {
+      await this.adminService.deleteTask(id);
+      this.taskList.set(this.taskList().filter(t => t.id !== id));
+      this.taskOptions.set(this.taskOptions().filter(t => t.id !== id));
+      this.successMsg.set('Aufgabe gelöscht.');
+    } catch (e) { this.handleError(e); }
+  }
+
+  async createQuestion() {
+    this.loading.set(true);
+    this.clearMessages();
+    try {
+      let antworten: unknown = this.question.antworten;
+      try { antworten = JSON.parse(this.question.antworten); } catch { /* send as string */ }
+      await this.adminService.createQuestion({
+        taskId: Number(this.question.taskId),
+        frage: this.question.frage,
+        antworten,
+        bestehgrenzeProzent: Number(this.question.bestehgrenzeProzent),
+        maximalpunkte: Number(this.question.maximalpunkte),
+      });
+      this.handleSuccess('Frage erfolgreich erstellt.');
+      this.question = { taskId: '', frage: '', antworten: '[]', bestehgrenzeProzent: 50, maximalpunkte: 10 };
+      await this.refreshData();
+    } catch (e) { this.handleError(e); }
+  }
+
+  async deleteQuestion(id: number) {
+    if (!confirm('Frage wirklich löschen?')) return;
+    try {
+      await this.adminService.deleteQuestion(id);
+      this.questionList.set(this.questionList().filter(q => q.id !== id));
+      this.successMsg.set('Frage gelöscht.');
+    } catch (e) { this.handleError(e); }
+  }
+
+  getTaskTitle(taskId: number): string {
+    return this.taskOptions().find(t => t.id === taskId)?.title ?? String(taskId);
+  }
 }
+

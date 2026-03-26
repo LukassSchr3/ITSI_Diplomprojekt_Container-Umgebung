@@ -19,9 +19,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class StudentCourseServiceTest {
@@ -66,7 +70,7 @@ class StudentCourseServiceTest {
     }
 
     @Test
-    void findAll_shouldReturnAllStudentCourses() {
+    void findAllShouldReturnAllStudentCourses() {
         when(studentCourseRepository.findAll()).thenReturn(Arrays.asList(testSC));
 
         List<StudentCourse> result = studentCourseService.findAll();
@@ -77,7 +81,7 @@ class StudentCourseServiceTest {
     }
 
     @Test
-    void findAll_shouldReturnEmptyList() {
+    void findAllShouldReturnEmptyList() {
         when(studentCourseRepository.findAll()).thenReturn(Collections.emptyList());
 
         List<StudentCourse> result = studentCourseService.findAll();
@@ -87,7 +91,7 @@ class StudentCourseServiceTest {
     }
 
     @Test
-    void findByUserId_shouldReturnCoursesForUser() {
+    void findByUserIdShouldReturnCoursesForUser() {
         when(studentCourseRepository.findByUserId(1)).thenReturn(Arrays.asList(testSC));
 
         List<StudentCourse> result = studentCourseService.findByUserId(1);
@@ -98,7 +102,7 @@ class StudentCourseServiceTest {
     }
 
     @Test
-    void findByCourseId_shouldReturnStudentsForCourse() {
+    void findByCourseIdShouldReturnStudentsForCourse() {
         when(studentCourseRepository.findByCourseId(10)).thenReturn(Arrays.asList(testSC));
 
         List<StudentCourse> result = studentCourseService.findByCourseId(10);
@@ -109,7 +113,7 @@ class StudentCourseServiceTest {
     }
 
     @Test
-    void findByUserIdAndCourseId_shouldReturnStudentCourseWhenExists() {
+    void findByUserIdAndCourseIdShouldReturnStudentCourseWhenExists() {
         when(studentCourseRepository.findByUserIdAndCourseId(1, 10)).thenReturn(Optional.of(testSC));
 
         Optional<StudentCourse> result = studentCourseService.findByUserIdAndCourseId(1, 10);
@@ -119,7 +123,7 @@ class StudentCourseServiceTest {
     }
 
     @Test
-    void findByUserIdAndCourseId_shouldReturnEmptyWhenNotExists() {
+    void findByUserIdAndCourseIdShouldReturnEmptyWhenNotExists() {
         when(studentCourseRepository.findByUserIdAndCourseId(99, 99)).thenReturn(Optional.empty());
 
         Optional<StudentCourse> result = studentCourseService.findByUserIdAndCourseId(99, 99);
@@ -128,7 +132,7 @@ class StudentCourseServiceTest {
     }
 
     @Test
-    void save_shouldPersistAndReturnStudentCourse() {
+    void saveShouldPersistAndReturnStudentCourse() {
         when(studentCourseRepository.save(testSC)).thenReturn(testSC);
 
         StudentCourse result = studentCourseService.save(testSC);
@@ -139,14 +143,14 @@ class StudentCourseServiceTest {
     }
 
     @Test
-    void deleteByUserIdAndCourseId_shouldCallDeleteById() {
+    void deleteByUserIdAndCourseIdShouldCallDeleteById() {
         studentCourseService.deleteByUserIdAndCourseId(1, 10);
 
         verify(studentCourseRepository).deleteById(new StudentCourse.StudentCourseId(1, 10));
     }
 
     @Test
-    void getDashboardCoursesByUserId_shouldReturnMappedDTOs() {
+    void getDashboardCoursesByUserIdShouldReturnMappedDTOs() {
         when(studentCourseRepository.findByUserId(1)).thenReturn(Arrays.asList(testSC));
         when(courseRepository.findById(10)).thenReturn(Optional.of(testCourse));
         when(courseTaskService.findTasksByCourseId(10)).thenReturn(Arrays.asList(testTask));
@@ -155,14 +159,14 @@ class StudentCourseServiceTest {
 
         assertEquals(1, result.size());
         DashboardCourseDTO dto = result.get(0);
-        assertEquals(10, dto.getId());
-        assertEquals("Testkurs", dto.getName());
+        assertEquals(10, dto.getCourseId());
+        assertEquals("Testkurs", dto.getCourseName());
         assertEquals(1, dto.getTasks().size());
         assertEquals("Aufgabe 1", dto.getTasks().get(0).getTitle());
     }
 
     @Test
-    void getDashboardCoursesByUserId_shouldSkipNullCourses() {
+    void getDashboardCoursesByUserIdShouldSkipNullCourses() {
         when(studentCourseRepository.findByUserId(1)).thenReturn(Arrays.asList(testSC));
         when(courseRepository.findById(10)).thenReturn(Optional.empty());
 
@@ -172,7 +176,7 @@ class StudentCourseServiceTest {
     }
 
     @Test
-    void getDashboardCoursesByUserId_shouldReturnEmptyListWhenNoEnrollments() {
+    void getDashboardCoursesByUserIdShouldReturnEmptyListWhenNoEnrollments() {
         when(studentCourseRepository.findByUserId(99)).thenReturn(Collections.emptyList());
 
         List<DashboardCourseDTO> result = studentCourseService.getDashboardCoursesByUserId(99);

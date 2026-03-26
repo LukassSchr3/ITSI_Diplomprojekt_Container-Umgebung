@@ -18,7 +18,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NoVncWebSocketHandlerTest {
@@ -38,7 +42,7 @@ class NoVncWebSocketHandlerTest {
     // ===================== afterConnectionEstablished – kein VNC-Server =====================
 
     @Test
-    void afterConnectionEstablished_vncNotAvailable_closesSession() throws Exception {
+    void afterConnectionEstablishedVncNotAvailableClosesSession() throws Exception {
         // Port 5900 wird in Tests nicht verfügbar sein → IOException
         when(session.getUri()).thenReturn(new URI("/novnc"));
         when(session.getId()).thenReturn("test-session-1");
@@ -50,7 +54,7 @@ class NoVncWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionEstablished_withVncPortQueryParam_parsesPort() throws Exception {
+    void afterConnectionEstablishedWithVncPortQueryParamParsesPort() throws Exception {
         when(session.getUri()).thenReturn(new URI("/novnc?vncPort=5910"));
         when(session.getId()).thenReturn("test-session-2");
 
@@ -61,7 +65,7 @@ class NoVncWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionEstablished_withMultipleQueryParams_parsesCorrectPort() throws Exception {
+    void afterConnectionEstablishedWithMultipleQueryParamsParsesCorrectPort() throws Exception {
         when(session.getUri()).thenReturn(new URI("/novnc?token=abc&vncPort=5920&other=val"));
         when(session.getId()).thenReturn("test-session-3");
 
@@ -71,7 +75,7 @@ class NoVncWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionEstablished_withInvalidVncPortParam_fallsBackToDefault() throws Exception {
+    void afterConnectionEstablishedWithInvalidVncPortParamFallsBackToDefault() throws Exception {
         when(session.getUri()).thenReturn(new URI("/novnc?vncPort=notanumber"));
         when(session.getId()).thenReturn("test-session-4");
 
@@ -82,7 +86,7 @@ class NoVncWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionEstablished_withNoQuery_usesDefaultPort() throws Exception {
+    void afterConnectionEstablishedWithNoQueryUsesDefaultPort() throws Exception {
         when(session.getUri()).thenReturn(new URI("/novnc"));
         when(session.getId()).thenReturn("test-session-5");
 
@@ -94,7 +98,7 @@ class NoVncWebSocketHandlerTest {
     // ===================== handleBinaryMessage – kein Socket =====================
 
     @Test
-    void handleBinaryMessage_noVncSocket_closesSession() throws Exception {
+    void handleBinaryMessageNoVncSocketClosesSession() throws Exception {
         Map<String, Object> attrs = new HashMap<>();
         // kein VNC_SOCKET_ATTR
         when(session.getAttributes()).thenReturn(attrs);
@@ -107,7 +111,7 @@ class NoVncWebSocketHandlerTest {
     }
 
     @Test
-    void handleBinaryMessage_closedSocket_closesSession() throws Exception {
+    void handleBinaryMessageClosedSocketClosesSession() throws Exception {
         Socket closedSocket = mock(Socket.class);
         when(closedSocket.isClosed()).thenReturn(true);
 
@@ -125,7 +129,7 @@ class NoVncWebSocketHandlerTest {
     // ===================== afterConnectionClosed =====================
 
     @Test
-    void afterConnectionClosed_noSocket_closesSessionGracefully() throws Exception {
+    void afterConnectionClosedNoSocketClosesSessionGracefully() throws Exception {
         Map<String, Object> attrs = new HashMap<>();
         when(session.getAttributes()).thenReturn(attrs);
         when(session.getId()).thenReturn("test-close-1");
@@ -137,7 +141,7 @@ class NoVncWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionClosed_withOpenSocket_closesSocket() throws Exception {
+    void afterConnectionClosedWithOpenSocketClosesSocket() throws Exception {
         Socket socket = mock(Socket.class);
         when(socket.isClosed()).thenReturn(false);
 
@@ -153,7 +157,7 @@ class NoVncWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionClosed_withAlreadyClosedSocket_doesNotCallClose() throws Exception {
+    void afterConnectionClosedWithAlreadyClosedSocketDoesNotCallClose() throws Exception {
         Socket socket = mock(Socket.class);
         when(socket.isClosed()).thenReturn(true);
 
@@ -169,7 +173,7 @@ class NoVncWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionClosed_sessionStillOpen_closesSession() throws Exception {
+    void afterConnectionClosedSessionStillOpenClosesSession() throws Exception {
         Map<String, Object> attrs = new HashMap<>();
         when(session.getAttributes()).thenReturn(attrs);
         when(session.getId()).thenReturn("test-close-4");
@@ -181,7 +185,7 @@ class NoVncWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionClosed_socketCloseThrows_doesNotPropagate() throws Exception {
+    void afterConnectionClosedSocketCloseThrowsDoesNotPropagate() throws Exception {
         Socket socket = mock(Socket.class);
         when(socket.isClosed()).thenReturn(false);
         doThrow(new IOException("socket error")).when(socket).close();
@@ -197,7 +201,7 @@ class NoVncWebSocketHandlerTest {
     }
 
     @Test
-    void afterConnectionClosed_sessionCloseThrows_doesNotPropagate() throws Exception {
+    void afterConnectionClosedSessionCloseThrowsDoesNotPropagate() throws Exception {
         Map<String, Object> attrs = new HashMap<>();
         when(session.getAttributes()).thenReturn(attrs);
         when(session.getId()).thenReturn("test-close-6");

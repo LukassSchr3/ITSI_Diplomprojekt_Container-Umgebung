@@ -15,9 +15,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -43,7 +50,7 @@ class UserServiceTest {
     }
 
     @Test
-    void findAll_shouldReturnAllUsers() {
+    void findAllShouldReturnAllUsers() {
         User user2 = new User();
         user2.setId(2);
         user2.setName("testuser2");
@@ -61,7 +68,7 @@ class UserServiceTest {
     }
 
     @Test
-    void findAll_shouldReturnEmptyListWhenNoUsers() {
+    void findAllShouldReturnEmptyListWhenNoUsers() {
         when(userRepository.findAll()).thenReturn(Collections.emptyList());
 
         List<User> actualUsers = userService.findAll();
@@ -72,7 +79,7 @@ class UserServiceTest {
     }
 
     @Test
-    void findById_shouldReturnUserWhenExists() {
+    void findByIdShouldReturnUserWhenExists() {
         when(userRepository.findById(1)).thenReturn(Optional.of(testUser));
 
         Optional<User> result = userService.findById(1);
@@ -83,7 +90,7 @@ class UserServiceTest {
     }
 
     @Test
-    void findById_shouldReturnEmptyWhenNotExists() {
+    void findByIdShouldReturnEmptyWhenNotExists() {
         when(userRepository.findById(999)).thenReturn(Optional.empty());
 
         Optional<User> result = userService.findById(999);
@@ -93,7 +100,7 @@ class UserServiceTest {
     }
 
     @Test
-    void findByName_shouldReturnUserWhenExists() {
+    void findByNameShouldReturnUserWhenExists() {
         when(userRepository.findByName("testuser")).thenReturn(Optional.of(testUser));
 
         Optional<User> result = userService.findByName("testuser");
@@ -104,7 +111,7 @@ class UserServiceTest {
     }
 
     @Test
-    void findByName_shouldReturnEmptyWhenNotExists() {
+    void findByNameShouldReturnEmptyWhenNotExists() {
         when(userRepository.findByName("nonexistent")).thenReturn(Optional.empty());
 
         Optional<User> result = userService.findByName("nonexistent");
@@ -114,7 +121,7 @@ class UserServiceTest {
     }
 
     @Test
-    void findByEmail_shouldReturnUserWhenExists() {
+    void findByEmailShouldReturnUserWhenExists() {
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
 
         Optional<User> result = userService.findByEmail("test@example.com");
@@ -125,7 +132,7 @@ class UserServiceTest {
     }
 
     @Test
-    void findByEmail_shouldReturnEmptyWhenNotExists() {
+    void findByEmailShouldReturnEmptyWhenNotExists() {
         when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
         Optional<User> result = userService.findByEmail("nonexistent@example.com");
@@ -135,7 +142,7 @@ class UserServiceTest {
     }
 
     @Test
-    void save_shouldSaveAndReturnUser() {
+    void saveShouldSaveAndReturnUser() {
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         User result = userService.save(testUser);
@@ -146,7 +153,7 @@ class UserServiceTest {
     }
 
     @Test
-    void save_shouldUpdateExistingUser() {
+    void saveShouldUpdateExistingUser() {
         testUser.setName("updatedname");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
@@ -158,7 +165,7 @@ class UserServiceTest {
     }
 
     @Test
-    void deleteById_shouldDeleteUser() {
+    void deleteByIdShouldDeleteUser() {
         doNothing().when(userRepository).deleteById(1);
 
         userService.deleteById(1);
@@ -167,7 +174,7 @@ class UserServiceTest {
     }
 
     @Test
-    void deleteById_shouldNotThrowExceptionWhenUserNotExists() {
+    void deleteByIdShouldNotThrowExceptionWhenUserNotExists() {
         doNothing().when(userRepository).deleteById(999);
 
         assertDoesNotThrow(() -> userService.deleteById(999));

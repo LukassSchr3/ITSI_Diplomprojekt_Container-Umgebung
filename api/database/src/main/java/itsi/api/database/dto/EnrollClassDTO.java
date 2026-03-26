@@ -10,9 +10,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EnrollClassDTO {
-
-    private String className;
     private Integer courseId;
+    private String className;
     private LocalDateTime expiresAt;
 }
-

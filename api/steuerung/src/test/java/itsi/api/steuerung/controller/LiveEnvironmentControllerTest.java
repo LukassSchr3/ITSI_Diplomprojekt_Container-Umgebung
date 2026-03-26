@@ -15,8 +15,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -85,7 +89,7 @@ class LiveEnvironmentControllerTest {
     // ===================== createLiveEnvironment =====================
 
     @Test
-    void createLiveEnvironment_withUserId_setsVncPortBasedOnUserId() {
+    void createLiveEnvironmentWithUserIdSetsVncPortBasedOnUserId() {
         Map<String, Object> input = new HashMap<>();
         input.put("userId", 5);
         input.put("vncPassword", "secret");
@@ -102,7 +106,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void createLiveEnvironment_vncPortEqualsUserId() {
+    void createLiveEnvironmentVncPortEqualsUserId() {
         Map<String, Object> input = new HashMap<>();
         input.put("userId", 10);
         input.put("vncPassword", "pw");
@@ -117,7 +121,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void createLiveEnvironment_withoutUserId_returnsBadRequest() {
+    void createLiveEnvironmentWithoutUserIdReturnsBadRequest() {
         Map<String, Object> input = new HashMap<>();
         input.put("vncPassword", "secret");
 
@@ -127,7 +131,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void createLiveEnvironment_withoutVncPassword_returnsBadRequest() {
+    void createLiveEnvironmentWithoutVncPasswordReturnsBadRequest() {
         Map<String, Object> input = new HashMap<>();
         input.put("userId", 3);
 
@@ -137,7 +141,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void createLiveEnvironment_withEmptyVncPassword_returnsBadRequest() {
+    void createLiveEnvironmentWithEmptyVncPasswordReturnsBadRequest() {
         Map<String, Object> input = new HashMap<>();
         input.put("userId", 3);
         input.put("vncPassword", "");
@@ -148,7 +152,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void createLiveEnvironment_userIdAsString_works() {
+    void createLiveEnvironmentUserIdAsStringWorks() {
         Map<String, Object> input = new HashMap<>();
         input.put("userId", "7");
         input.put("vncPassword", "pw");
@@ -161,7 +165,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void createLiveEnvironment_setsDefaultVncHost() {
+    void createLiveEnvironmentSetsDefaultVncHost() {
         Map<String, Object> input = new HashMap<>();
         input.put("userId", 2);
         input.put("vncPassword", "pw");
@@ -175,7 +179,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void createLiveEnvironment_doesNotOverrideExistingVncHost() {
+    void createLiveEnvironmentDoesNotOverrideExistingVncHost() {
         Map<String, Object> input = new HashMap<>();
         input.put("userId", 2);
         input.put("vncPassword", "pw");
@@ -190,7 +194,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void createLiveEnvironment_setsDefaultStatus() {
+    void createLiveEnvironmentSetsDefaultStatus() {
         Map<String, Object> input = new HashMap<>();
         input.put("userId", 3);
         input.put("vncPassword", "pw");
@@ -206,7 +210,7 @@ class LiveEnvironmentControllerTest {
     // ===================== getVncPortByUserId =====================
 
     @Test
-    void getVncPortByUserId_returnsVncPort() {
+    void getVncPortByUserIdReturnsVncPort() {
         Map<String, Object> liveEnv = new HashMap<>();
         liveEnv.put("id", 1);
         liveEnv.put("vncPort", 5901);
@@ -227,7 +231,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void getVncPortByUserId_notFound_returns404() {
+    void getVncPortByUserIdNotFoundReturns404() {
         when(databaseWebClient.get()).thenReturn(dbGetUriSpec);
         when(dbGetUriSpec.uri(anyString())).thenReturn(dbGetHeadersSpec);
         when(dbGetHeadersSpec.retrieve()).thenReturn(dbGetResponseSpec);
@@ -239,7 +243,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void getVncPortByUserId_noVncPort_returns404() {
+    void getVncPortByUserIdNoVncPortReturns404() {
         Map<String, Object> liveEnv = new HashMap<>();
         liveEnv.put("id", 1);
 
@@ -254,7 +258,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void getVncPortByUserId_withoutPasswordStillReturnsPort() {
+    void getVncPortByUserIdWithoutPasswordStillReturnsPort() {
         Map<String, Object> liveEnv = new HashMap<>();
         liveEnv.put("id", 1);
         liveEnv.put("vncPort", 5903);
@@ -275,7 +279,7 @@ class LiveEnvironmentControllerTest {
     // ===================== startLiveEnvironment =====================
 
     @Test
-    void startLiveEnvironment_existingEnv_startsSuccessfully() throws Exception {
+    void startLiveEnvironmentExistingEnvStartsSuccessfully() throws Exception {
         Map<String, Object> liveEnv = new HashMap<>();
         liveEnv.put("id", 1);
         liveEnv.put("vncPort", 5901);
@@ -303,7 +307,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void startLiveEnvironment_userNotFound_returnsBadRequest() {
+    void startLiveEnvironmentUserNotFoundReturnsBadRequest() {
         Map<String, Object> liveEnv = new HashMap<>();
         liveEnv.put("id", 1);
         liveEnv.put("vncPort", 5901);
@@ -321,7 +325,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void startLiveEnvironment_backendError_returnsBadGateway() {
+    void startLiveEnvironmentBackendErrorReturnsBadGateway() {
         Map<String, Object> liveEnv = new HashMap<>();
         liveEnv.put("id", 1);
         liveEnv.put("vncPort", 5901);
@@ -345,7 +349,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void startLiveEnvironment_newEnvCreated_whenNoneExists() {
+    void startLiveEnvironmentNewEnvCreatedWhenNoneExists() {
         Map<String, Object> createdEnv = new HashMap<>();
         createdEnv.put("id", 10);
         createdEnv.put("vncPort", 5902);
@@ -376,7 +380,7 @@ class LiveEnvironmentControllerTest {
     // ===================== stopLiveEnvironment =====================
 
     @Test
-    void stopLiveEnvironment_noLiveEnvFound_returnsBadRequest() {
+    void stopLiveEnvironmentNoLiveEnvFoundReturnsBadRequest() {
         when(databaseWebClient.get()).thenReturn(dbGetUriSpec);
         when(dbGetUriSpec.uri(anyString())).thenReturn(dbGetHeadersSpec);
         when(dbGetHeadersSpec.retrieve()).thenReturn(dbGetResponseSpec);
@@ -388,7 +392,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void stopLiveEnvironment_liveEnvWithoutId_returnsBadRequest() {
+    void stopLiveEnvironmentLiveEnvWithoutIdReturnsBadRequest() {
         Map<String, Object> liveEnv = new HashMap<>();
 
         when(databaseWebClient.get()).thenReturn(dbGetUriSpec);
@@ -402,7 +406,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void stopLiveEnvironment_success_returns200() throws Exception {
+    void stopLiveEnvironmentSuccessReturns200() throws Exception {
         Map<String, Object> liveEnv = new HashMap<>();
         liveEnv.put("id", 1);
         liveEnv.put("vncPort", 5901);
@@ -429,7 +433,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void stopLiveEnvironment_userNotFound_returnsBadRequest() {
+    void stopLiveEnvironmentUserNotFoundReturnsBadRequest() {
         Map<String, Object> liveEnv = new HashMap<>();
         liveEnv.put("id", 1);
 
@@ -446,7 +450,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void stopLiveEnvironment_backendError_returnsBadGateway() {
+    void stopLiveEnvironmentBackendErrorReturnsBadGateway() {
         Map<String, Object> liveEnv = new HashMap<>();
         liveEnv.put("id", 1);
         Map<String, Object> user = Map.of("name", "Max");
@@ -471,7 +475,7 @@ class LiveEnvironmentControllerTest {
     // ===================== resetLiveEnvironment =====================
 
     @Test
-    void resetLiveEnvironment_noLiveEnvFound_returnsBadRequest() {
+    void resetLiveEnvironmentNoLiveEnvFoundReturnsBadRequest() {
         when(databaseWebClient.get()).thenReturn(dbGetUriSpec);
         when(dbGetUriSpec.uri(anyString())).thenReturn(dbGetHeadersSpec);
         when(dbGetHeadersSpec.retrieve()).thenReturn(dbGetResponseSpec);
@@ -483,7 +487,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void resetLiveEnvironment_liveEnvWithoutId_returnsBadRequest() {
+    void resetLiveEnvironmentLiveEnvWithoutIdReturnsBadRequest() {
         Map<String, Object> liveEnv = new HashMap<>();
 
         when(databaseWebClient.get()).thenReturn(dbGetUriSpec);
@@ -497,7 +501,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void resetLiveEnvironment_success_returns200() throws Exception {
+    void resetLiveEnvironmentSuccessReturns200() throws Exception {
         Map<String, Object> liveEnv = new HashMap<>();
         liveEnv.put("id", 1);
         liveEnv.put("vncPort", 5901);
@@ -524,7 +528,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void resetLiveEnvironment_userNotFound_returnsBadRequest() {
+    void resetLiveEnvironmentUserNotFoundReturnsBadRequest() {
         Map<String, Object> liveEnv = new HashMap<>();
         liveEnv.put("id", 1);
 
@@ -541,7 +545,7 @@ class LiveEnvironmentControllerTest {
     }
 
     @Test
-    void resetLiveEnvironment_backendError_returnsBadGateway() {
+    void resetLiveEnvironmentBackendErrorReturnsBadGateway() {
         Map<String, Object> liveEnv = new HashMap<>();
         liveEnv.put("id", 1);
         Map<String, Object> user = Map.of("name", "Max");
