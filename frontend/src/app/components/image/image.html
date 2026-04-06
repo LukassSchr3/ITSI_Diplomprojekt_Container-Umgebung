@@ -2,15 +2,12 @@
   <!-- Header -->
   <div class="image-header">
     <div class="header-info">
-      <a routerLink="/" class="back-button">
+      <a routerLink="/dashboard" class="back-button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" [attr.stroke-width]="2">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
         Zurück
       </a>
-      @if (image()) {
-        <h2>{{ image()!.Name }}</h2>
-      }
     </div>
 
     <div class="header-right">
@@ -45,7 +42,7 @@
     <!-- Exercise Sidebar -->
     <aside class="exercise-sidebar" [class.open]="sidebarOpen()">
       <div class="sidebar-header">
-        <h3>Übungen &amp; Fragen</h3>
+        <h3>Aufgaben &amp; Fragen</h3>
         <button class="close-btn" (click)="toggleSidebar()" type="button" aria-label="Schließen">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12"/>
@@ -54,37 +51,105 @@
       </div>
 
       <div class="sidebar-content">
-        @for (exercise of exercises(); track exercise.id) {
-          <div class="accordion-item" [class.expanded]="isExpanded(exercise.id)">
-            <button class="accordion-header" (click)="toggleExercise(exercise.id)" type="button">
+        @if (isLoadingTasks()) {
+          <p class="no-quiz">Aufgaben werden geladen...</p>
+        }
+
+        @for (tw of tasksWithQuestions(); track tw.task.id) {
+          <div class="accordion-item" [class.expanded]="isExpanded(tw.task.id)">
+            <button class="accordion-header" (click)="toggleTask(tw.task.id)" type="button">
               <div class="accordion-title">
-                <span class="exercise-id">{{ exercise.id }}</span>
-                <span class="exercise-name">{{ exercise.title }}</span>
+                <span class="exercise-name">{{ tw.task.title }}</span>
+                @if (tw.questions.length > 0) {
+                  <span class="exercise-id">{{ getTaskProgress(tw) }} Fragen</span>
+                }
               </div>
               <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                   [class.rotated]="isExpanded(exercise.id)">
+                   [class.rotated]="isExpanded(tw.task.id)">
                 <path d="M6 9l6 6 6-6"/>
               </svg>
             </button>
 
-            @if (isExpanded(exercise.id)) {
+            @if (isExpanded(tw.task.id)) {
               <div class="accordion-body">
-                @if (exercise.description) {
-                  <p class="exercise-desc">{{ exercise.description }}</p>
+                @if (tw.task.description) {
+                  <p class="exercise-desc">{{ tw.task.description }}</p>
                 }
 
-                @if (getQuiz(exercise.id); as quiz) {
+                @if (tw.questions.length > 0) {
                   <div class="questions-list">
-                    <span class="questions-label">Fragen ({{ quiz.questions.length }})</span>
-                    @for (question of quiz.questions; track question.id; let i = $index) {
-                      <div class="question-item">
-                        <span class="question-nr">{{ i + 1 }}.</span>
-                        <span class="question-text">{{ question.question }}</span>
-                      </div>
+                    @for (question of tw.questions; track question.id; let i = $index) {
+
+                      <!-- Already answered -->
+                      @if (isQuestionAnswered(question.id)) {
+                        <div class="question-item answered">
+                          <span class="question-nr">{{ i + 1 }}.</span>
+                          <span class="question-text">{{ question.frage }}</span>
+                          <span class="check-icon">&#10003;</span>
+                        </div>
+                      }
+
+                      <!-- Not answered, not active -->
+                      @else if (!isQuestionActive(question.id)) {
+                        <div class="question-item clickable" (click)="activateQuestion(question.id)">
+                          <span class="question-nr">{{ i + 1 }}.</span>
+                          <span class="question-text">{{ question.frage }}</span>
+                        </div>
+                      }
+
+                      <!-- Active question (inline quiz) -->
+                      @else {
+                        <div class="question-item active-question">
+                          <div class="active-question-header">
+                            <span class="question-nr">{{ i + 1 }}.</span>
+                            <span class="question-text">{{ question.frage }}</span>
+                          </div>
+
+                          <div class="answer-options">
+                            @for (antwort of getParsedAnswers(question); track $index) {
+                              <button
+                                class="answer-option"
+                                [class.selected]="selectedAnswerIndex() === $index"
+                                [class.correct-answer]="questionFeedback() !== null && antwort.richtig"
+                                [class.wrong-answer]="questionFeedback() === 'wrong' && selectedAnswerIndex() === $index && !antwort.richtig"
+                                [disabled]="questionFeedback() !== null"
+                                (click)="selectAnswer($index)">
+                                <span class="option-letter">{{ 'ABCDEFGH'[$index] }}</span>
+                                <span>{{ antwort.text }}</span>
+                              </button>
+                            }
+                          </div>
+
+                          @if (questionFeedback() === 'correct') {
+                            <div class="inline-feedback correct">Richtig!</div>
+                          }
+                          @if (questionFeedback() === 'wrong') {
+                            <div class="inline-feedback wrong">Falsch!</div>
+                          }
+
+                          <div class="inline-actions">
+                            @if (questionFeedback() === null) {
+                              <button class="inline-btn submit" [disabled]="selectedAnswerIndex() === null" (click)="submitAnswer(question)">
+                                Bestätigen
+                              </button>
+                            }
+                            @if (questionFeedback() === 'correct') {
+                              <button class="inline-btn next" (click)="nextQuestion(tw.questions)">
+                                Weiter
+                              </button>
+                            }
+                            @if (questionFeedback() === 'wrong') {
+                              <button class="inline-btn retry" (click)="retryQuestion()">
+                                Nochmal
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      }
                     }
                   </div>
                 } @else {
-                  <p class="no-quiz">Kein Quiz verfügbar</p>
+                  <p class="no-quiz">Keine Fragen vorhanden</p>
                 }
               </div>
             }
@@ -94,4 +159,3 @@
     </aside>
   </div>
 </div>
-

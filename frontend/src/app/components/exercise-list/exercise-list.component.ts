@@ -1,55 +1,61 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ExerciseService } from '../../services/exercise.service';
-import { QuizService } from '../../services/quiz.service';
-import { AuthService } from '../../services/auth.service';
-import { Bewertung } from '../../models/exercise.model';
+import { AuthService } from '../../service/auth.service';
+import apiClient from '../../service/api.service';
+
+interface Task {
+  id: number;
+  title: string;
+  description?: string;
+  points: number;
+  imageId: number;
+}
 
 @Component({
   selector: 'app-exercise-list',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, RouterLink],
   templateUrl: './exercise-list.component.html',
   styleUrl: './exercise-list.component.css'
 })
-export class ExerciseListComponent {
-  private exerciseService = inject(ExerciseService);
-  private quizService = inject(QuizService);
+export class ExerciseListComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  protected exercises = this.exerciseService.getExercises();
+  protected tasks = signal<Task[]>([]);
+  protected isLoading = signal(true);
   protected isTeacher = this.authService.isTeacher();
 
-  readonly bewertungOptions: Bewertung[] = [
-    'Grundkompetenz nicht erfüllt',
-    'Grundkompetenz überwiegend erfüllt',
-    'Grundkompetenz vollständig erfüllt',
-    'Erweiterte Kompetenz überwiegend erfüllt',
-    'Erweiterte Kompetenz vollständig erfüllt'
-  ];
-
-  hasQuiz(exerciseId: string): boolean {
-    return !!this.quizService.getQuizByExerciseId(exerciseId);
+  async ngOnInit(): Promise<void> {
+    await this.loadTasks();
   }
 
-  startQuiz(exerciseId: string): void {
-    this.router.navigate(['/quiz-start', exerciseId]);
-  }
-
-  navigateTo(exerciseId: string): void {
-    this.router.navigate(['/exercises', exerciseId]);
-  }
-
-  setBewertung(exerciseId: string, bewertung: string): void {
-    if (this.isTeacher()) {
-      this.exerciseService.setBewertung(exerciseId, bewertung as Bewertung || undefined);
+  private async loadTasks(): Promise<void> {
+    this.isLoading.set(true);
+    try {
+      const res = await apiClient.get<Task[]>('/api/tasks');
+      this.tasks.set(res.data ?? []);
+    } catch {
+      this.tasks.set([]);
+    } finally {
+      this.isLoading.set(false);
     }
+  }
+
+  hasQuiz(taskId: number): boolean {
+    // Questions are always loaded on the quiz page itself
+    return true;
+  }
+
+  startQuiz(taskId: number): void {
+    this.router.navigate(['/quiz-start', taskId]);
+  }
+
+  navigateTo(taskId: number): void {
+    this.router.navigate(['/exercises', taskId]);
   }
 
   goBack() {
     this.router.navigate(['/dashboard']);
   }
 }
-

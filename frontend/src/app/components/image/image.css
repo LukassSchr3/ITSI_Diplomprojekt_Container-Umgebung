@@ -367,6 +367,158 @@
   font-style: italic;
 }
 
+/* ===== Inline Quiz ===== */
+.question-item.clickable {
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.question-item.clickable:hover {
+  border-color: #667eea;
+}
+
+.question-item.answered {
+  opacity: 0.6;
+  position: relative;
+}
+
+.check-icon {
+  color: #48bb78;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.question-item.active-question {
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-color: #667eea;
+}
+
+.active-question-header {
+  display: flex;
+  gap: 8px;
+}
+
+.answer-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.answer-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.answer-option:hover:not(:disabled) {
+  border-color: #667eea;
+}
+
+.answer-option.selected {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.08);
+}
+
+.answer-option.correct-answer {
+  border-color: #48bb78;
+  background: rgba(72, 187, 120, 0.1);
+}
+
+.answer-option.wrong-answer {
+  border-color: #f56565;
+  background: rgba(245, 101, 101, 0.1);
+}
+
+.answer-option:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.option-letter {
+  font-weight: 600;
+  color: #667eea;
+  font-size: 11px;
+  flex-shrink: 0;
+  width: 16px;
+}
+
+.inline-feedback {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+
+.inline-feedback.correct {
+  color: #48bb78;
+  background: rgba(72, 187, 120, 0.1);
+}
+
+.inline-feedback.wrong {
+  color: #f56565;
+  background: rgba(245, 101, 101, 0.1);
+}
+
+.inline-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.inline-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.inline-btn.submit {
+  background: #667eea;
+  color: white;
+}
+
+.inline-btn.submit:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.inline-btn.submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.inline-btn.next {
+  background: #48bb78;
+  color: white;
+}
+
+.inline-btn.next:hover {
+  background: #38a169;
+}
+
+.inline-btn.retry {
+  background: #f56565;
+  color: white;
+}
+
+.inline-btn.retry:hover {
+  background: #e53e3e;
+}
+
 /* ===== Scrollbar ===== */
 .sidebar-content::-webkit-scrollbar {
   width: 4px;

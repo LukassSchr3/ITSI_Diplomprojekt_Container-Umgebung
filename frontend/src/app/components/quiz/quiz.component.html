@@ -1,73 +1,81 @@
 <div class="quiz-container">
-  @if (quiz && !showResults()) {
+
+  @if (isLoading()) {
     <div class="quiz-header">
       <div class="quiz-title-section">
-        <h1>{{ quiz.title }}</h1>
+        <p>Quiz wird geladen...</p>
+      </div>
+    </div>
+  }
+
+  @if (!isLoading() && !showResults() && questions().length > 0) {
+    <div class="quiz-header">
+      <div class="quiz-title-section">
+        <h1>{{ task()?.title }}</h1>
         <p class="question-counter">
-          Frage {{ currentQuestionIndex() + 1 }} von {{ quiz.questions.length }}
+          Frage {{ currentQuestionIndex() + 1 }} von {{ questions().length }}
         </p>
       </div>
     </div>
 
     <div class="quiz-content">
       @if (currentQuestion(); as question) {
-        <div class="question-card">
-          <h2 class="question-text">{{ question.question }}</h2>
+        <div class="question-card" [class.correct]="feedback() === 'correct'" [class.wrong]="feedback() === 'wrong'">
+          <h2 class="question-text">{{ question.frage }}</h2>
           <div class="options-list">
-            @for (option of question.options; track $index) {
+            @for (antwort of parsedAnswers(); track $index) {
               <button
                 class="option-button"
-                [class.selected]="selectedAnswers()[currentQuestionIndex()] === $index"
+                [class.selected]="selectedAnswerIndex() === $index"
+                [class.correct-answer]="feedback() !== null && antwort.richtig"
+                [class.wrong-answer]="feedback() === 'wrong' && selectedAnswerIndex() === $index && !antwort.richtig"
+                [disabled]="feedback() !== null"
                 (click)="selectAnswer($index)">
-                <span class="option-letter">{{ String.fromCharCode(65 + $index) }}</span>
-                <span class="option-text">{{ option }}</span>
+                <span class="option-letter">{{ 'ABCDEFGH'[$index] }}</span>
+                <span class="option-text">{{ antwort.text }}</span>
               </button>
             }
           </div>
+
+          @if (feedback() === 'correct') {
+            <div class="feedback correct-feedback">Richtig!</div>
+          }
+          @if (feedback() === 'wrong') {
+            <div class="feedback wrong-feedback">Falsch! Versuche es erneut.</div>
+          }
         </div>
       }
 
       <div class="quiz-navigation">
-        <button class="nav-button" (click)="previousQuestion()" [disabled]="currentQuestionIndex() === 0">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-          Zurück
-        </button>
-        @if (currentQuestionIndex() < quiz.questions.length - 1) {
-          <button class="nav-button primary" (click)="nextQuestion()" [disabled]="selectedAnswers()[currentQuestionIndex()] === null">
-            Weiter
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        @if (feedback() === null) {
+          <button class="nav-button primary" [disabled]="selectedAnswerIndex() === null" (click)="submitAnswer()">
+            Antwort bestätigen
           </button>
-        } @else {
-          <button class="nav-button primary finish" (click)="finishQuiz()" [disabled]="selectedAnswers()[currentQuestionIndex()] === null">
-            Quiz beenden
+        }
+        @if (feedback() === 'correct') {
+          <button class="nav-button primary" (click)="nextQuestion()">
+            @if (currentQuestionIndex() < questions().length - 1) {
+              Nächste Frage
+            } @else {
+              Quiz beenden
+            }
+          </button>
+        }
+        @if (feedback() === 'wrong') {
+          <button class="nav-button" (click)="retryAnswer()">
+            Nochmal versuchen
           </button>
         }
       </div>
     </div>
   }
 
-  @if (showResults() && quiz) {
+  @if (showResults()) {
     <div class="results-container">
       <div class="results-header">
         <h1>Quiz beendet!</h1>
-        <p class="results-score">Du hast <strong>{{ score() }} von {{ quiz.questions.length }}</strong> Fragen richtig beantwortet</p>
-        <div class="results-percentage">{{ (score() / quiz.questions.length * 100).toFixed(0) }}%</div>
-      </div>
-
-      <div class="results-details">
-        <h3>Deine Antworten</h3>
-        @for (question of quiz.questions; track $index) {
-          <div class="result-item" [class.correct]="isAnswerCorrect($index)">
-            <div class="result-question">
-              <span class="result-icon">@if (isAnswerCorrect($index)) { ✓ } @else { ✗ }</span>
-              <span>{{ question.question }}</span>
-            </div>
-            <div class="result-answer"><strong>Deine Antwort:</strong> {{ question.options[selectedAnswers()[$index] ?? -1] ?? 'Keine Antwort' }}</div>
-            @if (!isAnswerCorrect($index)) {
-              <div class="result-correct-answer"><strong>Richtige Antwort:</strong> {{ question.options[question.correctAnswer] }}</div>
-            }
-          </div>
-        }
+        <p class="results-score">Du hast <strong>{{ correctCount() }} von {{ questions().length }}</strong> Fragen richtig beantwortet</p>
+        <div class="results-percentage">{{ (correctCount() / questions().length * 100).toFixed(0) }}%</div>
       </div>
 
       <div class="results-actions">

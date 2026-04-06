@@ -1,58 +1,49 @@
 <div class="quiz-start-container">
   <div class="quiz-start-card">
-    @if (quiz) {
+
+    @if (isLoading()) {
       <div class="quiz-header">
-        <h1>{{ quiz.title }}</h1>
+        <p class="quiz-description">Quiz wird geladen...</p>
+      </div>
+    }
+
+    @if (!isLoading() && task()) {
+      <div class="quiz-header">
+        <h1>{{ task()!.title }}</h1>
         <p class="quiz-description">
-          Gib das Passwort ein, um mit dem Quiz zu beginnen
+          Beantworte die Fragen zu dieser Aufgabe
         </p>
       </div>
 
       <div class="quiz-info">
         <div class="info-item">
-          <span>{{ quiz.questions.length }} Fragen</span>
+          <span>{{ questionCount() }} Fragen</span>
         </div>
       </div>
 
-      <form class="password-form" (ngSubmit)="startQuiz()">
-        <div class="form-group">
-          <label for="password">Quiz-Passwort</label>
-          <input
-            id="password"
-            type="password"
-            [(ngModel)]="password"
-            name="password"
-            placeholder="Passwort eingeben"
-            [disabled]="isLoading"
-            required
-          />
+      @if (errorMessage()) {
+        <div class="error-message">
+          {{ errorMessage() }}
         </div>
+      }
 
-        @if (errorMessage) {
-          <div class="error-message">
-            {{ errorMessage }}
-          </div>
-        }
+      <div class="button-group">
+        <button type="button" class="back-button" (click)="goBack()">
+          Zurück
+        </button>
+        <button
+          type="button"
+          class="start-button"
+          [disabled]="questionCount() === 0"
+          (click)="startQuiz()">
+          Quiz starten
+        </button>
+      </div>
+    }
 
-        <div class="button-group">
-          <button type="button" class="back-button" (click)="goBack()">
-            Zurück
-          </button>
-          <button
-            type="submit"
-            class="start-button"
-            [disabled]="!password || isLoading">
-            @if (isLoading) {
-              <span>Überprüfe...</span>
-            } @else {
-              <span>Quiz starten</span>
-            }
-          </button>
-        </div>
-      </form>
-    } @else {
+    @if (!isLoading() && !task()) {
       <div class="error-state">
-        <p class="error-message">{{ errorMessage || 'Quiz konnte nicht geladen werden' }}</p>
+        <p class="error-message">{{ errorMessage() || 'Quiz konnte nicht geladen werden' }}</p>
         <button class="back-button" (click)="goBack()">
           Zurück zu den Übungen
         </button>

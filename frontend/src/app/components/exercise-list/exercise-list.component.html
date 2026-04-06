@@ -4,54 +4,33 @@
     <h1>Übungsaufgaben</h1>
   </div>
 
+  @if (isLoading()) {
+    <div class="loading">Aufgaben werden geladen...</div>
+  }
+
   <div class="exercise-list">
-    @for (exercise of exercises(); track exercise.id) {
+    @for (task of tasks(); track task.id) {
       <div class="exercise-card"
-           [class.completed]="exercise.status === 'completed'"
-           [class.in-progress]="exercise.status === 'in-progress'"
-           [routerLink]="['/exercises', exercise.id]"
+           [routerLink]="['/exercises', task.id]"
            role="link"
            tabindex="0"
-           (keydown.enter)="navigateTo(exercise.id)">
+           (keydown.enter)="navigateTo(task.id)">
 
         <div class="exercise-content">
-          <h2>{{ exercise.title }}</h2>
-          @if (exercise.description) {
-            <p class="description">{{ exercise.description }}</p>
+          <h2>{{ task.title }}</h2>
+          @if (task.description) {
+            <p class="description">{{ task.description }}</p>
           }
 
           <div class="meta-row">
-            <span class="status-badge" [class]="exercise.status">
-              @if (exercise.status === 'not-started') { Nicht begonnen }
-              @else if (exercise.status === 'in-progress') { In Bearbeitung }
-              @else { Abgeschlossen }
-            </span>
-
-            @if (exercise.bewertung) {
-              <span class="bewertungs-badge bewertet">{{ exercise.bewertung }}</span>
-            } @else {
-              <span class="bewertungs-badge nicht-bewertet">Nicht bewertet</span>
-            }
+            <span class="status-badge">{{ task.points }} Punkte</span>
           </div>
         </div>
 
         <div class="exercise-actions" (click)="$event.stopPropagation()">
-          @if (isTeacher()) {
-            <select class="bewertung-select"
-                    [value]="exercise.bewertung ?? ''"
-                    (change)="setBewertung(exercise.id, $any($event.target).value)">
-              <option value="">— Bewertung wählen —</option>
-              @for (option of bewertungOptions; track option) {
-                <option [value]="option">{{ option }}</option>
-              }
-            </select>
-          }
-
-          @if (hasQuiz(exercise.id)) {
-            <button type="button" class="quiz-start-btn" (click)="startQuiz(exercise.id)">
-              Quiz starten
-            </button>
-          }
+          <button type="button" class="quiz-start-btn" (click)="startQuiz(task.id)">
+            Quiz starten
+          </button>
         </div>
 
         <svg class="card-arrow" viewBox="0 0 24 24" fill="currentColor">

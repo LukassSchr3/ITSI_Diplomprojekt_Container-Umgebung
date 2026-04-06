@@ -4,15 +4,20 @@
       <div>
         <h1>ITSI Labor Dashboard</h1>
         <p class="role-hint">
-          @if (role() === 'teacher') {
+          @if (isAdmin()) {
+            <span>Angemeldet als: Admin</span>
+          } @else if (isTeacher()) {
             <span>Angemeldet als: Lehrer</span>
-          } @else if (role() === 'student') {
+          } @else {
             <span>Angemeldet als: Schüler</span>
           }
         </p>
       </div>
     </div>
     <div class="header-actions">
+      @if (isAdmin()) {
+        <a routerLink="/admin" class="admin-button">Admin Panel</a>
+      }
       <button
         class="theme-toggle"
         (click)="toggleTheme()"
@@ -42,29 +47,58 @@
     </div>
   </div>
 
-  <!-- Kurse & Aufgaben Sektion -->
-  <div class="courses-section">
-    <h2>Meine Kurse</h2>
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Kurse werden geladen...</p>
+    </div>
+  }
 
-    <a routerLink="/exercises" class="nav-button">
-      <div>
-        <h3>Übungsaufgaben</h3>
-        <p>Alle Aufgaben anzeigen und Fortschritt verwalten</p>
-      </div>
-      <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z"/>
-      </svg>
-    </a>
+  <!-- Error -->
+  @if (errorMessage()) {
+    <div class="error-banner">{{ errorMessage() }}</div>
+  }
 
-    <a routerLink="/image/1" class="nav-button">
-      <div>
-        <h3>Live-Umgebung starten</h3>
-        <p>Kali Linux Container mit VNC &amp; Übungsleiste öffnen</p>
-      </div>
-      <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z"/>
-      </svg>
-    </a>
-  </div>
+  <!-- Courses Section -->
+  @if (!isLoading() && !errorMessage()) {
+    <div class="courses-section">
+      <h2>Meine Kurse</h2>
+
+      @if (courses().length === 0) {
+        <p class="no-data">Keine Kurse zugeordnet.</p>
+      }
+
+      @for (course of courses(); track course.courseId) {
+        <div class="course-card">
+          <div class="course-header">
+            <h3>{{ course.courseName }}</h3>
+            @if (course.courseDescription) {
+              <p class="course-description">{{ course.courseDescription }}</p>
+            }
+          </div>
+
+          @if (course.tasks.length > 0) {
+            <div class="task-list">
+              @for (task of course.tasks; track task.id) {
+                <a [routerLink]="['/exercises', task.id]" class="task-item">
+                  <div>
+                    <h4>{{ task.title }}</h4>
+                    @if (task.description) {
+                      <p>{{ task.description }}</p>
+                    }
+                  </div>
+                  <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z"/>
+                  </svg>
+                </a>
+              }
+            </div>
+          } @else {
+            <p class="no-data">Keine Aufgaben in diesem Kurs.</p>
+          }
+        </div>
+      }
+    </div>
+  }
 </div>
-

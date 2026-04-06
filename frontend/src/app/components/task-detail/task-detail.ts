@@ -62,7 +62,7 @@ export class TaskDetail implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    const taskId = this.route.snapshot.paramMap.get('taskId');
+    const taskId = this.route.snapshot.paramMap.get('id');
     if (!taskId) { this.router.navigate(['/dashboard']); return; }
     await this.loadTaskAndQuestions(taskId);
   }
