@@ -49,37 +49,37 @@ class AuthServiceTest {
     }
 
     @Test
-    void authenticate_matchingRoleReturnsTrue() {
+    void authenticateMatchingRoleReturnsTrue() {
         Claims claims = buildClaims("ADMIN");
         assertThat(authService.authenticate(claims, "ADMIN")).isTrue();
     }
 
     @Test
-    void authenticate_wrongRoleReturnsFalse() {
+    void authenticateWrongRoleReturnsFalse() {
         Claims claims = buildClaims("SCHUELER");
         assertThat(authService.authenticate(claims, "ADMIN")).isFalse();
     }
 
     @Test
-    void authenticate_schuelerRoleMatches() {
+    void authenticateSchuelerRoleMatches() {
         Claims claims = buildClaims("SCHUELER");
         assertThat(authService.authenticate(claims, "SCHUELER")).isTrue();
     }
 
     @Test
-    void authenticate_lehrerRoleMatches() {
+    void authenticateLehrerRoleMatches() {
         Claims claims = buildClaims("LEHRER");
         assertThat(authService.authenticate(claims, "LEHRER")).isTrue();
     }
 
     @Test
-    void authenticate_emptyRolleReturnsFalse() {
+    void authenticateEmptyRolleReturnsFalse() {
         Claims claims = buildClaims("SCHUELER");
         assertThat(authService.authenticate(claims, "")).isFalse();
     }
 
     @Test
-    void authenticate_caseSensitive() {
+    void authenticateCaseSensitive() {
         Claims claims = buildClaims("admin");
         assertThat(authService.authenticate(claims, "ADMIN")).isFalse();
     }

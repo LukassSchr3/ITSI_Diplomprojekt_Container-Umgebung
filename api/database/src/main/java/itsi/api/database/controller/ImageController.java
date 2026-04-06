@@ -7,6 +7,7 @@ import itsi.api.database.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,12 +29,14 @@ public class ImageController {
     private final ImageService imageService;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Alle Images abrufen", description = "Gibt eine Liste aller Docker Images zurück")
     public ResponseEntity<List<Image>> getAllImages() {
         return ResponseEntity.ok(imageService.findAll());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Image nach ID abrufen")
     public ResponseEntity<Image> getImageById(@PathVariable Integer id) {
         return imageService.findById(id)
@@ -42,6 +45,7 @@ public class ImageController {
     }
 
     @GetMapping("/name/{name}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Image nach Namen abrufen")
     public ResponseEntity<Image> getImageByName(@PathVariable String name) {
         return imageService.findByName(name)
@@ -50,6 +54,7 @@ public class ImageController {
     }
 
     @GetMapping("/ref/{imageRef}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Image nach Referenz abrufen")
     public ResponseEntity<Image> getImageByRef(@PathVariable String imageRef) {
         return imageService.findByImageRef(imageRef)
@@ -58,6 +63,7 @@ public class ImageController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Neues Image erstellen")
     public ResponseEntity<?> createImage(@RequestBody Image image) {
         try {
@@ -82,6 +88,7 @@ public class ImageController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Image aktualisieren")
     public ResponseEntity<Image> updateImage(@PathVariable Integer id, @RequestBody Image image) {
         if (!imageService.findById(id).isPresent()) {
@@ -92,6 +99,7 @@ public class ImageController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Image löschen")
     public ResponseEntity<Void> deleteImage(@PathVariable Integer id) {
         if (!imageService.findById(id).isPresent()) {

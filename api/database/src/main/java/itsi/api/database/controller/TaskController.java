@@ -7,6 +7,7 @@ import itsi.api.database.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,12 +29,14 @@ public class TaskController {
     private final TaskService taskService;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Alle Aufgaben abrufen")
     public ResponseEntity<List<Task>> getAllTasks() {
         return ResponseEntity.ok(taskService.findAll());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Aufgabe nach ID abrufen")
     public ResponseEntity<Task> getTaskById(@PathVariable Integer id) {
         return taskService.findById(id)
@@ -42,12 +45,14 @@ public class TaskController {
     }
 
     @GetMapping("/image/{imageId}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Alle Aufgaben mit einem bestimmten Image abrufen")
     public ResponseEntity<List<Task>> getTasksByImageId(@PathVariable Integer imageId) {
         return ResponseEntity.ok(taskService.findByImageId(imageId));
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Neue Aufgabe erstellen")
     public ResponseEntity<?> createTask(@RequestBody Task task) {
         try {
@@ -60,6 +65,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Aufgabe aktualisieren")
     public ResponseEntity<Task> updateTask(@PathVariable Integer id, @RequestBody Task task) {
         if (!taskService.findById(id).isPresent()) {
@@ -70,6 +76,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Aufgabe löschen")
     public ResponseEntity<Void> deleteTask(@PathVariable Integer id) {
         if (!taskService.findById(id).isPresent()) {

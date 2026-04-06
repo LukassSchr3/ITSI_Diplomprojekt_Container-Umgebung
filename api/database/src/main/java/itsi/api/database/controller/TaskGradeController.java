@@ -7,6 +7,7 @@ import itsi.api.database.service.TaskGradeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,12 +29,14 @@ public class TaskGradeController {
     private final TaskGradeService taskGradeService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Alle Benotungen abrufen")
     public ResponseEntity<List<TaskGrade>> getAllTaskGrades() {
         return ResponseEntity.ok(taskGradeService.findAll());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Benotung nach ID abrufen")
     public ResponseEntity<TaskGrade> getTaskGradeById(@PathVariable Integer id) {
         return taskGradeService.findById(id)
@@ -42,18 +45,21 @@ public class TaskGradeController {
     }
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN') or @securityService.isOwner(#userId)")
     @Operation(summary = "Alle Benotungen eines Schülers abrufen")
     public ResponseEntity<List<TaskGrade>> getGradesByUserId(@PathVariable Integer userId) {
         return ResponseEntity.ok(taskGradeService.findByUserId(userId));
     }
 
     @GetMapping("/task/{taskId}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Alle Benotungen einer Aufgabe abrufen")
     public ResponseEntity<List<TaskGrade>> getGradesByTaskId(@PathVariable Integer taskId) {
         return ResponseEntity.ok(taskGradeService.findByTaskId(taskId));
     }
 
     @GetMapping("/user/{userId}/task/{taskId}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN') or @securityService.isOwner(#userId)")
     @Operation(summary = "Benotung eines Schülers für eine Aufgabe abrufen")
     public ResponseEntity<TaskGrade> getGradeByUserAndTask(@PathVariable Integer userId, @PathVariable Integer taskId) {
         return taskGradeService.findByUserIdAndTaskId(userId, taskId)
@@ -62,12 +68,14 @@ public class TaskGradeController {
     }
 
     @GetMapping("/passed/{passed}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Benotungen nach Bestanden-Status filtern")
     public ResponseEntity<List<TaskGrade>> getGradesByPassed(@PathVariable Boolean passed) {
         return ResponseEntity.ok(taskGradeService.findByPassed(passed));
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Neue Benotung erstellen")
     public ResponseEntity<?> createTaskGrade(@RequestBody TaskGrade taskGrade) {
         try {
@@ -84,6 +92,7 @@ public class TaskGradeController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Benotung aktualisieren (nach ID)")
     public ResponseEntity<TaskGrade> updateTaskGrade(@PathVariable Integer id, @RequestBody TaskGrade taskGrade) {
         if (!taskGradeService.findById(id).isPresent()) {
@@ -94,6 +103,7 @@ public class TaskGradeController {
     }
 
     @PutMapping("/user/{userId}/task/{taskId}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Benotung aktualisieren (nach User + Task)")
     public ResponseEntity<TaskGrade> updateTaskGradeByUserAndTask(
             @PathVariable Integer userId, 
@@ -111,6 +121,7 @@ public class TaskGradeController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Benotung löschen")
     public ResponseEntity<Void> deleteTaskGrade(@PathVariable Integer id) {
         if (!taskGradeService.findById(id).isPresent()) {

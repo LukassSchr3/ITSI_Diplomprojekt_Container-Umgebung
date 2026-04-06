@@ -3,9 +3,15 @@ package itsi.api.steuerung.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.reactive.function.client.ClientRequest;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import reactor.core.publisher.Mono;
 
 @Configuration
 public class WebClientConfig {
@@ -26,6 +32,7 @@ public class WebClientConfig {
     public WebClient databaseWebClient() {
         return WebClient.builder()
                 .baseUrl(databaseApiUrl)
+                .filter(jwtForwardingFilter())
                 .build();
     }
 
@@ -39,6 +46,22 @@ public class WebClientConfig {
     @Bean
     public WebClient.Builder webClientBuilder() {
         return WebClient.builder();
+    }
+
+    private ExchangeFilterFunction jwtForwardingFilter() {
+        return ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
+            ServletRequestAttributes attrs =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attrs != null) {
+                String authHeader = attrs.getRequest().getHeader(HttpHeaders.AUTHORIZATION);
+                if (authHeader != null) {
+                    return Mono.just(ClientRequest.from(clientRequest)
+                            .header(HttpHeaders.AUTHORIZATION, authHeader)
+                            .build());
+                }
+            }
+            return Mono.just(clientRequest);
+        });
     }
 
     @Bean
