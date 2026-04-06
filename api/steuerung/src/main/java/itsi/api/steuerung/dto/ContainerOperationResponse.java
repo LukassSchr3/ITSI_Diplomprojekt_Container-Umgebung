@@ -1,5 +1,6 @@
 package itsi.api.steuerung.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ public class ContainerOperationResponse {
     private String message;
     private String containerId;
     private String status;
+    @JsonIgnoreProperties({"user"})
     private InstanceDTO instance;
     private String containerIp;
 
