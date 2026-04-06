@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>noVNC Test</title>
+    <style>
+        body { margin: 0; background: #1e1e1e; color: #d4d4d4; font-family: monospace; }
+        #toolbar { padding: 10px; background: #252526; display: flex; align-items: center; gap: 10px; }
+        label { font-size: 13px; }
+        input { background: #3c3c3c; color: #d4d4d4; border: 1px solid #555; padding: 4px 8px; border-radius: 3px; width: 80px; }
+        button { padding: 6px 16px; border: none; border-radius: 3px; cursor: pointer; font-size: 13px; }
+        #btnConnect { background: #0e639c; color: #fff; }
+        #status { font-size: 13px; color: #888; }
+        #screen { width: 100vw; height: calc(100vh - 46px); }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <label>VNC-Port: <input id="vncPort" type="number" value="5901"></label>
+        <label>Passwort: <input id="vncPass" type="password" value="kali"></label>
+        <button id="btnConnect" onclick="connect()">Verbinden</button>
+        <span id="status">Nicht verbunden</span>
+    </div>
+    <div id="screen"></div>
+
+    <!-- noVNC von CDN -->
+    <script type="module">
+        import RFB from 'https://cdn.jsdelivr.net/npm/@novnc/novnc@1.4.0/core/rfb.js';
+
+        let rfb = null;
+
+        window.connect = function () {
+            const port = document.getElementById('vncPort').value;
+            const url = `ws://localhost:9090/ws/novnc?vncPort=${port}`;
+            const screen = document.getElementById('screen');
+            const status = document.getElementById('status');
+
+            if (rfb) { rfb.disconnect(); rfb = null; }
+
+            status.textContent = `Verbinde zu VNC-Port ${port}...`;
+
+            rfb = new RFB(screen, url);
+            rfb.scaleViewport = true;
+            rfb.resizeSession = true;
+
+            rfb.addEventListener('connect', () => {
+                status.textContent = `Verbunden (Port ${port})`;
+                status.style.color = '#4ec9b0';
+            });
+            rfb.addEventListener('disconnect', (e) => {
+                status.textContent = `Getrennt: ${e.detail.reason || 'unbekannt'}`;
+                status.style.color = '#f48771';
+            });
+            rfb.addEventListener('credentialsrequired', () => {
+                rfb.sendCredentials({ password: document.getElementById('vncPass').value });
+            });
+        };
+
+        // Auto-connect
+        window.connect();
+    </script>
+</body>
+</html>

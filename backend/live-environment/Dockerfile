@@ -16,7 +16,7 @@ RUN apt update && apt upgrade -y && \
 
 # Copy startup script
 COPY start-vnc.sh /opt/start-vnc.sh
-RUN chmod +x /opt/start-vnc.sh
+RUN sed -i 's/\r$//' /opt/start-vnc.sh && chmod +x /opt/start-vnc.sh
 
 # Optional: Configure x11vnc password (can be overridden by env var)
 RUN mkdir -p ~/.vnc && \
