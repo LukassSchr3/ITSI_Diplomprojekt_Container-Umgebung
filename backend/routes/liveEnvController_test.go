@@ -108,7 +108,7 @@ func TestLiveEnvStart_AlreadyRunning(t *testing.T) {
 	router, cleanup := setupLiveEnvRouter(t, mock)
 	defer cleanup()
 
-	body := `{"name":"alice"}`
+	body := `{"name":"alice","port":"5901"}`
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, "/live/start", bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -127,7 +127,7 @@ func TestLiveEnvStart_ExistingStopped(t *testing.T) {
 	router, cleanup := setupLiveEnvRouter(t, mock)
 	defer cleanup()
 
-	body := `{"name":"alice"}`
+	body := `{"name":"alice","port":"5901"}`
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, "/live/start", bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -141,7 +141,7 @@ func TestLiveEnvStart_ImageMissing(t *testing.T) {
 	router, cleanup := setupLiveEnvRouter(t, mock)
 	defer cleanup()
 
-	body := `{"name":"alice"}`
+	body := `{"name":"alice","port":"5901"}`
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, "/live/start", bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
