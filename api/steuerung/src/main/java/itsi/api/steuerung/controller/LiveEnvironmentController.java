@@ -93,11 +93,12 @@ public class LiveEnvironmentController {
                     return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
                 }
 
+                Number vncPortNum = (Number) liveEnv.get("vncPort");
+                int vncPortInt = vncPortNum != null ? vncPortNum.intValue() : (5900 + userId.intValue());
+
                 Map<String, Object> backendRequest = new HashMap<>();
                 backendRequest.put("name", user.get("name").toString());
-                backendRequest.put("vncHost", liveEnv.get("vncHost"));
-                backendRequest.put("vncPort", liveEnv.get("vncPort"));
-                backendRequest.put("vncPassword", liveEnv.get("vncPassword"));
+                backendRequest.put("port", String.valueOf(vncPortInt));
 
                 log.info("Sending to Backend /live/start: {}", backendRequest);
 
@@ -168,9 +169,6 @@ public class LiveEnvironmentController {
 
                 Map<String, Object> backendRequest = new HashMap<>();
                 backendRequest.put("name", user.get("name").toString());
-                backendRequest.put("vncHost", liveEnv.get("vncHost"));
-                backendRequest.put("vncPort", liveEnv.get("vncPort"));
-                backendRequest.put("vncPassword", liveEnv.get("vncPassword"));
 
                 log.info("Sending to Backend /live/stop: {}", backendRequest);
 
@@ -235,11 +233,12 @@ public class LiveEnvironmentController {
                     return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
                 }
 
+                Number vncPortNumReset = (Number) liveEnv.get("vncPort");
+                int vncPortIntReset = vncPortNumReset != null ? vncPortNumReset.intValue() : (5900 + userId.intValue());
+
                 Map<String, Object> backendRequest = new HashMap<>();
                 backendRequest.put("name", user.get("name").toString());
-                backendRequest.put("vncHost", liveEnv.get("vncHost"));
-                backendRequest.put("vncPort", liveEnv.get("vncPort"));
-                backendRequest.put("vncPassword", liveEnv.get("vncPassword"));
+                backendRequest.put("port", String.valueOf(vncPortIntReset));
 
                 log.info("Sending to Backend /live/reset: {}", backendRequest);
 
