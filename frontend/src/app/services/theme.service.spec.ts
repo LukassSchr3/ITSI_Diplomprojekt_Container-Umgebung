@@ -1,24 +1,53 @@
 import { TestBed } from '@angular/core/testing';
+import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';
 
 import { ThemeService } from './theme.service';
 
 function mockMatchMedia(prefersDark: boolean) {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
+    configurable: true,
     value: vi.fn((query: string) => ({
       matches: query.includes('dark') ? prefersDark : false,
       media: query,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
     })),
+  });
+}
+
+function mockLocalStorage() {
+  let store: Record<string, string> = {};
+
+  Object.defineProperty(window, 'localStorage', {
+    value: {
+      getItem: (key: string) => store[key] || null,
+      setItem: (key: string, value: string) => {
+        store[key] = value;
+      },
+      removeItem: (key: string) => {
+        delete store[key];
+      },
+      clear: () => {
+        store = {};
+      },
+      key: (index: number) => Object.keys(store)[index] || null,
+      length: Object.keys(store).length,
+    },
+    writable: true,
+    configurable: true,
   });
 }
 
 describe('ThemeService', () => {
   beforeEach(() => {
+    mockLocalStorage();
     localStorage.clear();
     mockMatchMedia(false);
+    TestBed.resetTestingModule();
   });
 
   afterEach(() => {
@@ -26,7 +55,9 @@ describe('ThemeService', () => {
   });
 
   function createService(): ThemeService {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [ThemeService],
+    });
     return TestBed.inject(ThemeService);
   }
 
