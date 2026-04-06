@@ -17,12 +17,12 @@ INSERT INTO users (email, name, password, class, role, created_at, expired_at)
 VALUES ('test.user@example.com', 'test_user', '$2a$10$abcdefghijklmnopqrstuv', '3AHIT', 'TESTER', CURRENT_TIMESTAMP, NULL);
 
 -- Images einfügen
-INSERT INTO images (name, image_ref) VALUES ('ubuntu-latest', 'docker.io/library/ubuntu:latest');
-INSERT INTO images (name, image_ref) VALUES ('nginx-alpine', 'docker.io/library/nginx:alpine');
-INSERT INTO images (name, image_ref) VALUES ('postgres-14', 'docker.io/library/postgres:14');
-INSERT INTO images (name, image_ref) VALUES ('redis-latest', 'docker.io/library/redis:latest');
-INSERT INTO images (name, image_ref) VALUES ('node-18', 'docker.io/library/node:18');
-INSERT INTO images (name, image_ref) VALUES ('python-3.11', 'docker.io/library/python:3.11');
+INSERT INTO images (name, image_ref) VALUES ('ubuntu-latest', 'ubuntu:latest');
+INSERT INTO images (name, image_ref) VALUES ('nginx-alpine', 'nginx:alpine');
+INSERT INTO images (name, image_ref) VALUES ('postgres-14', 'postgres:14');
+INSERT INTO images (name, image_ref) VALUES ('redis-latest', 'redis:latest');
+INSERT INTO images (name, image_ref) VALUES ('node-18', 'node:18');
+INSERT INTO images (name, image_ref) VALUES ('python-3.11', 'python:3.11');
 
 -- Kurse/Semester einfügen
 INSERT INTO courses (name, description) VALUES 
