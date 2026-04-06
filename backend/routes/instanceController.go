@@ -75,6 +75,7 @@ func RegisterInstanceRoutes(router *gin.Engine, cli *client.Client) {
 					"message":       "Container is already running",
 					"containerId":   existing.ID,
 					"containerName": givenInstance.Name,
+					"containerIp":   utils.GetContainerIP(ctx, cli, existing.ID),
 				})
 				return
 			}
@@ -91,6 +92,7 @@ func RegisterInstanceRoutes(router *gin.Engine, cli *client.Client) {
 				"message":       "Container started successfully",
 				"containerId":   existing.ID,
 				"containerName": givenInstance.Name,
+				"containerIp":   utils.GetContainerIP(ctx, cli, existing.ID),
 			})
 			return
 		}
@@ -123,6 +125,7 @@ func RegisterInstanceRoutes(router *gin.Engine, cli *client.Client) {
 			"message":       "Instance created and started",
 			"containerId":   containerInstance.ID,
 			"containerName": givenInstance.Name,
+			"containerIp":   utils.GetContainerIP(ctx, cli, containerInstance.ID),
 		})
 	})
 
@@ -274,6 +277,7 @@ func RegisterInstanceRoutes(router *gin.Engine, cli *client.Client) {
 			"containerId":   newContainer.ID,
 			"containerName": givenInstance.Name,
 			"imageRef":      imageRef,
+			"containerIp":   utils.GetContainerIP(ctx, cli, newContainer.ID),
 		})
 	})
 }

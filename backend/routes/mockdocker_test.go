@@ -211,7 +211,9 @@ func makeContainerInspect(id, name, imgRef, state string, running bool) map[stri
 		"Config":     map[string]interface{}{"Image": imgRef},
 		"HostConfig": map[string]interface{}{},
 		"NetworkSettings": map[string]interface{}{
-			"Ports": map[string]interface{}{},
+			"IPAddress": "172.17.0.5",
+			"Networks":  map[string]interface{}{},
+			"Ports":     map[string]interface{}{},
 		},
 		"Mounts": []interface{}{},
 	}

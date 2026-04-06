@@ -72,17 +72,21 @@ public class ContainerService {
                     
             log.info("Backend response: {}", backendResponse);
 
+            String containerIp = null;
+            if (backendResponse != null && backendResponse.get("containerIp") instanceof String) {
+                containerIp = (String) backendResponse.get("containerIp");
+            }
+
             // Update instance status in database
             instance.setStatus("running");
             InstanceDTO updatedInstance = databaseService.updateInstance(instance.getId(), instance);
 
-            return new ContainerOperationResponse(
-                    true,
-                    "Container started successfully",
-                    instance.getContainerId(),
-                    "running",
-                    updatedInstance
+            ContainerOperationResponse resp = new ContainerOperationResponse(
+                    true, "Container started successfully",
+                    instance.getContainerId(), "running", updatedInstance
             );
+            resp.setContainerIp(containerIp);
+            return resp;
 
         } catch (Exception e) {
             log.error("Error starting container", e);
@@ -206,17 +210,21 @@ public class ContainerService {
                     
             log.info("Backend response: {}", backendResponse);
 
+            String containerIp = null;
+            if (backendResponse != null && backendResponse.get("containerIp") instanceof String) {
+                containerIp = (String) backendResponse.get("containerIp");
+            }
+
             // Update instance status in database
             instance.setStatus("running");
             InstanceDTO updatedInstance = databaseService.updateInstance(instance.getId(), instance);
 
-            return new ContainerOperationResponse(
-                    true,
-                    "Container reset successfully",
-                    instance.getContainerId(),
-                    "running",
-                    updatedInstance
+            ContainerOperationResponse resp = new ContainerOperationResponse(
+                    true, "Container reset successfully",
+                    instance.getContainerId(), "running", updatedInstance
             );
+            resp.setContainerIp(containerIp);
+            return resp;
 
         } catch (Exception e) {
             log.error("Error resetting container", e);

@@ -9,6 +9,22 @@ import (
 	"github.com/docker/docker/client"
 )
 
+func GetContainerIP(ctx context.Context, cli *client.Client, containerID string) string {
+	info, err := cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return ""
+	}
+	ip := info.NetworkSettings.IPAddress
+	if ip == "" {
+		for _, network := range info.NetworkSettings.Networks {
+			if network.IPAddress != "" {
+				return network.IPAddress
+			}
+		}
+	}
+	return ip
+}
+
 func ImageExists(ctx context.Context, cli *client.Client, ref string) (bool, error) {
 	args := filters.NewArgs()
 	args.Add("reference", ref)

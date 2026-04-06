@@ -19,6 +19,7 @@ import (
 type utilsMock struct {
 	images     []image.Summary
 	containers []container.Summary
+	inspects   map[string]interface{}
 	failMode   bool
 }
 
@@ -74,6 +75,18 @@ func (m *utilsMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		json.NewEncoder(w).Encode(m.containers)
 	default:
+		if strings.HasPrefix(path, "/containers/") && strings.HasSuffix(path, "/json") {
+			id := strings.TrimSuffix(strings.TrimPrefix(path, "/containers/"), "/json")
+			if m.inspects != nil {
+				if data, ok := m.inspects[id]; ok {
+					json.NewEncoder(w).Encode(data)
+					return
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"message": "No such container: " + id})
+			return
+		}
 		w.WriteHeader(http.StatusNotFound)
 	}
 }
@@ -209,4 +222,57 @@ func TestFindContainerByName_ReturnsErrorOnDaemonFail(t *testing.T) {
 
 	_, err := FindContainerByName(context.Background(), cli, "any")
 	assert.Error(t, err)
+}
+
+// --- GetContainerIP tests ---
+
+func TestGetContainerIP_ReturnsIPFromDefaultNetwork(t *testing.T) {
+	mock := &utilsMock{
+		inspects: map[string]interface{}{
+			"ctr-id": map[string]interface{}{
+				"Id": "ctr-id",
+				"NetworkSettings": map[string]interface{}{
+					"IPAddress": "172.17.0.5",
+					"Networks":  map[string]interface{}{},
+				},
+				"State": map[string]interface{}{"Running": true},
+			},
+		},
+	}
+	cli, cleanup := newUtilsDockerClient(t, mock)
+	defer cleanup()
+
+	ip := GetContainerIP(context.Background(), cli, "ctr-id")
+	assert.Equal(t, "172.17.0.5", ip)
+}
+
+func TestGetContainerIP_FallsBackToCustomNetwork(t *testing.T) {
+	mock := &utilsMock{
+		inspects: map[string]interface{}{
+			"ctr-id": map[string]interface{}{
+				"Id": "ctr-id",
+				"NetworkSettings": map[string]interface{}{
+					"IPAddress": "",
+					"Networks": map[string]interface{}{
+						"mynet": map[string]interface{}{"IPAddress": "10.0.0.3"},
+					},
+				},
+				"State": map[string]interface{}{"Running": true},
+			},
+		},
+	}
+	cli, cleanup := newUtilsDockerClient(t, mock)
+	defer cleanup()
+
+	ip := GetContainerIP(context.Background(), cli, "ctr-id")
+	assert.Equal(t, "10.0.0.3", ip)
+}
+
+func TestGetContainerIP_ReturnsEmptyOnNotFound(t *testing.T) {
+	mock := &utilsMock{inspects: map[string]interface{}{}}
+	cli, cleanup := newUtilsDockerClient(t, mock)
+	defer cleanup()
+
+	ip := GetContainerIP(context.Background(), cli, "nonexistent")
+	assert.Equal(t, "", ip)
 }
