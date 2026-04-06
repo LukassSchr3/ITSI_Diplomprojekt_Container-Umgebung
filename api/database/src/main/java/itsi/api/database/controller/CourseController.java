@@ -7,6 +7,7 @@ import itsi.api.database.service.CourseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,12 +29,14 @@ public class CourseController {
     private final CourseService courseService;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Alle Kurse abrufen")
     public ResponseEntity<List<Course>> getAllCourses() {
         return ResponseEntity.ok(courseService.findAll());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Kurs nach ID abrufen")
     public ResponseEntity<Course> getCourseById(@PathVariable Integer id) {
         return courseService.findById(id)
@@ -42,6 +45,7 @@ public class CourseController {
     }
 
     @GetMapping("/name/{name}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Kurs nach Namen abrufen")
     public ResponseEntity<Course> getCourseByName(@PathVariable String name) {
         return courseService.findByName(name)
@@ -50,6 +54,7 @@ public class CourseController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Neuen Kurs erstellen")
     public ResponseEntity<?> createCourse(@RequestBody Course course) {
         try {
@@ -66,6 +71,7 @@ public class CourseController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Kurs aktualisieren")
     public ResponseEntity<Course> updateCourse(@PathVariable Integer id, @RequestBody Course course) {
         if (!courseService.findById(id).isPresent()) {
@@ -76,6 +82,7 @@ public class CourseController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Kurs löschen")
     public ResponseEntity<Void> deleteCourse(@PathVariable Integer id) {
         if (!courseService.findById(id).isPresent()) {

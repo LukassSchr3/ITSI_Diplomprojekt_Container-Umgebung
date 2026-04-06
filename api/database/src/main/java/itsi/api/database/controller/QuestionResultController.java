@@ -7,6 +7,7 @@ import itsi.api.database.service.QuestionResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,12 +29,14 @@ public class QuestionResultController {
     private final QuestionResultService questionResultService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Alle Ergebnisse abrufen")
     public ResponseEntity<List<QuestionResult>> getAllResults() {
         return ResponseEntity.ok(questionResultService.findAll());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Ergebnis nach ID abrufen")
     public ResponseEntity<QuestionResult> getResultById(@PathVariable Integer id) {
         return questionResultService.findById(id)
@@ -42,18 +45,21 @@ public class QuestionResultController {
     }
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN') or @securityService.isOwner(#userId)")
     @Operation(summary = "Alle Ergebnisse eines Users abrufen")
     public ResponseEntity<List<QuestionResult>> getResultsByUserId(@PathVariable Integer userId) {
         return ResponseEntity.ok(questionResultService.findByUserId(userId));
     }
 
     @GetMapping("/question/{questionId}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Alle Ergebnisse einer Frage abrufen")
     public ResponseEntity<List<QuestionResult>> getResultsByQuestionId(@PathVariable Integer questionId) {
         return ResponseEntity.ok(questionResultService.findByQuestionId(questionId));
     }
 
     @GetMapping("/user/{userId}/question/{questionId}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN') or @securityService.isOwner(#userId)")
     @Operation(summary = "Ergebnis eines Users für eine spezifische Frage abrufen")
     public ResponseEntity<QuestionResult> getResultByUserAndQuestion(
             @PathVariable Integer userId,
@@ -64,18 +70,21 @@ public class QuestionResultController {
     }
 
     @GetMapping("/user/{userId}/passed")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN') or @securityService.isOwner(#userId)")
     @Operation(summary = "Alle bestandenen Fragen eines Users abrufen")
     public ResponseEntity<List<QuestionResult>> getPassedResultsByUserId(@PathVariable Integer userId) {
         return ResponseEntity.ok(questionResultService.findByUserIdAndBestanden(userId, true));
     }
 
     @GetMapping("/user/{userId}/failed")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN') or @securityService.isOwner(#userId)")
     @Operation(summary = "Alle nicht bestandenen Fragen eines Users abrufen")
     public ResponseEntity<List<QuestionResult>> getFailedResultsByUserId(@PathVariable Integer userId) {
         return ResponseEntity.ok(questionResultService.findByUserIdAndBestanden(userId, false));
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Neues Ergebnis speichern", description = "Speichert das Ergebnis einer beantworteten Frage")
     public ResponseEntity<?> createResult(@RequestBody QuestionResult result) {
         try {
@@ -94,6 +103,7 @@ public class QuestionResultController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Ergebnis aktualisieren")
     public ResponseEntity<QuestionResult> updateResult(@PathVariable Integer id, @RequestBody QuestionResult result) {
         if (!questionResultService.findById(id).isPresent()) {
@@ -104,6 +114,7 @@ public class QuestionResultController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Ergebnis löschen")
     public ResponseEntity<Void> deleteResult(@PathVariable Integer id) {
         if (!questionResultService.findById(id).isPresent()) {

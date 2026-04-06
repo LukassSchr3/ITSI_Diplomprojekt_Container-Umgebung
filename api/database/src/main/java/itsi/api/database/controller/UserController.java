@@ -11,6 +11,7 @@ import itsi.api.database.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +34,7 @@ public class UserController {
     private final UserMapper userMapper;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Alle Benutzer abrufen", description = "Gibt eine Liste aller Benutzer zurück (ohne Passwörter)")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<UserDTO> users = userService.findAll().stream()
@@ -42,6 +44,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN') or @securityService.isOwner(#id)")
     @Operation(summary = "Benutzer nach ID abrufen", description = "Gibt Benutzerdetails zurück (ohne Passwort)")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Integer id) {
         return userService.findById(id)
@@ -51,6 +54,7 @@ public class UserController {
     }
 
     @GetMapping("/name/{name}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Benutzer nach Namen abrufen", description = "Gibt Benutzerdetails zurück (ohne Passwort)")
     public ResponseEntity<UserDTO> getUserByName(@PathVariable String name) {
         return userService.findByName(name)
@@ -60,6 +64,7 @@ public class UserController {
     }
 
     @GetMapping("/email/{email}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Benutzer nach E-Mail abrufen", description = "Gibt Benutzerdetails zurück (ohne Passwort)")
     public ResponseEntity<UserDTO> getUserByEmail(@PathVariable String email) {
         return userService.findByEmail(email)
@@ -69,6 +74,7 @@ public class UserController {
     }
 
     @GetMapping("/class/{className}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Benutzer nach Klasse abrufen")
     public ResponseEntity<List<UserDTO>> getUsersByClass(@PathVariable String className) {
         List<UserDTO> users = userService.findByClassName(className).stream()
@@ -78,6 +84,7 @@ public class UserController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Neuen Benutzer erstellen", description = "Erstellt einen neuen Benutzer und gibt die Details zurück (ohne Passwort)")
     public ResponseEntity<UserDTO> createUser(@RequestBody CreateUserDTO createUserDTO) {
         User user = userMapper.toEntity(createUserDTO);
@@ -87,6 +94,7 @@ public class UserController {
 
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @securityService.isOwner(#id)")
     @Operation(summary = "Benutzer aktualisieren", description = "Aktualisiert Benutzerdaten (Passwort ist optional)")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Integer id, @RequestBody UpdateUserDTO updateUserDTO) {
         return userService.findById(id)
@@ -99,6 +107,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Benutzer löschen")
     public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
         if (!userService.findById(id).isPresent()) {

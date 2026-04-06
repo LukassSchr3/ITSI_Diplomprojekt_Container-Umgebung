@@ -7,6 +7,7 @@ import itsi.api.database.service.QuestionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,12 +29,14 @@ public class QuestionController {
     private final QuestionService questionService;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Alle Fragen abrufen", description = "Gibt eine Liste aller Fragen zurück")
     public ResponseEntity<List<Question>> getAllQuestions() {
         return ResponseEntity.ok(questionService.findAll());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Frage nach ID abrufen")
     public ResponseEntity<Question> getQuestionById(@PathVariable Integer id) {
         return questionService.findById(id)
@@ -42,6 +45,7 @@ public class QuestionController {
     }
 
     @GetMapping("/task/{taskId}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Fragen nach Task-ID abrufen", description = "Gibt alle Fragen für eine bestimmte Aufgabe zurück")
     public ResponseEntity<List<Question>> getQuestionsByTaskId(@PathVariable Integer taskId) {
         List<Question> questions = questionService.findByTaskId(taskId);
@@ -49,6 +53,7 @@ public class QuestionController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Neue Frage erstellen")
     public ResponseEntity<?> createQuestion(@RequestBody Question question) {
         try {
@@ -61,6 +66,7 @@ public class QuestionController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Frage aktualisieren")
     public ResponseEntity<Question> updateQuestion(@PathVariable Integer id, @RequestBody Question question) {
         if (!questionService.findById(id).isPresent()) {
@@ -71,6 +77,7 @@ public class QuestionController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     @Operation(summary = "Frage löschen")
     public ResponseEntity<Void> deleteQuestion(@PathVariable Integer id) {
         if (!questionService.findById(id).isPresent()) {

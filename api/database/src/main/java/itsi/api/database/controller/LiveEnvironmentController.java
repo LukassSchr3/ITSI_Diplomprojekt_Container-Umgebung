@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -26,22 +28,26 @@ public class LiveEnvironmentController {
     private LiveEnvironmentService service;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     public List<LiveEnvironment> getAll() {
         return service.findAll();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<LiveEnvironment> getById(@PathVariable Long id) {
         Optional<LiveEnvironment> env = service.findById(id);
         return env.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     public LiveEnvironment create(@RequestBody LiveEnvironment env) {
         return service.save(env);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     public ResponseEntity<LiveEnvironment> update(@PathVariable Long id, @RequestBody LiveEnvironment env) {
         if (!service.findById(id).isPresent()) {
             return ResponseEntity.notFound().build();
@@ -51,6 +57,7 @@ public class LiveEnvironmentController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         if (!service.findById(id).isPresent()) {
             return ResponseEntity.notFound().build();
@@ -60,18 +67,21 @@ public class LiveEnvironmentController {
     }
 
     @GetMapping("/max-vnc-port")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     public Integer getMaxVncPort() {
         return service.getMaxVncPort();
     }
 
     // Neue Endpunkte nach userId
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN') or @securityService.isOwner(#userId)")
     public ResponseEntity<LiveEnvironment> getByUserId(@PathVariable Long userId) {
         Optional<LiveEnvironment> env = service.findByUserId(userId);
         return env.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     public ResponseEntity<LiveEnvironment> createByUserId(@PathVariable Long userId, @RequestBody LiveEnvironment env) {
         // Wenn bereits ein LiveEnvironment für die userId existiert, geben wir 409 zurück
         if (service.findByUserId(userId).isPresent()) {
@@ -85,6 +95,7 @@ public class LiveEnvironmentController {
     }
 
     @PutMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN') or @securityService.isOwner(#userId)")
     public ResponseEntity<LiveEnvironment> updateByUserId(@PathVariable Long userId, @RequestBody LiveEnvironment env) {
         Optional<LiveEnvironment> existing = service.findByUserId(userId);
         if (!existing.isPresent()) {
@@ -101,6 +112,7 @@ public class LiveEnvironmentController {
     }
 
     @DeleteMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('LEHRER','ADMIN')")
     public ResponseEntity<Void> deleteByUserId(@PathVariable Long userId) {
         Optional<LiveEnvironment> existing = service.findByUserId(userId);
         if (!existing.isPresent()) {
