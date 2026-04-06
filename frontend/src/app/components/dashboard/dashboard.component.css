@@ -125,6 +125,13 @@
   background: #5568d3;
 }
 
+.quick-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
 .nav-button {
   display: flex;
   align-items: center;

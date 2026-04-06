@@ -60,6 +60,30 @@
     <div class="error-banner">{{ errorMessage() }}</div>
   }
 
+  <!-- Quick Links -->
+  <div class="quick-links">
+    <a routerLink="/progress" class="nav-button">
+      <div>
+        <h3>Meine Punkte</h3>
+        <p>Fortschritt und Ergebnisse ansehen</p>
+      </div>
+      <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z"/>
+      </svg>
+    </a>
+    @if (isTeacher() || isAdmin()) {
+      <a routerLink="/teacher-progress" class="nav-button">
+        <div>
+          <h3>Schüler-Fortschritt</h3>
+          <p>Punkte und Ergebnisse der Schüler einsehen</p>
+        </div>
+        <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z"/>
+        </svg>
+      </a>
+    }
+  </div>
+
   <!-- Courses Section -->
   @if (!isLoading() && !errorMessage()) {
     <div class="courses-section">

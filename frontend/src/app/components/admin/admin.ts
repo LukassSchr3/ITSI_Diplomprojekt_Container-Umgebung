@@ -1,8 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AdminService, CourseItem, ImageItem, LiveEnvItem, UserItem, TaskItem, QuestionItem } from '../../service/admin.service';
+import { ThemeService } from '../../services/theme.service';
 
 type Tab = 'courses' | 'images' | 'liveenvs' | 'users' | 'tasks' | 'enrollment' | 'questions';
 interface CourseOption { id: number; name: string; }
@@ -17,7 +18,9 @@ interface UserOption   { id: number; name: string; className: string; }
   styleUrl: './admin.css',
 })
 export class Admin implements OnInit {
-  constructor(private router: Router, private adminService: AdminService) {}
+  protected themeService = inject(ThemeService);
+  private router = inject(Router);
+  private adminService = inject(AdminService);
 
   activeTab = signal<Tab>('courses');
 
