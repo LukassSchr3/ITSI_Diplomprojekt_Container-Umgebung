@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import apiClient from '../../service/api.service';
 
@@ -28,7 +29,7 @@ interface Task {
 
 @Component({
   selector: 'app-task-detail',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './task-detail.html',
   styleUrl: './task-detail.css',
 })
@@ -39,8 +40,9 @@ export class TaskDetail implements OnInit {
   task = signal<Task | null>(null);
   questions = signal<Question[]>([]);
   currentIndex = signal(0);
-  selectedAnswerIndex = signal<number | null>(null);
+  selectedAnswerIndices = signal<Set<number>>(new Set());
   feedback = signal<'correct' | 'wrong' | null>(null);
+  textAnswer = signal('');
   isLoading = signal(true);
   errorMessage = signal<string | null>(null);
 
@@ -83,17 +85,43 @@ export class TaskDetail implements OnInit {
     }
   }
 
+  isTextQuestion(): boolean {
+    const answers = this.parsedAnswers();
+    return answers.length === 1 && answers[0].richtig;
+  }
+
+  isMultiSelect(): boolean {
+    const answers = this.parsedAnswers();
+    return answers.filter(a => a.richtig).length > 1;
+  }
+
   selectAnswer(index: number): void {
     if (this.feedback()) return;
-    this.selectedAnswerIndex.set(index);
+    if (this.isMultiSelect()) {
+      this.selectedAnswerIndices.update(set => {
+        const next = new Set(set);
+        if (next.has(index)) { next.delete(index); } else { next.add(index); }
+        return next;
+      });
+    } else {
+      this.selectedAnswerIndices.set(new Set([index]));
+    }
   }
 
   submitAnswer(): void {
-    const idx = this.selectedAnswerIndex();
-    if (idx === null) return;
     const answers = this.parsedAnswers();
-    const chosen = answers[idx];
-    if (chosen?.richtig) {
+    let isCorrect = false;
+
+    if (this.isTextQuestion()) {
+      isCorrect = this.textAnswer().trim().toLowerCase() === answers[0].text.trim().toLowerCase();
+    } else {
+      const selected = this.selectedAnswerIndices();
+      if (selected.size === 0) return;
+      const correctIndices = new Set(answers.map((a, i) => a.richtig ? i : -1).filter(i => i >= 0));
+      isCorrect = selected.size === correctIndices.size && [...selected].every(i => correctIndices.has(i));
+    }
+
+    if (isCorrect) {
       this.feedback.set('correct');
     } else {
       this.feedback.set('wrong');
@@ -102,7 +130,8 @@ export class TaskDetail implements OnInit {
 
   nextQuestion(): void {
     this.feedback.set(null);
-    this.selectedAnswerIndex.set(null);
+    this.selectedAnswerIndices.set(new Set());
+    this.textAnswer.set('');
     const next = this.currentIndex() + 1;
     if (next < this.questions().length) {
       this.currentIndex.set(next);
@@ -111,7 +140,8 @@ export class TaskDetail implements OnInit {
 
   retryAnswer(): void {
     this.feedback.set(null);
-    this.selectedAnswerIndex.set(null);
+    this.selectedAnswerIndices.set(new Set());
+    this.textAnswer.set('');
   }
 
   navigateToImage(): void {

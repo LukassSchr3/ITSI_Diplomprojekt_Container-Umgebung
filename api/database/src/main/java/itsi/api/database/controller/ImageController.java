@@ -7,6 +7,7 @@ import itsi.api.database.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,12 +30,14 @@ public class ImageController {
 
     @GetMapping
     @Operation(summary = "Alle Images abrufen", description = "Gibt eine Liste aller Docker Images zurück")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<List<Image>> getAllImages() {
         return ResponseEntity.ok(imageService.findAll());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Image nach ID abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<Image> getImageById(@PathVariable Integer id) {
         return imageService.findById(id)
                 .map(ResponseEntity::ok)
@@ -43,6 +46,7 @@ public class ImageController {
 
     @GetMapping("/name/{name}")
     @Operation(summary = "Image nach Namen abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<Image> getImageByName(@PathVariable String name) {
         return imageService.findByName(name)
                 .map(ResponseEntity::ok)
@@ -51,6 +55,7 @@ public class ImageController {
 
     @GetMapping("/ref/{imageRef}")
     @Operation(summary = "Image nach Referenz abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<Image> getImageByRef(@PathVariable String imageRef) {
         return imageService.findByImageRef(imageRef)
                 .map(ResponseEntity::ok)
@@ -59,6 +64,7 @@ public class ImageController {
 
     @PostMapping
     @Operation(summary = "Neues Image erstellen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<?> createImage(@RequestBody Image image) {
         try {
             // Check if image with same name already exists
@@ -83,6 +89,7 @@ public class ImageController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Image aktualisieren")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<Image> updateImage(@PathVariable Integer id, @RequestBody Image image) {
         if (!imageService.findById(id).isPresent()) {
             return ResponseEntity.notFound().build();
@@ -93,6 +100,7 @@ public class ImageController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Image löschen")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteImage(@PathVariable Integer id) {
         if (!imageService.findById(id).isPresent()) {
             return ResponseEntity.notFound().build();

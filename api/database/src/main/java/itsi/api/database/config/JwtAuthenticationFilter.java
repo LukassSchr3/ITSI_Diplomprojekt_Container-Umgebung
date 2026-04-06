@@ -1,7 +1,7 @@
-package itsi.api.steuerung.config;
+package itsi.api.database.config;
 
 import io.jsonwebtoken.Claims;
-import itsi.api.steuerung.service.JwtService;
+import itsi.api.database.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,4 +50,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
-

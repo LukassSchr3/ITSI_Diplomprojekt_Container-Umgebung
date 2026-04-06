@@ -1,4 +1,4 @@
-package itsi.api.steuerung.config;
+JwtAuthenticationFilterpackage itsi.api.database.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,8 +27,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/api/info").permitAll()
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/info", "/api/health").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -36,4 +35,3 @@ public class SecurityConfig {
         return http.build();
     }
 }
-

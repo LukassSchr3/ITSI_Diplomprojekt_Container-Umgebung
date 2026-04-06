@@ -98,7 +98,11 @@ export class AdminService {
 
   // --- Questions ---
   async createQuestion(data: { taskId: number; frage: string; antworten: unknown; bestehgrenzeProzent: number; maximalpunkte: number }): Promise<QuestionItem> {
-    const res = await apiClient.post<QuestionItem>('/api/questions', data);
+    const payload = {
+      ...data,
+      antworten: data.antworten ? JSON.stringify(data.antworten) : null
+    };
+    const res = await apiClient.post<QuestionItem>('/api/questions', payload);
     return res.data;
   }
 

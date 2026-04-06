@@ -7,6 +7,7 @@ import itsi.api.steuerung.dto.ContainerOperationResponse;
 import itsi.api.steuerung.service.ContainerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +27,7 @@ public class ContainerController {
 
     @PostMapping("/start")
     @Operation(summary = "Start Container", description = "Starts a container and updates the database")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<ContainerOperationResponse> startContainer(
             @RequestBody ContainerOperationRequest request) {
         log.info("Received start request: {}", request);
@@ -37,6 +39,7 @@ public class ContainerController {
 
     @PostMapping("/stop")
     @Operation(summary = "Stop Container", description = "Stops a container and updates the database")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<ContainerOperationResponse> stopContainer(
             @RequestBody ContainerOperationRequest request) {
         log.info("Received stop request: {}", request);
@@ -48,6 +51,7 @@ public class ContainerController {
 
     @PostMapping("/reset")
     @Operation(summary = "Reset Container", description = "Resets a container (stops and starts fresh) and updates the database")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<ContainerOperationResponse> resetContainer(
             @RequestBody ContainerOperationRequest request) {
         log.info("Received reset request: {}", request);

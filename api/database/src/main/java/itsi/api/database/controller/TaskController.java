@@ -7,6 +7,7 @@ import itsi.api.database.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,12 +30,14 @@ public class TaskController {
 
     @GetMapping
     @Operation(summary = "Alle Aufgaben abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<List<Task>> getAllTasks() {
         return ResponseEntity.ok(taskService.findAll());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Aufgabe nach ID abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<Task> getTaskById(@PathVariable Integer id) {
         return taskService.findById(id)
                 .map(ResponseEntity::ok)
@@ -43,12 +46,14 @@ public class TaskController {
 
     @GetMapping("/image/{imageId}")
     @Operation(summary = "Alle Aufgaben mit einem bestimmten Image abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<List<Task>> getTasksByImageId(@PathVariable Integer imageId) {
         return ResponseEntity.ok(taskService.findByImageId(imageId));
     }
 
     @PostMapping
     @Operation(summary = "Neue Aufgabe erstellen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<?> createTask(@RequestBody Task task) {
         try {
             Task savedTask = taskService.save(task);
@@ -61,6 +66,7 @@ public class TaskController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Aufgabe aktualisieren")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<Task> updateTask(@PathVariable Integer id, @RequestBody Task task) {
         if (!taskService.findById(id).isPresent()) {
             return ResponseEntity.notFound().build();
@@ -71,6 +77,7 @@ public class TaskController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Aufgabe löschen")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteTask(@PathVariable Integer id) {
         if (!taskService.findById(id).isPresent()) {
             return ResponseEntity.notFound().build();

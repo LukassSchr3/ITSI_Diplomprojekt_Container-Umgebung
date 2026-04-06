@@ -79,46 +79,60 @@
                 @if (tw.questions.length > 0) {
                   <div class="questions-list">
                     @for (question of tw.questions; track question.id; let i = $index) {
-
-                      <!-- Already answered -->
                       @if (isQuestionAnswered(question.id)) {
+                        <!-- Already answered -->
                         <div class="question-item answered">
                           <span class="question-nr">{{ i + 1 }}.</span>
                           <span class="question-text">{{ question.frage }}</span>
                           <span class="check-icon">&#10003;</span>
                         </div>
-                      }
-
-                      <!-- Not answered, not active -->
-                      @else if (!isQuestionActive(question.id)) {
+                      } @else if (!isQuestionActive(question.id)) {
+                        <!-- Not answered, not active -->
                         <div class="question-item clickable" (click)="activateQuestion(question.id)">
                           <span class="question-nr">{{ i + 1 }}.</span>
                           <span class="question-text">{{ question.frage }}</span>
                         </div>
-                      }
-
-                      <!-- Active question (inline quiz) -->
-                      @else {
+                      } @else {
+                        <!-- Active question (inline quiz) -->
                         <div class="question-item active-question">
                           <div class="active-question-header">
                             <span class="question-nr">{{ i + 1 }}.</span>
                             <span class="question-text">{{ question.frage }}</span>
                           </div>
 
-                          <div class="answer-options">
-                            @for (antwort of getParsedAnswers(question); track $index) {
-                              <button
-                                class="answer-option"
-                                [class.selected]="selectedAnswerIndex() === $index"
-                                [class.correct-answer]="questionFeedback() !== null && antwort.richtig"
-                                [class.wrong-answer]="questionFeedback() === 'wrong' && selectedAnswerIndex() === $index && !antwort.richtig"
+                          @if (isTextQuestion(question)) {
+                            <!-- Text input question -->
+                            <div class="text-answer-wrapper">
+                              <input
+                                type="text"
+                                class="text-answer-input"
+                                [ngModel]="textAnswer()"
+                                (ngModelChange)="textAnswer.set($event)"
                                 [disabled]="questionFeedback() !== null"
-                                (click)="selectAnswer($index)">
-                                <span class="option-letter">{{ 'ABCDEFGH'[$index] }}</span>
-                                <span>{{ antwort.text }}</span>
-                              </button>
+                                placeholder="Antwort eingeben..."
+                                (keydown.enter)="submitAnswer(question)"
+                              />
+                            </div>
+                          } @else {
+                            <!-- Multiple choice -->
+                            @if (isMultiSelect(question)) {
+                              <span class="multi-hint">Mehrere Antworten möglich</span>
                             }
-                          </div>
+                            <div class="answer-options">
+                              @for (antwort of getParsedAnswers(question); track $index) {
+                                <button
+                                  class="answer-option"
+                                  [class.selected]="selectedAnswerIndices().has($index)"
+                                  [class.correct-answer]="questionFeedback() !== null && antwort.richtig"
+                                  [class.wrong-answer]="questionFeedback() === 'wrong' && selectedAnswerIndices().has($index) && !antwort.richtig"
+                                  [disabled]="questionFeedback() !== null"
+                                  (click)="selectAnswer($index, question)">
+                                  <span class="option-letter">{{ 'ABCDEFGH'[$index] }}</span>
+                                  <span>{{ antwort.text }}</span>
+                                </button>
+                              }
+                            </div>
+                          }
 
                           @if (questionFeedback() === 'correct') {
                             <div class="inline-feedback correct">Richtig!</div>
@@ -129,7 +143,7 @@
 
                           <div class="inline-actions">
                             @if (questionFeedback() === null) {
-                              <button class="inline-btn submit" [disabled]="selectedAnswerIndex() === null" (click)="submitAnswer(question)">
+                              <button class="inline-btn submit" [disabled]="isTextQuestion(question) ? !textAnswer().trim() : selectedAnswerIndices().size === 0" (click)="submitAnswer(question)">
                                 Bestätigen
                               </button>
                             }

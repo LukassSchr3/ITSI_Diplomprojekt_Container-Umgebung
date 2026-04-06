@@ -11,6 +11,7 @@ import itsi.api.database.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,12 +36,14 @@ public class StudentCourseController {
 
     @GetMapping
     @Operation(summary = "Alle Zuordnungen abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<List<StudentCourse>> getAllStudentCourses() {
         return ResponseEntity.ok(studentCourseService.findAll());
     }
 
     @GetMapping("/user/{userId}")
     @Operation(summary = "Alle Kurse eines Schülers abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER') or @securityService.isOwner(#userId)")
     public ResponseEntity<List<StudentCourse>> getCoursesByUserId(@PathVariable String userId) {
         try {
             Integer userIdInt = Integer.parseInt(userId);
@@ -52,6 +55,7 @@ public class StudentCourseController {
 
     @GetMapping("/user/{userId}/dashboard")
     @Operation(summary = "Dashboard-Daten eines Schülers abrufen (optimiert)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER') or @securityService.isOwner(#userId)")
     public ResponseEntity<List<DashboardCourseDTO>> getDashboardCoursesByUserId(@PathVariable String userId) {
         try {
             Integer userIdInt = Integer.parseInt(userId);
@@ -63,12 +67,14 @@ public class StudentCourseController {
 
     @GetMapping("/course/{courseId}")
     @Operation(summary = "Alle Schüler eines Kurses abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<List<StudentCourse>> getStudentsByCourseId(@PathVariable Integer courseId) {
         return ResponseEntity.ok(studentCourseService.findByCourseId(courseId));
     }
 
     @GetMapping("/user/{userId}/course/{courseId}")
     @Operation(summary = "Spezifische Zuordnung abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER') or @securityService.isOwner(#userId)")
     public ResponseEntity<StudentCourse> getStudentCourse(@PathVariable Integer userId, @PathVariable Integer courseId) {
         return studentCourseService.findByUserIdAndCourseId(userId, courseId)
                 .map(ResponseEntity::ok)
@@ -77,6 +83,7 @@ public class StudentCourseController {
 
     @PostMapping
     @Operation(summary = "Schüler zu Kurs zuordnen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<?> enrollStudent(@RequestBody StudentCourse studentCourse) {
         try {
             if (studentCourseService.findByUserIdAndCourseId(studentCourse.getUserId(), studentCourse.getCourseId()).isPresent()) {
@@ -93,6 +100,7 @@ public class StudentCourseController {
 
     @DeleteMapping("/user/{userId}/course/{courseId}")
     @Operation(summary = "Schüler aus Kurs entfernen")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> unenrollStudent(@PathVariable Integer userId, @PathVariable Integer courseId) {
         if (!studentCourseService.findByUserIdAndCourseId(userId, courseId).isPresent()) {
             return ResponseEntity.notFound().build();
@@ -103,6 +111,7 @@ public class StudentCourseController {
 
     @PostMapping("/enroll-class")
     @Operation(summary = "Alle User einer Klasse in einen Kurs einschreiben")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<?> enrollClass(@RequestBody EnrollClassDTO dto) {
         try {
             List<User> users = userService.findByClassName(dto.getClassName());

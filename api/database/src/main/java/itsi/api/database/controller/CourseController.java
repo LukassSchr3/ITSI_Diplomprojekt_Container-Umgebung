@@ -7,6 +7,7 @@ import itsi.api.database.service.CourseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,12 +30,14 @@ public class CourseController {
 
     @GetMapping
     @Operation(summary = "Alle Kurse abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<List<Course>> getAllCourses() {
         return ResponseEntity.ok(courseService.findAll());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Kurs nach ID abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<Course> getCourseById(@PathVariable Integer id) {
         return courseService.findById(id)
                 .map(ResponseEntity::ok)
@@ -43,6 +46,7 @@ public class CourseController {
 
     @GetMapping("/name/{name}")
     @Operation(summary = "Kurs nach Namen abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<Course> getCourseByName(@PathVariable String name) {
         return courseService.findByName(name)
                 .map(ResponseEntity::ok)
@@ -51,6 +55,7 @@ public class CourseController {
 
     @PostMapping
     @Operation(summary = "Neuen Kurs erstellen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<?> createCourse(@RequestBody Course course) {
         try {
             if (courseService.findByName(course.getName()).isPresent()) {
@@ -67,6 +72,7 @@ public class CourseController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Kurs aktualisieren")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<Course> updateCourse(@PathVariable Integer id, @RequestBody Course course) {
         if (!courseService.findById(id).isPresent()) {
             return ResponseEntity.notFound().build();
@@ -77,6 +83,7 @@ public class CourseController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Kurs löschen")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCourse(@PathVariable Integer id) {
         if (!courseService.findById(id).isPresent()) {
             return ResponseEntity.notFound().build();

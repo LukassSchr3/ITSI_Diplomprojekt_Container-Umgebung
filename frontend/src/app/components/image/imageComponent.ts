@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild, signal, inject, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { VncService, VNCConnectionStatus } from '../../service/vnc.service';
 import { AuthService } from '../../service/auth.service';
 import apiClient from '../../service/api.service';
@@ -13,7 +14,7 @@ export interface VncInfoResponse {
 
 interface Antwort {
   text: string;
-  richtig: boolean;
+  richtig: boolean | string;
   punkte: number;
 }
 
@@ -49,7 +50,7 @@ interface TaskWithQuestions {
 
 @Component({
   selector: 'app-image',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './image.html',
   styleUrl: './image.css',
 })
@@ -68,8 +69,9 @@ export class ImageComponent implements OnInit, OnDestroy {
 
   // Inline quiz state
   protected activeQuestionId = signal<number | null>(null);
-  protected selectedAnswerIndex = signal<number | null>(null);
+  protected selectedAnswerIndices = signal<Set<number>>(new Set());
   protected questionFeedback = signal<'correct' | 'wrong' | null>(null);
+  protected textAnswer = signal('');
 
   private expandedTasks = signal<Set<number>>(new Set());
 
@@ -196,8 +198,25 @@ export class ImageComponent implements OnInit, OnDestroy {
   activateQuestion(questionId: number): void {
     if (this.answeredQuestions().has(questionId)) return;
     this.activeQuestionId.set(questionId);
-    this.selectedAnswerIndex.set(null);
+    this.selectedAnswerIndices.set(new Set());
     this.questionFeedback.set(null);
+    this.textAnswer.set('');
+  }
+
+  private isRichtig(value: boolean | string | undefined): boolean {
+    return value === true || value === 'true' || String(value).toLowerCase() === 'true';
+  }
+
+  isTextQuestion(question: Question): boolean {
+    const answers = this.getParsedAnswers(question);
+    // Text question: exactly one answer that is marked as correct
+    if (answers.length !== 1) return false;
+    return this.isRichtig(answers[0].richtig);
+  }
+
+  isMultiSelect(question: Question): boolean {
+    const answers = this.getParsedAnswers(question);
+    return answers.filter(a => this.isRichtig(a.richtig)).length > 1;
   }
 
   isQuestionActive(questionId: number): boolean {
@@ -211,32 +230,52 @@ export class ImageComponent implements OnInit, OnDestroy {
     return question.antworten as Antwort[];
   }
 
-  selectAnswer(index: number): void {
+  selectAnswer(index: number, question: Question): void {
     if (this.questionFeedback()) return;
-    this.selectedAnswerIndex.set(index);
+    if (this.isMultiSelect(question)) {
+      this.selectedAnswerIndices.update(set => {
+        const next = new Set(set);
+        if (next.has(index)) { next.delete(index); } else { next.add(index); }
+        return next;
+      });
+    } else {
+      this.selectedAnswerIndices.set(new Set([index]));
+    }
   }
 
   async submitAnswer(question: Question): Promise<void> {
-    const idx = this.selectedAnswerIndex();
-    if (idx === null) return;
-
     const answers = this.getParsedAnswers(question);
-    const chosen = answers[idx];
+    let isCorrect = false;
+    let punkte = question.maximalpunkte;
 
-    if (chosen?.richtig) {
+    if (this.isTextQuestion(question)) {
+      const correctText = answers[0].text;
+      isCorrect = this.textAnswer().trim().toLowerCase() === correctText.trim().toLowerCase();
+      punkte = answers[0].punkte ?? question.maximalpunkte;
+    } else {
+      const selected = this.selectedAnswerIndices();
+      if (selected.size === 0) return;
+      const correctIndices = new Set(answers.map((a, i) => this.isRichtig(a.richtig) ? i : -1).filter(i => i >= 0));
+      isCorrect = selected.size === correctIndices.size && [...selected].every(i => correctIndices.has(i));
+      // Sum punkte of selected correct answers
+      let totalPunkte = 0;
+      for (const idx of selected) {
+        if (this.isRichtig(answers[idx]?.richtig)) totalPunkte += answers[idx].punkte ?? 0;
+      }
+      punkte = totalPunkte > 0 ? totalPunkte : question.maximalpunkte;
+    }
+
+    if (isCorrect) {
       this.questionFeedback.set('correct');
-
-      // Save to backend
       const userId = this.authService.getUserId()();
       if (userId) {
         try {
           await apiClient.post('/api/question-results', {
             userId: Number(userId),
             questionId: question.id,
-            erreichtePunkte: chosen.punkte ?? question.maximalpunkte,
+            erreichtePunkte: punkte,
             bestanden: true
           });
-          // Mark as answered in local state
           this.answeredQuestions.update(set => {
             const next = new Set(set);
             next.add(question.id);
@@ -253,7 +292,8 @@ export class ImageComponent implements OnInit, OnDestroy {
 
   retryQuestion(): void {
     this.questionFeedback.set(null);
-    this.selectedAnswerIndex.set(null);
+    this.selectedAnswerIndices.set(new Set());
+    this.textAnswer.set('');
   }
 
   nextQuestion(taskQuestions: Question[]): void {
@@ -270,6 +310,6 @@ export class ImageComponent implements OnInit, OnDestroy {
     // No more unanswered - close
     this.activeQuestionId.set(null);
     this.questionFeedback.set(null);
-    this.selectedAnswerIndex.set(null);
+    this.selectedAnswerIndices.set(new Set());
   }
 }

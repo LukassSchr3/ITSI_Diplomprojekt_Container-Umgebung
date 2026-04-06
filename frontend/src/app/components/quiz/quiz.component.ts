@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import apiClient from '../../service/api.service';
 
@@ -10,7 +11,6 @@ interface Antwort {
 }
 
 interface Question {
-  id: number;
   taskId: number;
   frage: string;
   antworten: Antwort[] | string;
@@ -25,7 +25,7 @@ interface Task {
 
 @Component({
   selector: 'app-quiz',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './quiz.component.html',
   styleUrl: './quiz.component.css'
 })
@@ -36,11 +36,12 @@ export class QuizComponent implements OnInit {
   protected task = signal<Task | null>(null);
   protected questions = signal<Question[]>([]);
   protected currentQuestionIndex = signal(0);
-  protected selectedAnswerIndex = signal<number | null>(null);
+  protected selectedAnswerIndices = signal<Set<number>>(new Set());
   protected feedback = signal<'correct' | 'wrong' | null>(null);
   protected isLoading = signal(true);
   protected showResults = signal(false);
   protected correctCount = signal(0);
+  protected textAnswer = signal('');
 
   protected currentQuestion = computed(() => {
     const qs = this.questions();
@@ -88,17 +89,43 @@ export class QuizComponent implements OnInit {
     }
   }
 
+  isTextQuestion(): boolean {
+    const answers = this.parsedAnswers();
+    return answers.length === 1 && answers[0].richtig;
+  }
+
+  isMultiSelect(): boolean {
+    const answers = this.parsedAnswers();
+    return answers.filter(a => a.richtig).length > 1;
+  }
+
   selectAnswer(index: number): void {
     if (this.feedback()) return;
-    this.selectedAnswerIndex.set(index);
+    if (this.isMultiSelect()) {
+      this.selectedAnswerIndices.update(set => {
+        const next = new Set(set);
+        if (next.has(index)) { next.delete(index); } else { next.add(index); }
+        return next;
+      });
+    } else {
+      this.selectedAnswerIndices.set(new Set([index]));
+    }
   }
 
   submitAnswer(): void {
-    const idx = this.selectedAnswerIndex();
-    if (idx === null) return;
     const answers = this.parsedAnswers();
-    const chosen = answers[idx];
-    if (chosen?.richtig) {
+    let isCorrect = false;
+
+    if (this.isTextQuestion()) {
+      isCorrect = this.textAnswer().trim().toLowerCase() === answers[0].text.trim().toLowerCase();
+    } else {
+      const selected = this.selectedAnswerIndices();
+      if (selected.size === 0) return;
+      const correctIndices = new Set(answers.map((a, i) => a.richtig ? i : -1).filter(i => i >= 0));
+      isCorrect = selected.size === correctIndices.size && [...selected].every(i => correctIndices.has(i));
+    }
+
+    if (isCorrect) {
       this.feedback.set('correct');
       this.correctCount.set(this.correctCount() + 1);
     } else {
@@ -108,7 +135,8 @@ export class QuizComponent implements OnInit {
 
   nextQuestion(): void {
     this.feedback.set(null);
-    this.selectedAnswerIndex.set(null);
+    this.selectedAnswerIndices.set(new Set());
+    this.textAnswer.set('');
     const next = this.currentQuestionIndex() + 1;
     if (next < this.questions().length) {
       this.currentQuestionIndex.set(next);
@@ -119,15 +147,17 @@ export class QuizComponent implements OnInit {
 
   retryAnswer(): void {
     this.feedback.set(null);
-    this.selectedAnswerIndex.set(null);
+    this.selectedAnswerIndices.set(new Set());
+    this.textAnswer.set('');
   }
 
   restartQuiz(): void {
     this.currentQuestionIndex.set(0);
-    this.selectedAnswerIndex.set(null);
+    this.selectedAnswerIndices.set(new Set());
     this.feedback.set(null);
     this.correctCount.set(0);
     this.showResults.set(false);
+    this.textAnswer.set('');
   }
 
   exitQuiz(): void {

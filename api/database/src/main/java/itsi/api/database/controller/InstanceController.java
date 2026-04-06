@@ -7,6 +7,7 @@ import itsi.api.database.service.InstanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,12 +29,14 @@ public class InstanceController {
 
     @GetMapping
     @Operation(summary = "Alle Instances abrufen", description = "Gibt eine Liste aller Container-Instances zurück")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<List<Instance>> getAllInstances() {
         return ResponseEntity.ok(instanceService.findAll());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Instance nach ID abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<Instance> getInstanceById(@PathVariable Integer id) {
         return instanceService.findById(id)
                 .map(ResponseEntity::ok)
@@ -42,6 +45,7 @@ public class InstanceController {
 
     @GetMapping("/container/{containerId}")
     @Operation(summary = "Instance nach Container-ID abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<Instance> getInstanceByContainerId(@PathVariable String containerId) {
         return instanceService.findByContainerId(containerId)
                 .map(ResponseEntity::ok)
@@ -50,6 +54,7 @@ public class InstanceController {
 
     @GetMapping("/name/{name}")
     @Operation(summary = "Instance nach Namen abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<Instance> getInstanceByName(@PathVariable String name) {
         return instanceService.findByName(name)
                 .map(ResponseEntity::ok)
@@ -58,24 +63,28 @@ public class InstanceController {
 
     @GetMapping("/user/{userId}")
     @Operation(summary = "Alle Instances eines Benutzers abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER') or @securityService.isOwner(#userId)")
     public ResponseEntity<List<Instance>> getInstancesByUserId(@PathVariable Integer userId) {
         return ResponseEntity.ok(instanceService.findByUserId(userId));
     }
 
     @GetMapping("/image/{imageId}")
     @Operation(summary = "Alle Instances eines Images abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<List<Instance>> getInstancesByImageId(@PathVariable Integer imageId) {
         return ResponseEntity.ok(instanceService.findByImageId(imageId));
     }
 
     @GetMapping("/status/{status}")
     @Operation(summary = "Alle Instances nach Status abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<List<Instance>> getInstancesByStatus(@PathVariable String status) {
         return ResponseEntity.ok(instanceService.findByStatus(status));
     }
 
     @PostMapping
     @Operation(summary = "Neue Instance erstellen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<Instance> createInstance(@RequestBody Instance instance) {
         Instance savedInstance = instanceService.save(instance);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedInstance);
@@ -83,6 +92,7 @@ public class InstanceController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Instance aktualisieren")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<Instance> updateInstance(@PathVariable Integer id, @RequestBody Instance instance) {
         if (!instanceService.findById(id).isPresent()) {
             return ResponseEntity.notFound().build();
@@ -93,6 +103,7 @@ public class InstanceController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Instance löschen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<Void> deleteInstance(@PathVariable Integer id) {
         if (!instanceService.findById(id).isPresent()) {
             return ResponseEntity.notFound().build();
@@ -103,6 +114,7 @@ public class InstanceController {
 
     @GetMapping("/max-container-id")
     @Operation(summary = "Größte Container-ID abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<String> getMaxContainerId() {
         return instanceService.findMaxContainerId()
                 .map(ResponseEntity::ok)

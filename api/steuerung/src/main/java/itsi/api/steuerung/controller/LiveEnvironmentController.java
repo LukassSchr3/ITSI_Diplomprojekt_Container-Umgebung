@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +35,7 @@ public class LiveEnvironmentController {
     }
 
     @PostMapping("/start/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER') or @securityService.isOwner(#userId)")
     public ResponseEntity<?> startLiveEnvironment(@PathVariable Long userId) {
         try {
             // Prüfe, ob Live-Environment existiert - neuer Endpunkt nach Vorgabe
@@ -142,6 +144,7 @@ public class LiveEnvironmentController {
     }
 
     @PostMapping("/stop/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER') or @securityService.isOwner(#userId)")
     public ResponseEntity<?> stopLiveEnvironment(@PathVariable Long userId) {
         try {
             Map<String, Object> liveEnv = databaseWebClient.get()
@@ -208,6 +211,7 @@ public class LiveEnvironmentController {
     }
 
     @PostMapping("/reset/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER') or @securityService.isOwner(#userId)")
     public ResponseEntity<?> resetLiveEnvironment(@PathVariable Long userId) {
         try {
             Map<String, Object> liveEnv = databaseWebClient.get()
@@ -282,6 +286,7 @@ public class LiveEnvironmentController {
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<?> createLiveEnvironment(@RequestBody Map<String, Object> newEnv) {
         // userId required
         if (newEnv == null || !newEnv.containsKey("userId")) {
@@ -332,6 +337,7 @@ public class LiveEnvironmentController {
     }
 
     @GetMapping("/vnc-port/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER') or @securityService.isOwner(#userId)")
     public ResponseEntity<?> getVncPortByUserId(@PathVariable Long userId) {
         // Hole das Live-Environment für den User über user-Pfad
         Map<String, Object> liveEnv = databaseWebClient.get()

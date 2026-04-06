@@ -8,6 +8,7 @@ import itsi.api.database.service.CourseTaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,30 +31,35 @@ public class CourseTaskController {
 
     @GetMapping
     @Operation(summary = "Alle Zuordnungen abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<List<CourseTask>> getAllCourseTasks() {
         return ResponseEntity.ok(courseTaskService.findAll());
     }
 
     @GetMapping("/course/{courseId}")
     @Operation(summary = "Alle Aufgaben-Zuordnungen eines Kurses abrufen (mit Reihenfolge)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<List<CourseTask>> getTasksByCourseId(@PathVariable Integer courseId) {
         return ResponseEntity.ok(courseTaskService.findByCourseId(courseId));
     }
 
     @GetMapping("/course/{courseId}/tasks")
     @Operation(summary = "Alle Aufgaben eines Kurses abrufen (komplette Task-Objekte, sortiert)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<List<Task>> getTaskObjectsByCourseId(@PathVariable Integer courseId) {
         return ResponseEntity.ok(courseTaskService.findTasksByCourseId(courseId));
     }
 
     @GetMapping("/task/{taskId}")
     @Operation(summary = "Alle Kurse die eine Aufgabe verwenden")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<List<CourseTask>> getCoursesByTaskId(@PathVariable Integer taskId) {
         return ResponseEntity.ok(courseTaskService.findByTaskId(taskId));
     }
 
     @GetMapping("/course/{courseId}/task/{taskId}")
     @Operation(summary = "Spezifische Zuordnung abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER', 'SCHUELER')")
     public ResponseEntity<CourseTask> getCourseTask(@PathVariable Integer courseId, @PathVariable Integer taskId) {
         return courseTaskService.findByCourseIdAndTaskId(courseId, taskId)
                 .map(ResponseEntity::ok)
@@ -62,6 +68,7 @@ public class CourseTaskController {
 
     @PostMapping
     @Operation(summary = "Aufgabe zu Kurs zuordnen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<?> assignTaskToCourse(@RequestBody CourseTask courseTask) {
         try {
             if (courseTaskService.findByCourseIdAndTaskId(courseTask.getCourseId(), courseTask.getTaskId()).isPresent()) {
@@ -78,6 +85,7 @@ public class CourseTaskController {
 
     @PutMapping("/course/{courseId}/task/{taskId}")
     @Operation(summary = "Zuordnung aktualisieren (z.B. Reihenfolge ändern)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<?> updateCourseTask(
             @PathVariable Integer courseId, 
             @PathVariable Integer taskId, 
@@ -94,6 +102,7 @@ public class CourseTaskController {
 
     @DeleteMapping("/course/{courseId}/task/{taskId}")
     @Operation(summary = "Aufgabe aus Kurs entfernen")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> removeTaskFromCourse(@PathVariable Integer courseId, @PathVariable Integer taskId) {
         if (!courseTaskService.findByCourseIdAndTaskId(courseId, taskId).isPresent()) {
             return ResponseEntity.notFound().build();

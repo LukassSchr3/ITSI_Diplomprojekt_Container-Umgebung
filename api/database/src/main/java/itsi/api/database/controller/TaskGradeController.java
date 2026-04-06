@@ -7,6 +7,7 @@ import itsi.api.database.service.TaskGradeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,12 +30,14 @@ public class TaskGradeController {
 
     @GetMapping
     @Operation(summary = "Alle Benotungen abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<List<TaskGrade>> getAllTaskGrades() {
         return ResponseEntity.ok(taskGradeService.findAll());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Benotung nach ID abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<TaskGrade> getTaskGradeById(@PathVariable Integer id) {
         return taskGradeService.findById(id)
                 .map(ResponseEntity::ok)
@@ -43,18 +46,21 @@ public class TaskGradeController {
 
     @GetMapping("/user/{userId}")
     @Operation(summary = "Alle Benotungen eines Schülers abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER') or @securityService.isOwner(#userId)")
     public ResponseEntity<List<TaskGrade>> getGradesByUserId(@PathVariable Integer userId) {
         return ResponseEntity.ok(taskGradeService.findByUserId(userId));
     }
 
     @GetMapping("/task/{taskId}")
     @Operation(summary = "Alle Benotungen einer Aufgabe abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<List<TaskGrade>> getGradesByTaskId(@PathVariable Integer taskId) {
         return ResponseEntity.ok(taskGradeService.findByTaskId(taskId));
     }
 
     @GetMapping("/user/{userId}/task/{taskId}")
     @Operation(summary = "Benotung eines Schülers für eine Aufgabe abrufen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER') or @securityService.isOwner(#userId)")
     public ResponseEntity<TaskGrade> getGradeByUserAndTask(@PathVariable Integer userId, @PathVariable Integer taskId) {
         return taskGradeService.findByUserIdAndTaskId(userId, taskId)
                 .map(ResponseEntity::ok)
@@ -63,12 +69,14 @@ public class TaskGradeController {
 
     @GetMapping("/passed/{passed}")
     @Operation(summary = "Benotungen nach Bestanden-Status filtern")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<List<TaskGrade>> getGradesByPassed(@PathVariable Boolean passed) {
         return ResponseEntity.ok(taskGradeService.findByPassed(passed));
     }
 
     @PostMapping
     @Operation(summary = "Neue Benotung erstellen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<?> createTaskGrade(@RequestBody TaskGrade taskGrade) {
         try {
             if (taskGradeService.findByUserIdAndTaskId(taskGrade.getUserId(), taskGrade.getTaskId()).isPresent()) {
@@ -85,6 +93,7 @@ public class TaskGradeController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Benotung aktualisieren (nach ID)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<TaskGrade> updateTaskGrade(@PathVariable Integer id, @RequestBody TaskGrade taskGrade) {
         if (!taskGradeService.findById(id).isPresent()) {
             return ResponseEntity.notFound().build();
@@ -95,6 +104,7 @@ public class TaskGradeController {
 
     @PutMapping("/user/{userId}/task/{taskId}")
     @Operation(summary = "Benotung aktualisieren (nach User + Task)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER')")
     public ResponseEntity<TaskGrade> updateTaskGradeByUserAndTask(
             @PathVariable Integer userId, 
             @PathVariable Integer taskId, 
@@ -112,6 +122,7 @@ public class TaskGradeController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Benotung löschen")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteTaskGrade(@PathVariable Integer id) {
         if (!taskGradeService.findById(id).isPresent()) {
             return ResponseEntity.notFound().build();

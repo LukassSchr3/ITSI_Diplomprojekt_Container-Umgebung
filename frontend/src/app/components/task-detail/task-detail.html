@@ -71,20 +71,37 @@
         <div class="question-card" [class.correct]="feedback() === 'correct'" [class.wrong]="feedback() === 'wrong'">
           <p class="question-text">{{ currentQuestion()!.frage }}</p>
 
-          <div class="answers-list">
-            @for (antwort of parsedAnswers(); track $index) {
-              <button
-                class="answer-button"
-                [class.selected]="selectedAnswerIndex() === $index"
-                [class.correct-answer]="feedback() !== null && antwort.richtig"
-                [class.wrong-answer]="feedback() === 'wrong' && selectedAnswerIndex() === $index && !antwort.richtig"
+          @if (isTextQuestion()) {
+            <div class="text-answer-wrapper">
+              <input
+                type="text"
+                class="text-answer-input"
+                [ngModel]="textAnswer()"
+                (ngModelChange)="textAnswer.set($event)"
                 [disabled]="feedback() !== null"
-                (click)="selectAnswer($index)">
-                <span class="answer-letter">{{ 'ABCD'[$index] }}</span>
-                <span class="answer-text">{{ antwort.text }}</span>
-              </button>
+                placeholder="Antwort eingeben..."
+                (keydown.enter)="submitAnswer()"
+              />
+            </div>
+          } @else {
+            @if (isMultiSelect()) {
+              <p class="multi-hint">Mehrere Antworten möglich</p>
             }
-          </div>
+            <div class="answers-list">
+              @for (antwort of parsedAnswers(); track $index) {
+                <button
+                  class="answer-button"
+                  [class.selected]="selectedAnswerIndices().has($index)"
+                  [class.correct-answer]="feedback() !== null && antwort.richtig"
+                  [class.wrong-answer]="feedback() === 'wrong' && selectedAnswerIndices().has($index) && !antwort.richtig"
+                  [disabled]="feedback() !== null"
+                  (click)="selectAnswer($index)">
+                  <span class="answer-letter">{{ 'ABCDEFGH'[$index] }}</span>
+                  <span class="answer-text">{{ antwort.text }}</span>
+                </button>
+              }
+            </div>
+          }
 
           @if (feedback() === 'correct') {
             <div class="feedback correct-feedback">
@@ -101,7 +118,7 @@
 
           <div class="action-row">
             @if (feedback() === null) {
-              <button class="submit-button" [disabled]="selectedAnswerIndex() === null" (click)="submitAnswer()">
+              <button class="submit-button" [disabled]="isTextQuestion() ? !textAnswer().trim() : selectedAnswerIndices().size === 0" (click)="submitAnswer()">
                 Antwort bestätigen
               </button>
             }

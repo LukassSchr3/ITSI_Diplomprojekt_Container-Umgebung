@@ -455,6 +455,38 @@
   width: 16px;
 }
 
+.multi-hint {
+  font-size: 11px;
+  color: #667eea;
+  font-weight: 500;
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+.text-answer-wrapper {
+  display: flex;
+}
+
+.text-answer-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  box-sizing: border-box;
+}
+
+.text-answer-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.text-answer-input:disabled {
+  opacity: 0.6;
+}
+
 .inline-feedback {
   font-size: 12px;
   font-weight: 600;

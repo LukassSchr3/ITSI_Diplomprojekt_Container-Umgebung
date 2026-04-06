@@ -309,19 +309,57 @@ export class Admin implements OnInit {
     this.loading.set(true);
     this.clearMessages();
     try {
-      let antworten: unknown = this.question.antworten;
-      try { antworten = JSON.parse(this.question.antworten); } catch { /* send as string */ }
-      await this.adminService.createQuestion({
+      // Validiere erforderliche Felder
+      if (!this.question.taskId || !this.question.taskId.toString().trim()) {
+        this.errorMsg.set('Aufgabe ist erforderlich');
+        this.loading.set(false);
+        return;
+      }
+      if (!this.question.frage || !this.question.frage.trim()) {
+        this.errorMsg.set('Fragetext ist erforderlich');
+        this.loading.set(false);
+        return;
+      }
+
+      let antworten: unknown;
+
+      // Versuche JSON zu parsen
+      if (this.question.antworten && this.question.antworten.trim()) {
+        try {
+          antworten = JSON.parse(this.question.antworten);
+          // Validiere, dass es ein Array oder Objekt ist
+          if (typeof antworten !== 'object' || antworten === null) {
+            this.errorMsg.set('Antworten müssen ein gültiges JSON-Array oder JSON-Objekt sein');
+            this.loading.set(false);
+            return;
+          }
+        } catch (parseErr) {
+          this.errorMsg.set(`Antworten-JSON ungültig: ${(parseErr as Error).message}`);
+          this.loading.set(false);
+          return;
+        }
+      } else {
+        antworten = null;
+      }
+
+      const payload = {
         taskId: Number(this.question.taskId),
-        frage: this.question.frage,
+        frage: this.question.frage.trim(),
         antworten,
-        bestehgrenzeProzent: Number(this.question.bestehgrenzeProzent),
-        maximalpunkte: Number(this.question.maximalpunkte),
-      });
+        bestehgrenzeProzent: Number(this.question.bestehgrenzeProzent) || 50,
+        maximalpunkte: Number(this.question.maximalpunkte) || 10,
+      };
+
+      console.log('Sende Frage-Payload:', payload);
+
+      await this.adminService.createQuestion(payload);
       this.handleSuccess('Frage erfolgreich erstellt.');
       this.question = { taskId: '', frage: '', antworten: '[]', bestehgrenzeProzent: 50, maximalpunkte: 10 };
       await this.refreshData();
-    } catch (e) { this.handleError(e); }
+    } catch (e) {
+      console.error('Fehler beim Erstellen der Frage:', e);
+      this.handleError(e);
+    }
   }
 
   async deleteQuestion(id: number) {
