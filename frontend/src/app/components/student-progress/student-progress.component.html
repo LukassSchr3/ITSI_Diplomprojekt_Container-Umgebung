@@ -1,0 +1,51 @@
+<div class="progress-container">
+  <div class="header">
+    <button class="back-button" (click)="goBack()" type="button">← Zurück</button>
+    <h1>Meine Punkte</h1>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Fortschritt wird geladen...</p>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="error-banner">{{ errorMessage() }}</div>
+  }
+
+  @if (!isLoading() && !errorMessage()) {
+    @if (courseProgress().length === 0) {
+      <p class="no-data">Keine Kurse zugeordnet.</p>
+    }
+
+    @for (cp of courseProgress(); track cp.course.courseId) {
+      <div class="course-card">
+        <div class="course-header">
+          <h2>{{ cp.course.courseName }}</h2>
+          <span class="course-percent" [class.complete]="cp.totalPercent === 100">{{ cp.totalPercent }}%</span>
+        </div>
+
+        @if (cp.tasks.length === 0) {
+          <p class="no-data">Keine Aufgaben in diesem Kurs.</p>
+        }
+
+        @for (tp of cp.tasks; track tp.task.id) {
+          <div class="task-row">
+            <div class="task-info">
+              <h3>{{ tp.task.title }}</h3>
+              <span class="task-meta">{{ tp.answeredCount }}/{{ tp.totalQuestions }} Fragen beantwortet</span>
+            </div>
+            <div class="task-score">
+              <div class="progress-bar-wrapper">
+                <div class="progress-bar-fill" [style.width.%]="tp.percent"></div>
+              </div>
+              <span class="score-text">{{ tp.erreichtePunkte }}/{{ tp.maxPunkte }} Punkte ({{ tp.percent }}%)</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

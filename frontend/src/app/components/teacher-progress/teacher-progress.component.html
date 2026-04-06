@@ -1,0 +1,94 @@
+<div class="progress-container">
+  <div class="header">
+    <button class="back-button" (click)="goBack()" type="button">← Zurück</button>
+    <h1>Schüler-Fortschritt</h1>
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <label class="search-label" for="student-search">Schüler suchen</label>
+    <div class="search-wrapper">
+      <input
+        id="student-search"
+        type="text"
+        class="search-input"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchInput($event)"
+        (blur)="hideDropdown()"
+        (focus)="showDropdown.set(true)"
+        placeholder="Name, E-Mail oder Klasse eingeben..."
+        autocomplete="off"
+      />
+
+      @if (showDropdown() && filteredUsers().length > 0) {
+        <div class="autocomplete-dropdown">
+          @for (user of filteredUsers(); track user.id) {
+            <button class="autocomplete-item" (mousedown)="selectUser(user)" type="button">
+              <span class="user-name">{{ user.name }}</span>
+              <span class="user-meta">{{ user.email }} · {{ user.className }}</span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="error-banner">{{ errorMessage() }}</div>
+  }
+
+  <!-- Selected user info -->
+  @if (selectedUser()) {
+    <div class="selected-user-card">
+      <span class="selected-label">Ausgewählt:</span>
+      <strong>{{ selectedUser()!.name }}</strong>
+      <span class="user-detail">{{ selectedUser()!.email }}</span>
+      @if (selectedUser()!.className) {
+        <span class="user-detail">Klasse: {{ selectedUser()!.className }}</span>
+      }
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (isLoadingProgress()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Fortschritt wird geladen...</p>
+    </div>
+  }
+
+  <!-- Results -->
+  @if (!isLoadingProgress() && selectedUser()) {
+    @if (courseProgress().length === 0) {
+      <p class="no-data">Keine Kurse für diesen Schüler gefunden.</p>
+    }
+
+    @for (cp of courseProgress(); track cp.courseName) {
+      <div class="course-card">
+        <div class="course-header">
+          <h2>{{ cp.courseName }}</h2>
+          <span class="course-percent" [class.complete]="cp.totalPercent === 100">{{ cp.totalPercent }}%</span>
+        </div>
+
+        @if (cp.tasks.length === 0) {
+          <p class="no-data">Keine Aufgaben in diesem Kurs.</p>
+        }
+
+        @for (tp of cp.tasks; track tp.task.id) {
+          <div class="task-row">
+            <div class="task-info">
+              <h3>{{ tp.task.title }}</h3>
+              <span class="task-meta">{{ tp.answeredCount }}/{{ tp.totalQuestions }} Fragen beantwortet</span>
+            </div>
+            <div class="task-score">
+              <div class="progress-bar-wrapper">
+                <div class="progress-bar-fill" [style.width.%]="tp.percent"></div>
+              </div>
+              <span class="score-text">{{ tp.erreichtePunkte }}/{{ tp.maxPunkte }} Punkte ({{ tp.percent }}%)</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>
