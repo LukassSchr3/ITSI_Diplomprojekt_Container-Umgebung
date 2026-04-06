@@ -358,7 +358,7 @@ func TestStartContainer_AlreadyRunning(t *testing.T) {
 	defer cleanup()
 
 	svc := NewLiveEnvService(cli)
-	info, err := svc.StartContainer(context.Background(), "alice")
+	info, err := svc.StartContainer(context.Background(), "alice", "5901")
 	require.NoError(t, err)
 	assert.Equal(t, "alice", info.Username)
 }
@@ -371,7 +371,7 @@ func TestStartContainer_ExistingStopped(t *testing.T) {
 	defer cleanup()
 
 	svc := NewLiveEnvService(cli)
-	info, err := svc.StartContainer(context.Background(), "alice")
+	info, err := svc.StartContainer(context.Background(), "alice", "5901")
 	require.NoError(t, err)
 	assert.Equal(t, "alice", info.Username)
 }
@@ -382,7 +382,7 @@ func TestStartContainer_ImageNotFound(t *testing.T) {
 	defer cleanup()
 
 	svc := NewLiveEnvService(cli)
-	_, err := svc.StartContainer(context.Background(), "alice")
+	_, err := svc.StartContainer(context.Background(), "alice", "5901")
 	require.Error(t, err)
 }
 
@@ -396,7 +396,7 @@ func TestResetContainer_ExistingRunning(t *testing.T) {
 	defer cleanup()
 
 	svc := NewLiveEnvService(cli)
-	info, err := svc.ResetContainer(context.Background(), "alice")
+	info, err := svc.ResetContainer(context.Background(), "alice", "5901")
 	require.NoError(t, err)
 	assert.Equal(t, "alice", info.Username)
 }
@@ -409,7 +409,7 @@ func TestResetContainer_ExistingStopped(t *testing.T) {
 	defer cleanup()
 
 	svc := NewLiveEnvService(cli)
-	info, err := svc.ResetContainer(context.Background(), "alice")
+	info, err := svc.ResetContainer(context.Background(), "alice", "5901")
 	require.NoError(t, err)
 	assert.Equal(t, "alice", info.Username)
 }
@@ -422,7 +422,7 @@ func TestResetContainer_NoExisting_CreatesNew(t *testing.T) {
 	defer cleanup()
 
 	svc := NewLiveEnvService(cli)
-	info, err := svc.ResetContainer(context.Background(), "bob")
+	info, err := svc.ResetContainer(context.Background(), "bob", "5901")
 	require.NoError(t, err)
 	assert.Equal(t, "bob", info.Username)
 }
