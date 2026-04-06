@@ -40,6 +40,7 @@ func RegisterLiveEnvironmentRoutes(router *gin.Engine, cli *client.Client) {
 	liveenv.POST("/start", func(c *gin.Context) {
 		var user struct {
 			Name string `json:"name" binding:"required"`
+			Port string `json:"port" binding:"required"`
 		}
 		if err := c.ShouldBindJSON(&user); err != nil {
 			utils.RespondError(c, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
@@ -48,7 +49,7 @@ func RegisterLiveEnvironmentRoutes(router *gin.Engine, cli *client.Client) {
 
 		log.Printf("Starting live environment for user: %s", user.Name)
 
-		info, err := liveEnvService.StartContainer(c.Request.Context(), user.Name)
+		info, err := liveEnvService.StartContainer(c.Request.Context(), user.Name, user.Port)
 		if err != nil {
 			log.Printf("Failed to start live environment for %s: %v", user.Name, err)
 			utils.RespondError(c, http.StatusInternalServerError, "START_FAILED", err.Error())
@@ -83,6 +84,7 @@ func RegisterLiveEnvironmentRoutes(router *gin.Engine, cli *client.Client) {
 	liveenv.POST("/reset", func(c *gin.Context) {
 		var user struct {
 			Name string `json:"name" binding:"required"`
+			Port string `json:"port" binding:"required"`
 		}
 		if err := c.ShouldBindJSON(&user); err != nil {
 			utils.RespondError(c, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
@@ -91,7 +93,7 @@ func RegisterLiveEnvironmentRoutes(router *gin.Engine, cli *client.Client) {
 
 		log.Printf("Resetting live environment for user: %s", user.Name)
 
-		info, err := liveEnvService.ResetContainer(c.Request.Context(), user.Name)
+		info, err := liveEnvService.ResetContainer(c.Request.Context(), user.Name, user.Port)
 		if err != nil {
 			log.Printf("Failed to reset live environment for %s: %v", user.Name, err)
 			utils.RespondError(c, http.StatusInternalServerError, "RESET_FAILED", err.Error())
@@ -102,4 +104,3 @@ func RegisterLiveEnvironmentRoutes(router *gin.Engine, cli *client.Client) {
 		utils.RespondSuccess(c, http.StatusOK, "Live environment reset", info)
 	})
 }
-

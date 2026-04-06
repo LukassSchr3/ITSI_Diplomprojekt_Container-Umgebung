@@ -51,7 +51,7 @@ func (s *LiveEnvService) EnsureImageExists(ctx context.Context) error {
 	return fmt.Errorf("live environment image '%s' not found. Please build it first using: docker build -t %s ./live-environment", LiveEnvImageName, LiveEnvImageName)
 }
 
-func (s *LiveEnvService) StartContainer(ctx context.Context, username string) (*LiveEnvInfo, error) {
+func (s *LiveEnvService) StartContainer(ctx context.Context, username string, vncport string) (*LiveEnvInfo, error) {
 	containerName := LiveEnvPrefix + username
 
 	if err := s.EnsureImageExists(ctx); err != nil {
@@ -99,8 +99,8 @@ func (s *LiveEnvService) StartContainer(ctx context.Context, username string) (*
 
 	hostConfig := &container.HostConfig{
 		PortBindings: nat.PortMap{
-			"6080/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "0"}}, // Random port
-			"5900/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "0"}}, // Random port
+			"6080/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "0"}},     // Random port
+			"5900/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: vncport}}, // Random port
 		},
 		Resources: container.Resources{
 			Memory:   2 * 1024 * 1024 * 1024, // 2GB RAM limit
@@ -156,7 +156,7 @@ func (s *LiveEnvService) StopContainer(ctx context.Context, username string) err
 	return nil
 }
 
-func (s *LiveEnvService) ResetContainer(ctx context.Context, username string) (*LiveEnvInfo, error) {
+func (s *LiveEnvService) ResetContainer(ctx context.Context, username string, vncport string) (*LiveEnvInfo, error) {
 	containerName := LiveEnvPrefix + username
 
 	existing, err := s.findContainerByName(ctx, containerName)
@@ -166,7 +166,7 @@ func (s *LiveEnvService) ResetContainer(ctx context.Context, username string) (*
 
 	if existing == nil {
 		log.Printf("No existing container found for user %s, creating new one", username)
-		return s.StartContainer(ctx, username)
+		return s.StartContainer(ctx, username, vncport)
 	}
 
 	log.Printf("Resetting live environment for user: %s", username)
@@ -193,7 +193,7 @@ func (s *LiveEnvService) ResetContainer(ctx context.Context, username string) (*
 
 	log.Printf("Successfully removed old container, creating fresh one for user: %s", username)
 
-	return s.StartContainer(ctx, username)
+	return s.StartContainer(ctx, username, vncport)
 }
 
 func (s *LiveEnvService) GetContainerInfo(ctx context.Context, username string) (*LiveEnvInfo, error) {
