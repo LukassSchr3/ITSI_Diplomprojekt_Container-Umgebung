@@ -44,25 +44,15 @@ public class StudentCourseController {
     @GetMapping("/user/{userId}")
     @Operation(summary = "Alle Kurse eines Schülers abrufen")
     @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER') or @securityService.isOwner(#userId)")
-    public ResponseEntity<List<StudentCourse>> getCoursesByUserId(@PathVariable String userId) {
-        try {
-            Integer userIdInt = Integer.parseInt(userId);
-            return ResponseEntity.ok(studentCourseService.findByUserId(userIdInt));
-        } catch (NumberFormatException e) {
-            return ResponseEntity.ok(List.of());
-        }
+    public ResponseEntity<List<StudentCourse>> getCoursesByUserId(@PathVariable Integer userId) {
+        return ResponseEntity.ok(studentCourseService.findByUserId(userId));
     }
 
     @GetMapping("/user/{userId}/dashboard")
     @Operation(summary = "Dashboard-Daten eines Schülers abrufen (optimiert)")
     @PreAuthorize("hasAnyRole('ADMIN', 'LEHRER') or @securityService.isOwner(#userId)")
-    public ResponseEntity<List<DashboardCourseDTO>> getDashboardCoursesByUserId(@PathVariable String userId) {
-        try {
-            Integer userIdInt = Integer.parseInt(userId);
-            return ResponseEntity.ok(studentCourseService.getDashboardCoursesByUserId(userIdInt));
-        } catch (NumberFormatException e) {
-            return ResponseEntity.ok(List.of());
-        }
+    public ResponseEntity<List<DashboardCourseDTO>> getDashboardCoursesByUserId(@PathVariable Integer userId) {
+        return ResponseEntity.ok(studentCourseService.getDashboardCoursesByUserId(userId));
     }
 
     @GetMapping("/course/{courseId}")

@@ -158,7 +158,7 @@ public class DatabaseService {
         log.debug("Fetching live-environment for userId: {}", userId);
         try {
             return databaseWebClient.get()
-                    .uri("/api/live-environments/{userId}", userId)
+                    .uri("/api/live-environments/user/{userId}", userId)
                     .retrieve()
                     .bodyToMono(java.util.Map.class)
                     .timeout(Duration.ofSeconds(30))
