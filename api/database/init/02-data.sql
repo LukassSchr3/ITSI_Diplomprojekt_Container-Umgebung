@@ -5,16 +5,16 @@ INSERT INTO users (email, name, password, class, role, created_at, expired_at)
 VALUES ('admin@example.com', 'admin', '$2a$10$abcdefghijklmnopqrstuv', NULL, 'ADMIN', CURRENT_TIMESTAMP, NULL);
 
 INSERT INTO users (email, name, password, class, role, created_at, expired_at)
-VALUES ('john.doe@example.com', 'john_doe', '$2a$10$abcdefghijklmnopqrstuv', '5AHIT', 'USER', CURRENT_TIMESTAMP, NULL);
+VALUES ('john.doe@example.com', 'john_doe', '$2a$10$abcdefghijklmnopqrstuv', '5AHIT', 'SCHUELER', CURRENT_TIMESTAMP, NULL);
 
 INSERT INTO users (email, name, password, class, role, created_at, expired_at)
-VALUES ('jane.smith@example.com', 'jane_smith', '$2a$10$abcdefghijklmnopqrstuv', '5BHIT', 'USER', CURRENT_TIMESTAMP, NULL);
+VALUES ('jane.smith@example.com', 'jane_smith', '$2a$10$abcdefghijklmnopqrstuv', '5BHIT', 'SCHUELER', CURRENT_TIMESTAMP, NULL);
 
 INSERT INTO users (email, name, password, class, role, created_at, expired_at)
-VALUES ('dev.user@example.com', 'dev_user', '$2a$10$abcdefghijklmnopqrstuv', '4AHIT', 'DEVELOPER', CURRENT_TIMESTAMP, NULL);
+VALUES ('dev.user@example.com', 'dev_user', '$2a$10$abcdefghijklmnopqrstuv', '4AHIT', 'LEHRER', CURRENT_TIMESTAMP, NULL);
 
 INSERT INTO users (email, name, password, class, role, created_at, expired_at)
-VALUES ('test.user@example.com', 'test_user', '$2a$10$abcdefghijklmnopqrstuv', '3AHIT', 'TESTER', CURRENT_TIMESTAMP, NULL);
+VALUES ('test.user@example.com', 'test_user', '$2a$10$abcdefghijklmnopqrstuv', '3AHIT', 'SCHUELER', CURRENT_TIMESTAMP, NULL);
 
 -- Images einfügen
 INSERT INTO images (name, image_ref) VALUES ('ubuntu-latest', 'ubuntu:latest');
@@ -191,7 +191,7 @@ INSERT INTO question_results (user_id, question_id, erreichte_punkte, bestanden)
 VALUES (3, 1, 5, false); -- jane_smith hat Frage 1 nicht bestanden
 
 INSERT INTO question_results (user_id, question_id, erreichte_punkte, bestanden)
-VALUES (4, 3, 12, true); -- dev_user hat Frage 3 bestanden
+VALUES (4, 3, 10, true); -- dev_user hat Frage 3 bestanden
 
 -- Task Grades Beispieldaten
 INSERT INTO task_grades (user_id, task_id, grade, passed, feedback) VALUES 

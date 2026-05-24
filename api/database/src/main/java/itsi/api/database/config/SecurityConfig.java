@@ -1,4 +1,4 @@
-JwtAuthenticationFilterpackage itsi.api.database.config;
+package itsi.api.database.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
