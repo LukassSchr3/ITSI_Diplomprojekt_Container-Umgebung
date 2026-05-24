@@ -25,9 +25,6 @@ class JwtServiceTest {
         jwtService = new JwtService();
         ReflectionTestUtils.setField(jwtService, "secret", SECRET);
         ReflectionTestUtils.setField(jwtService, "expiration", EXPIRATION);
-        // AuthService muss gesetzt sein, da JwtService.isTokenValid() ihn intern nutzt
-        AuthService authService = new AuthService(null);
-        ReflectionTestUtils.setField(jwtService, "authService", authService);
     }
 
     private UserDTO createUser(String role) {
@@ -146,18 +143,17 @@ class JwtServiceTest {
         JwtService shortLivedService = new JwtService();
         ReflectionTestUtils.setField(shortLivedService, "secret", SECRET);
         ReflectionTestUtils.setField(shortLivedService, "expiration", -1000L);
-        ReflectionTestUtils.setField(shortLivedService, "authService", new AuthService(null));
 
         String token = shortLivedService.generateToken(createUser("SCHUELER"));
         assertThat(shortLivedService.isTokenValid(token)).isFalse();
     }
 
     @Test
-    void isTokenValidUnknownRoleReturnsFalse() {
-        // Generiere Token mit unbekannter Rolle – isTokenValid soll false zurückgeben
+    void isTokenValidUnknownRoleReturnsTrue() {
+        // isTokenValid prüft nur Signatur + Expiry, nicht die Rolle
         UserDTO user = createUser("UNKNOWN_ROLE");
         String token = jwtService.generateToken(user);
-        assertThat(jwtService.isTokenValid(token)).isFalse();
+        assertThat(jwtService.isTokenValid(token)).isTrue();
     }
 
     @Test

@@ -23,8 +23,6 @@ export class LoginComponent {
     this.errorMessage.set('');
     this.isLoading.set(true);
     try {
-      console.log(this.email())
-      console.log(this.password())
       const success = await this.authService.login(this.email(), this.password());
       if (success) {
         await this.router.navigate(['/dashboard']);

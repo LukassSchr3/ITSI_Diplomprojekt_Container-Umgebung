@@ -2,6 +2,7 @@ package itsi.api.database.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import itsi.api.database.dto.AuthVerifyRequest;
 import itsi.api.database.dto.CreateUserDTO;
 import itsi.api.database.dto.UpdateUserDTO;
 import itsi.api.database.dto.UserDTO;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,6 +34,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @GetMapping
     @Operation(summary = "Alle Benutzer abrufen", description = "Gibt eine Liste aller Benutzer zurück (ohne Passwörter)")
@@ -80,6 +83,17 @@ public class UserController {
                 .map(userMapper::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(users);
+    }
+
+    @PostMapping("/auth/verify")
+    @Operation(summary = "Login verifizieren", description = "Prüft Email + Passwort per BCrypt, gibt UserDTO zurück (ohne Passwort)")
+    public ResponseEntity<UserDTO> verifyCredentials(@RequestBody AuthVerifyRequest request) {
+        System.out.println("Verifying credentials for email: " + request.getEmail() + " " + request.getPassword());
+        return userService.findByEmail(request.getEmail())
+            .filter(user -> passwordEncoder.matches(request.getPassword(), user.getPassword()))
+            .map(userMapper::toDTO)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).header("WWW-Authenticate", "Basic realm=\"User Authentication\"").build());
     }
 
     @PostMapping

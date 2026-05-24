@@ -52,35 +52,26 @@ public class AuthController {
                 );
             }
 
-            // Fetch user from database
-            if(databaseService.findUserByEmail(loginRequest.getEmail()).isEmpty()) {
-                log.warn("Login failed: User not found with email: {}", loginRequest.getEmail());
+            // Passwort via BCrypt in Database verifizieren
+            var verifiedUser = databaseService.verifyLogin(loginRequest.getEmail(), loginRequest.getPassword());
+            if (verifiedUser.isEmpty()) {
+                log.warn("Login failed: Invalid credentials for email: {}", loginRequest.getEmail());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                     new LoginResponse(false, "Invalid email or password", null, null)
                 );
             }
-            UserDTO user = databaseService.findUserByEmail(loginRequest.getEmail()).get();
-
-            log.info("User Passwort {}",user.getPassword());
-
-            // Validate password (simple comparison - in production use BCrypt!)
-            if (!loginRequest.getPassword().equals(user.getPassword())) {
-                log.warn("Login failed: Invalid password for email: {}", loginRequest.getEmail());
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                    new LoginResponse(false, "Invalid email or password", null, null)
-                );
-            }
+            UserDTO user = verifiedUser.get();
 
             // Generate JWT token
             String token = jwtService.generateToken(user);
             log.info("Login successful for user: {} (id: {})", user.getName(), user.getId());
 
-            // Return success response with token and user data (without password!)
+            // Database gibt bereits kein Passwort zurück — direkt verwenden
             UserDTO safeUser = new UserDTO(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                null, // Don't send password back!
+                null,
                 user.getClassName(),
                 user.getRole(),
                 user.getCreatedAt(),

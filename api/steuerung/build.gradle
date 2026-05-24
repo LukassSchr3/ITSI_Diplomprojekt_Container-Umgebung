@@ -45,6 +45,8 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation 'com.cedarpolicy:cedar-java:3.3.0'
+
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 }
 
 // Normaler Test-Run: nur Unit-Tests, QS/QM-Tests (qa-Package) werden NICHT ausgeführt

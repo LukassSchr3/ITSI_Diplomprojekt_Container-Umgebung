@@ -206,6 +206,23 @@ public class DatabaseService {
         }
     }
 
+    public Optional<UserDTO> verifyLogin(String email, String password) {
+        log.debug("Verifying login for email: {}", email);
+        try {
+            UserDTO user = databaseWebClient.post()
+                    .uri("/api/users/auth/verify")
+                    .bodyValue(java.util.Map.of("email", email, "password", password))
+                    .retrieve()
+                    .bodyToMono(UserDTO.class)
+                    .timeout(Duration.ofSeconds(30))
+                    .block();
+            return Optional.ofNullable(user);
+        } catch (Exception e) {
+            log.warn("Login verification failed for email: {}", email);
+            return Optional.empty();
+        }
+    }
+
     public Mono<Void> updateInstanceStatus(Integer instanceId, String status) {
         log.debug("Updating instance {} status to: {}", instanceId, status);
 

@@ -22,8 +22,6 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private Long expiration;
 
-    private AuthService authService;
-
     public String generateToken(UserDTO user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
@@ -57,11 +55,8 @@ public class JwtService {
     public boolean isTokenValid(String token) {
         try {
             Claims claims = extractClaims(token);
-            return this.authService.authenticate(claims, "SCHUELER") ||
-                   this.authService.authenticate(claims, "LEHRER") ||
-                   this.authService.authenticate(claims, "ADMIN");
+            return !claims.getExpiration().before(new Date());
         } catch (Exception e) {
-            System.out.println("JWT Validation Error: " + e.getMessage()); // LOG PRÜFEN!
             return false;
         }
     }

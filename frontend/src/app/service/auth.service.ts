@@ -86,9 +86,6 @@ export class AuthService {
       }
 
       this.setToken(response.data.token);
-      console.log(this.getToken()());
-      console.log(this.getRoles()());
-      console.log(this.isAdmin()());
       return true;
     } catch {
       return false;

@@ -6,6 +6,8 @@ import itsi.api.database.dto.UserDTO;
 import itsi.api.database.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.sql.Timestamp;
 
@@ -13,14 +15,19 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 class UserMapperTest {
 
     private UserMapper userMapper;
+    private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void setUp() {
-        userMapper = new UserMapper();
+        passwordEncoder = Mockito.mock(PasswordEncoder.class);
+        when(passwordEncoder.encode(anyString())).thenAnswer(inv -> "encoded_" + inv.getArgument(0));
+        userMapper = new UserMapper(passwordEncoder);
     }
 
     @Test
@@ -69,7 +76,7 @@ class UserMapperTest {
         assertNull(user.getId());
         assertEquals(createDTO.getName(), user.getName());
         assertEquals(createDTO.getEmail(), user.getEmail());
-        assertEquals(createDTO.getPassword(), user.getPassword());
+        assertEquals("encoded_" + createDTO.getPassword(), user.getPassword());
         assertEquals(createDTO.getClassName(), user.getClassName());
         assertEquals(createDTO.getRole(), user.getRole());
         assertNotNull(user.getCreatedAt());
@@ -107,7 +114,7 @@ class UserMapperTest {
         assertEquals(1, existingUser.getId());
         assertEquals("newname", existingUser.getName());
         assertEquals("new@example.com", existingUser.getEmail());
-        assertEquals("newpassword", existingUser.getPassword());
+        assertEquals("encoded_newpassword", existingUser.getPassword());
         assertEquals("5AHIT", existingUser.getClassName());
         assertEquals("ADMIN", existingUser.getRole());
         assertEquals(updateDTO.getExpiredAt(), existingUser.getExpiredAt());

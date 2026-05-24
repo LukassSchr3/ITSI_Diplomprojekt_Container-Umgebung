@@ -44,7 +44,7 @@ class AuthControllerTest {
 
     @Test
     void loginSuccessfulLoginReturns200() {
-        when(databaseService.findUserByEmail("max@test.at")).thenReturn(Optional.of(testUser));
+        when(databaseService.verifyLogin("max@test.at", "pass123")).thenReturn(Optional.of(testUser));
         when(jwtService.generateToken(testUser)).thenReturn("jwt-token-xyz");
 
         ResponseEntity<LoginResponse> response = authController.login(
@@ -58,7 +58,7 @@ class AuthControllerTest {
 
     @Test
     void loginSuccessfulLoginResponseContainsNoPassword() {
-        when(databaseService.findUserByEmail("max@test.at")).thenReturn(Optional.of(testUser));
+        when(databaseService.verifyLogin("max@test.at", "pass123")).thenReturn(Optional.of(testUser));
         when(jwtService.generateToken(testUser)).thenReturn("token");
 
         ResponseEntity<LoginResponse> response = authController.login(
@@ -69,7 +69,7 @@ class AuthControllerTest {
 
     @Test
     void loginSuccessfulLoginResponseContainsUserData() {
-        when(databaseService.findUserByEmail("max@test.at")).thenReturn(Optional.of(testUser));
+        when(databaseService.verifyLogin("max@test.at", "pass123")).thenReturn(Optional.of(testUser));
         when(jwtService.generateToken(testUser)).thenReturn("token");
 
         ResponseEntity<LoginResponse> response = authController.login(
@@ -118,7 +118,7 @@ class AuthControllerTest {
 
     @Test
     void loginUserNotFoundReturnsUnauthorized() {
-        when(databaseService.findUserByEmail("nobody@test.at")).thenReturn(Optional.empty());
+        when(databaseService.verifyLogin("nobody@test.at", "pass123")).thenReturn(Optional.empty());
 
         ResponseEntity<LoginResponse> response = authController.login(
                 new LoginRequest("nobody@test.at", "pass123"));
@@ -129,7 +129,7 @@ class AuthControllerTest {
 
     @Test
     void loginWrongPasswordReturnsUnauthorized() {
-        when(databaseService.findUserByEmail("max@test.at")).thenReturn(Optional.of(testUser));
+        when(databaseService.verifyLogin("max@test.at", "wrongpassword")).thenReturn(Optional.empty());
 
         ResponseEntity<LoginResponse> response = authController.login(
                 new LoginRequest("max@test.at", "wrongpassword"));
@@ -140,7 +140,7 @@ class AuthControllerTest {
 
     @Test
     void loginServiceThrowsExceptionReturns500() {
-        when(databaseService.findUserByEmail(any())).thenThrow(new RuntimeException("DB down"));
+        when(databaseService.verifyLogin(any(), any())).thenThrow(new RuntimeException("DB down"));
 
         ResponseEntity<LoginResponse> response = authController.login(
                 new LoginRequest("max@test.at", "pass123"));

@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: itsi-postgres-db-2
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: itsi_db
+      POSTGRES_USER: itsi_user
+      POSTGRES_PASSWORD: itsi_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./api/database/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U itsi_user -d itsi_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Adminer (DB GUI) ──────────────────────────────────────────────────────
+  adminer:
+    image: adminer:latest
+    container_name: itsi-adminer-2
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
+
+  # ── Spring Boot REST API ──────────────────────────────────────────────────
+  api:
+    build:
+      context: ./api/database
+      dockerfile: Dockerfile
+    container_name: itsi-api
+    restart: unless-stopped
+    ports:
+      - "5050:5050"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/itsi_db
+      SPRING_DATASOURCE_USERNAME: itsi_user
+      SPRING_DATASOURCE_PASSWORD: itsi_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ── Steuerung Middleware (Auth, JWT, noVNC, Gateway) ─────────────────────
+  steuerung:
+    build:
+      context: ./api/steuerung
+      dockerfile: Dockerfile
+    container_name: itsi-steuerung
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    environment:
+      DATABASE_API_URL: http://api:5050
+    depends_on:
+      - api
+
+  # ── Angular Frontend (nginx) ──────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: itsi-frontend
+    restart: unless-stopped
+    ports:
+      - "4200:9090"
+    depends_on:
+      - steuerung
+
+volumes:
+  postgres_data:
+    driver: local
