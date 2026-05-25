@@ -1,15 +1,18 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild, signal, inject, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, signal, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VncService, VNCConnectionStatus } from '../../service/vnc.service';
 import { AuthService } from '../../service/auth.service';
-import apiClient from '../../service/api.service';
-import axios, { AxiosResponse } from 'axios';
+import apiClient, { steuerungClient } from '../../service/api.service';
 
-export interface VncInfoResponse {
+interface LiveEnvironmentResponse {
+  id: number;
+  userId: number;
   vncPort: number;
   vncPassword: string;
+  vncHost: string;
+  status: string;
 }
 
 interface Antwort {
@@ -136,7 +139,6 @@ export class ImageComponent implements OnInit, OnDestroy {
   }
 
   private async connectVNC(): Promise<void> {
-    // Wait for ViewChild to be available
     await new Promise(resolve => setTimeout(resolve, 500));
     if (!this.vncScreen) {
       console.error('VNC Screen element not found');
@@ -147,18 +149,21 @@ export class ImageComponent implements OnInit, OnDestroy {
     if (!userId) return;
 
     try {
-      const imagePort: AxiosResponse<VncInfoResponse> = await axios.get(
-        `http://localhost:9090/api/live-environment/vnc-port/${userId}`, {}
+      const startRes = await steuerungClient.post<LiveEnvironmentResponse>(
+        `/api/live-environment/start/${userId}`
       );
-      const vncUrl = `ws://localhost:9090/ws/novnc?vncPort=${imagePort.data.vncPort}`;
+      const { vncPort, vncPassword } = startRes.data;
+      const vncUrl = `ws://localhost:9090/ws/novnc?vncPort=${vncPort}`;
       this.vncService.connect(this.vncScreen.nativeElement, {
         url: vncUrl,
-        password: imagePort.data.vncPassword,
+        password: vncPassword,
         scaleViewport: true,
         resizeSession: true
       });
     } catch (err) {
       console.error('VNC Verbindung fehlgeschlagen:', err);
+      this.connectionStatus.set('Fehler beim Starten der Umgebung');
+      this.isConnecting.set(false);
     }
   }
 

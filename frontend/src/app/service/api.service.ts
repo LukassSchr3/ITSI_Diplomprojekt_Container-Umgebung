@@ -6,8 +6,20 @@ const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' }
 });
 
-// JWT-Token aus sessionStorage an jeden Request anhängen
 apiClient.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem('auth_token');
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export const steuerungClient = axios.create({
+  baseURL: 'http://localhost:9090',
+  headers: { 'Content-Type': 'application/json' }
+});
+
+steuerungClient.interceptors.request.use((config) => {
   const token = sessionStorage.getItem('auth_token');
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`;
