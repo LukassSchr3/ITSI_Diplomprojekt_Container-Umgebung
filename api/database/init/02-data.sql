@@ -2,7 +2,7 @@
 
 -- Users einfügen
 INSERT INTO users (email, name, password, class, role, created_at, expired_at)
-VALUES ('admin@example.com', 'admin', '$2a$10$abcdefghijklmnopqrstuv', NULL, 'ADMIN', CURRENT_TIMESTAMP, NULL);
+VALUES ('admin@example.com', 'admin', '$2b$10$1rAGQstqXJJRxl8GeZ2hvu2UrLpHUnrj5DNWkVh3CVk5SbBw/VJ0C', NULL, 'ADMIN', CURRENT_TIMESTAMP, NULL);
 
 INSERT INTO users (email, name, password, class, role, created_at, expired_at)
 VALUES ('john.doe@example.com', 'john_doe', '$2a$10$abcdefghijklmnopqrstuv', '5AHIT', 'SCHUELER', CURRENT_TIMESTAMP, NULL);
