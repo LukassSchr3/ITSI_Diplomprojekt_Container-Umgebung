@@ -96,7 +96,9 @@ public class NoVncWebSocketHandler extends BinaryWebSocketHandler {
         try {
             OutputStream out = socket.getOutputStream();
             ByteBuffer payload = message.getPayload();
-            out.write(payload.array(), payload.position(), message.getPayloadLength());
+            byte[] data = new byte[payload.remaining()];
+            payload.get(data);
+            out.write(data);
             out.flush();
         } catch (IOException e) {
             log.warn("Failed to forward binary message to VNC server for session {}", session.getId(), e);
