@@ -22,10 +22,14 @@ public class WebClientConfig {
     @Value("${backend.api.timeout}")
     private long backendTimeout;
 
+    @Value("${internal.api.key}")
+    private String internalApiKey;
+
     @Bean
     public WebClient databaseWebClient() {
         return WebClient.builder()
                 .baseUrl(databaseApiUrl)
+                .defaultHeader("X-Internal-Key", internalApiKey)
                 .build();
     }
 
