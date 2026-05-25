@@ -51,7 +51,7 @@ public class LiveEnvironmentController {
                 newEnv.put("userId", userId);
                 newEnv.put("status", "running");
                 newEnv.put("vncHost", "localhost");
-                newEnv.put("vncPassword", "password123");
+                newEnv.put("vncPassword", "kali");
 
                 // Versuche, den aktuellen maximalen VNC-Port aus der DB zu lesen (Tests stubben bodyToMono(Integer.class))
                 Integer maxVncPort = null;

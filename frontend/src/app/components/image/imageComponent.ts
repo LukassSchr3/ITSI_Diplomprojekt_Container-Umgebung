@@ -7,12 +7,12 @@ import { AuthService } from '../../service/auth.service';
 import apiClient, { steuerungClient } from '../../service/api.service';
 
 interface LiveEnvironmentResponse {
-  id: number;
-  userId: number;
+  id?: number;
+  userId?: number;
   vncPort: number;
   vncPassword: string;
-  vncHost: string;
-  status: string;
+  vncHost?: string;
+  status?: string;
 }
 
 interface Antwort {
@@ -148,23 +148,53 @@ export class ImageComponent implements OnInit, OnDestroy {
     const userId = this.authService.getUserId()();
     if (!userId) return;
 
+    let liveEnv: LiveEnvironmentResponse | null = null;
+
+    // Versuche Container zu starten; bei Backend-Fehler (502) direkt Port/Passwort lesen
     try {
-      const startRes = await steuerungClient.post<LiveEnvironmentResponse>(
+      const res = await steuerungClient.post<LiveEnvironmentResponse>(
         `/api/live-environment/start/${userId}`
       );
-      const { vncPort, vncPassword } = startRes.data;
-      const vncUrl = `ws://localhost:9090/ws/novnc?vncPort=${vncPort}`;
-      this.vncService.connect(this.vncScreen.nativeElement, {
-        url: vncUrl,
-        password: vncPassword,
-        scaleViewport: true,
-        resizeSession: true
-      });
-    } catch (err) {
-      console.error('VNC Verbindung fehlgeschlagen:', err);
-      this.connectionStatus.set('Fehler beim Starten der Umgebung');
-      this.isConnecting.set(false);
+      liveEnv = res.data;
+      console.log('Live-Umgebung gestartet:', liveEnv);
+    } catch (startErr: any) {
+      const status = startErr?.response?.status;
+      if (status === 502 || status === 503) {
+        console.warn('Backend nicht erreichbar, lese vorhandene VNC-Daten...');
+        try {
+          const fallbackRes = await steuerungClient.get<LiveEnvironmentResponse>(
+            `/api/live-environment/vnc-port/${userId}`
+          );
+          liveEnv = fallbackRes.data;
+          console.log('VNC-Daten aus DB:', liveEnv);
+        } catch (fallbackErr) {
+          console.error('Keine Live-Umgebung gefunden:', fallbackErr);
+          this.connectionStatus.set('Keine Live-Umgebung konfiguriert');
+          this.isConnecting.set(false);
+          return;
+        }
+      } else {
+        console.error('VNC Start fehlgeschlagen:', startErr);
+        this.connectionStatus.set('Fehler beim Starten der Umgebung');
+        this.isConnecting.set(false);
+        return;
+      }
     }
+
+    if (!liveEnv?.vncPort) {
+      this.connectionStatus.set('Kein VNC-Port konfiguriert');
+      this.isConnecting.set(false);
+      return;
+    }
+
+    const vncUrl = `ws://localhost:9090/ws/novnc?vncPort=${liveEnv.vncPort}`;
+    console.log(`VNC verbinden: ${vncUrl}, Passwort: ${liveEnv.vncPassword ? '***' : '(keins)'}`);
+    this.vncService.connect(this.vncScreen.nativeElement, {
+      url: vncUrl,
+      password: liveEnv.vncPassword,
+      scaleViewport: true,
+      resizeSession: true
+    });
   }
 
   // Sidebar accordion
